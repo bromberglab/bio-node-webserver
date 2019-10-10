@@ -1,5 +1,7 @@
 .pyenv/
 travis-key.json
+webservice-key.json
+kube_configs/secret.yml
 
 # ^ ADD CUSTOM HERE ^ #
 
