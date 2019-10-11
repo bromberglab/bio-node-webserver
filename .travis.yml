@@ -8,11 +8,25 @@ services:
 before_install:
   - openssl aes-256-cbc -K $encrypted_654104714d0c_key -iv $encrypted_654104714d0c_iv -in travis-key.json.enc -out travis-key.json -d
   - cat travis-key.json | docker login -u _json_key --password-stdin https://gcr.io
+  - if [ ! -d "$HOME/google-cloud-sdk/bin" ]; then rm -rf $HOME/google-cloud-sdk; export CLOUDSDK_CORE_DISABLE_PROMPTS=1; curl https://sdk.cloud.google.com | bash; fi
+  - source /home/travis/google-cloud-sdk/path.bash.inc
+  - gcloud --quiet version
+  - gcloud --quiet components update
+  - gcloud --quiet components beta update
+  - gcloud --quiet components update kubectl
+  - gcloud auth activate-service-account --key-file travis-key.json
   - rm travis-key.json
 install:
   - echo $TRAVIS_COMMIT > .commit
   - docker build . -t $IMAGENAME
   - docker tag $IMAGENAME $REGISTRY/$IMAGENAME
   - docker push $REGISTRY/$IMAGENAME
+  - sleep 1
+  - kubectl delete pod -l "app=server"
 script:
   - echo "done"
+
+# Cache Gcloud SDK between commands
+cache:
+  directories:
+    - "$HOME/google-cloud-sdk/"
