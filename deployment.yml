@@ -19,9 +19,11 @@ spec:
           hostPath:
             # directory location on host
             path: /var/run/docker.sock
+      terminationGracePeriodSeconds: 15
       containers:
         - name: server
           image: gcr.io/poised-cortex-254814/webservice-server:latest
+          imagePullPolicy: "Always"
           command: ["bash"]
           args:
             [
