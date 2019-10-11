@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from app.views import *
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('.commit/', CommitView.as_view()),
@@ -23,4 +24,5 @@ urlpatterns = [
     path('createadmin/', AdminCreationView.as_view()),
     path('list/', ListImagesView.as_view()),
     path('list/<str:name>/', InspectImageView.as_view()),
+    path('', RedirectView.as_view(url='/admin', permanent=False), name='index')
 ]
