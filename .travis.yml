@@ -15,6 +15,7 @@ before_install:
   - gcloud --quiet components update kubectl
   - gcloud auth activate-service-account --key-file travis-key.json
   - rm travis-key.json
+  - gcloud container clusters get-credentials standard-cluster-1 --zone us-east4-a --project poised-cortex-254814
 install:
   - echo $TRAVIS_COMMIT > .commit
   - docker build . -t $IMAGENAME
