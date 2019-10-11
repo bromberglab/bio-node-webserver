@@ -13,3 +13,4 @@ ADD inspect.sh $APP_DIR/
 RUN chmod +x inspect.sh
 ADD requirements.txt $APP_DIR/
 RUN pip install -r requirements.txt
+ADD .commit $APP_DIR/
