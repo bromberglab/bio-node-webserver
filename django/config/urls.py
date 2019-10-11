@@ -19,5 +19,6 @@ from app.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('list/', ListImagesView.as_view())
+    path('list/', ListImagesView.as_view()),
+    path('list/<str:name>/', InspectImageView.as_view()),
 ]
