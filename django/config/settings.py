@@ -86,7 +86,7 @@ if not DEBUG:
             'NAME': 'django',
             'USER': 'django',
             'PASSWORD': os.environ.get('db_pw', 'password'),
-            'HOST': '***REMOVED***',
+            'HOST': '35.245.251.90',
         }
     }
 
