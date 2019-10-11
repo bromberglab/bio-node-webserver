@@ -7,7 +7,10 @@ def list_images():
         "gcloud", "container", "images", "list"
     ], capture_output=True)
     r = p.stdout.decode()
-    return r.split("\n")[1:][:-1]
+    r = r.split("\n")[1:][:-1]
+    r = map(lambda i: i[len("gcr.io/poised-cortex-254814/"):], r)
+
+    return list(r)
 
 
 def inspect_image(name):
