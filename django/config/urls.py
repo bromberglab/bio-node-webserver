@@ -20,6 +20,7 @@ from app.views import *
 urlpatterns = [
     path('.commit/', CommitView.as_view()),
     path('admin/', admin.site.urls),
+    path('createadmin/', AdminCreationView.as_view()),
     path('list/', ListImagesView.as_view()),
     path('list/<str:name>/', InspectImageView.as_view()),
 ]
