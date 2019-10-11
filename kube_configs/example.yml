@@ -5,3 +5,4 @@ metadata:
 data:
   encryption_key: "<goes here>"
   db_pw: "<goes here>"
+  db_host: "<goes here>"
