@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-deployment
+  labels:
+    app: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      volumes:
+        - name: docker-volume
+          hostPath:
+            # directory location on host
+            path: /var/run/docker.sock
+      containers:
+        - name: server
+          image: gcr.io/poised-cortex-254814/webservice-server:latest
+          command: ["bash"]
+          args:
+            [
+              "-c",
+              "python /app/manage.py migrate; python /app/manage.py runserver --insecure 0.0.0.0:80",
+            ]
+          envFrom:
+            - configMapRef:
+                name: secrets-config
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: docker-volume
+              mountPath: /var/run/docker.sock
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+  labels:
+    app: server
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+  selector:
+    app: server
+  type: LoadBalancer
