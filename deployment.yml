@@ -31,7 +31,7 @@ spec:
               "python /app/manage.py migrate; python /app/manage.py runserver --insecure 0.0.0.0:80",
             ]
           envFrom:
-            - configMapRef:
+            - secretRef:
                 name: secrets-config
           ports:
             - containerPort: 80
