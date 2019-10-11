@@ -17,3 +17,9 @@ class ListImagesView(APIView):
 class InspectImageView(APIView):
     def get(self, request, name, format=None):
         return Response(inspect_image(name))
+
+
+class CommitView(APIView):
+    def get(self, request, format=None):
+        with open(".commit", "r") as f:
+            return Response(f.read().replace('\n', ''))

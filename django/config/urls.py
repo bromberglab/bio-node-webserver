@@ -18,6 +18,7 @@ from django.urls import path
 from app.views import *
 
 urlpatterns = [
+    path('.commit/', CommitView.as_view()),
     path('admin/', admin.site.urls),
     path('list/', ListImagesView.as_view()),
     path('list/<str:name>/', InspectImageView.as_view()),
