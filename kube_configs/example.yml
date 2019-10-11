@@ -3,4 +3,5 @@ kind: ConfigMap
 metadata:
   name: secrets-config
 data:
-  encryption_key: <goes here>
+  encryption_key: "<goes here>"
+  db_pw: "<goes here>"

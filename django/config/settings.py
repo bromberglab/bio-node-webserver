@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'un8&muaf=dz@9df^lgdu-*iu_&q+9#mcbmbs0^)l89^9w$3p#^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = BASE_DIR != '/app'
 
 ALLOWED_HOSTS = ['*']
 
@@ -79,6 +79,16 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+if not DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'django',
+            'USER': 'django',
+            'PASSWORD': os.environ.get('db_pw', 'password'),
+            'HOST': '***REMOVED***',
+        }
+    }
 
 
 # Password validation
