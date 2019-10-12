@@ -24,5 +24,5 @@ urlpatterns = [
     path('createadmin/', AdminCreationView.as_view()),
     path('list/', ListImagesView.as_view()),
     path('list/<str:name>/', InspectImageView.as_view()),
-    path('', RedirectView.as_view(url='/admin', permanent=False), name='index')
+    path('', IndexView.as_view(), name='index')
 ]
