@@ -10,6 +10,11 @@ from django.contrib.auth.models import User
 from .images import list_images, inspect_image
 
 
+class IndexView(APIView):
+    def get(self, request, format=None):
+        return Response("Bio Node")
+
+
 class AdminCreationView(APIView):
     def get(self, request, format=None):
         import random
