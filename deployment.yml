@@ -51,7 +51,7 @@ spec:
       protocol: TCP
   selector:
     app: server
-  type: LoadBalancer
+  type: NodePort
 ---
 apiVersion: networking.gke.io/v1beta1
 kind: ManagedCertificate
