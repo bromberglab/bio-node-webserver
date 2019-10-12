@@ -53,11 +53,21 @@ spec:
     app: server
   type: LoadBalancer
 ---
+apiVersion: networking.gke.io/v1beta1
+kind: ManagedCertificate
+metadata:
+  name: server-certificate
+spec:
+  domains:
+    - bio-no.de
+---
 apiVersion: "extensions/v1beta1"
 kind: "Ingress"
 metadata:
   name: "server-ingress"
-  namespace: "default"
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: server-address
+    networking.gke.io/managed-certificates: server-certificate
 spec:
   backend:
     serviceName: "server-service"
