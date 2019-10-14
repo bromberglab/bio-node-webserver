@@ -11,7 +11,7 @@ def cron():
         labels = get_image_labels(i)
 
         if not labels.get('bio_node', False):
-            next
+            continue
         valid_images.append(i)
 
         labels_string = json.dumps(labels)
