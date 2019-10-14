@@ -13,7 +13,7 @@ from .models import *
 
 class IndexView(APIView):
     def get(self, request, format=None):
-        return Response(request.headers.get("X-Forwarded-Proto", "None") + "Bio Node")
+        return Response("Bio Node")
 
 
 class AdminCreationView(APIView):
