@@ -3,6 +3,7 @@
 input/
 output/
 travis-key.json
+.env
 
 # ^ ADD CUSTOM HERE ^ #
 
