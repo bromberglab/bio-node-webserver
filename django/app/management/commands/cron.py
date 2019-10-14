@@ -40,7 +40,7 @@ def cron_worker():
     tasks = [
         # CronTask("some_function", 10 * minutes, some_function),
         # ...
-        CronTask("images_cron", 1 * minutes, images_cron),
+        CronTask("images_cron", 3 * minutes, images_cron),
     ]
 
     for task in tasks:
