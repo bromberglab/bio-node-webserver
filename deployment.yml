@@ -39,6 +39,34 @@ spec:
             - name: docker-volume
               mountPath: /var/run/docker.sock
 ---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: docker-volume
+              hostPath:
+                # directory location on host
+                path: /var/run/docker.sock
+          containers:
+            - name: server
+              image: gcr.io/poised-cortex-254814/webservice-server:latest
+              imagePullPolicy: "Always"
+              command: ["python"]
+              args: ["/app/manage.py cron"]
+              envFrom:
+                - secretRef:
+                    name: secrets-config
+              volumeMounts:
+                - name: docker-volume
+                  mountPath: /var/run/docker.sock
+---
 apiVersion: v1
 kind: Service
 metadata:
