@@ -42,7 +42,7 @@ spec:
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: hello
+  name: server-cron
 spec:
   schedule: "*/1 * * * *"
   jobTemplate:
@@ -66,6 +66,7 @@ spec:
               volumeMounts:
                 - name: docker-volume
                   mountPath: /var/run/docker.sock
+          restartPolicy: OnFailure
 ---
 apiVersion: v1
 kind: Service
