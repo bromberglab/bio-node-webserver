@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 # Create your views here.
 
 from .images import list_images, inspect_image
+from .models import *
 
 
 class IndexView(APIView):
