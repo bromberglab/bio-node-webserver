@@ -96,7 +96,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.global-static-ip-name: server-address
     networking.gke.io/managed-certificates: server-certificate
-    kubernetes.io/ingress.allow-http: "false"
 spec:
   backend:
     serviceName: "server-service"
