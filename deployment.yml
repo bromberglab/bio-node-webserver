@@ -59,7 +59,7 @@ spec:
               image: gcr.io/poised-cortex-254814/webservice-server:latest
               imagePullPolicy: "Always"
               command: ["python"]
-              args: ["/app/manage.py cron"]
+              args: ["/app/manage.py", "cron"]
               envFrom:
                 - secretRef:
                     name: secrets-config
