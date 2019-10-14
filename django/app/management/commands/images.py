@@ -10,7 +10,7 @@ def cron():
     for i in images:
         labels = get_image_labels(i)
 
-        if not labels.get('bio_workflow_container', False):
+        if not labels.get('bio_node', False):
             next
         valid_images.append(i)
 
