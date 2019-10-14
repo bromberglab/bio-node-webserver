@@ -5,9 +5,15 @@ from app.images import *
 
 def cron():
     images = get_images()
+    valid_images = []
 
     for i in images:
         labels = get_image_labels(i)
+
+        if not labels.get('bio_workflow_container', False):
+            next
+        valid_images.append(i)
+
         labels_string = json.dumps(labels)
         tags = get_image_tags(i)
         tag_hashes = [t[0] for t in tags]
@@ -36,5 +42,5 @@ def cron():
         for t in image.tag_refs.exclude(sha__in=tag_hashes):
             t.delete()
 
-    for i in NodeImage.objects.exclude(name__in=images):
+    for i in NodeImage.objects.exclude(name__in=valid_images):
         i.delete()
