@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views import View as RegView
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
@@ -37,12 +37,35 @@ class AdminCreationView(APIView):
 
 class ListImagesView(APIView):
     def get(self, request, format=None):
-        return Response("back soon")
+        images = NodeImage.objects.all()
+        images = [
+            {
+                'name': i.name,
+                'labels': i.labels
+            } for i in images
+        ]
+
+        return Response(images)
 
 
 class InspectImageView(APIView):
     def get(self, request, name, format=None):
-        return Response("back soon")
+        try:
+            image = NodeImage.objects.get(name=name)
+        except:
+            return Response(status=404)
+        tags = image.tag_refs.all()
+        tags = [
+            {
+                'name': i.name,
+                'sha': i.sha
+            } for i in tags
+        ]
+        return Response({
+            'name': name,
+            'labels': image.labels,
+            'tags': tags
+        })
 
 
 class CommitView(APIView):

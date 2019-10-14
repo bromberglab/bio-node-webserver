@@ -23,6 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('createadmin/', AdminCreationView.as_view()),
     path('list/', ListImagesView.as_view()),
-    path('list/<str:name>/', InspectImageView.as_view()),
+    path('list/<path:name>/', InspectImageView.as_view()),
     path('', IndexView.as_view(), name='index')
 ]
