@@ -13,6 +13,11 @@ from .models import *
 
 class IndexView(APIView):
     def get(self, request, format=None):
+
+        print("++ ++")
+        print(request.META)
+        print(request.headers)
+
         return Response("Bio Node")
 
 
