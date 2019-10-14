@@ -7,7 +7,6 @@ from django.contrib.auth.models import User
 
 # Create your views here.
 
-from .images import list_images, inspect_image
 from .models import *
 
 
@@ -38,12 +37,12 @@ class AdminCreationView(APIView):
 
 class ListImagesView(APIView):
     def get(self, request, format=None):
-        return Response(list_images())
+        return Response("back soon")
 
 
 class InspectImageView(APIView):
     def get(self, request, name, format=None):
-        return Response(inspect_image(name))
+        return Response("back soon")
 
 
 class CommitView(APIView):
