@@ -72,3 +72,13 @@ class CommitView(APIView):
     def get(self, request, format=None):
         with open(".commit", "r") as f:
             return Response(f.read().replace('\n', ''))
+
+
+class GoogleStorageWebhook(APIView):
+    def post(self, request):
+        glob = Globals().instance
+        glob.gs_webhook_fired = True
+        glob.gs_webhook_working = True
+        glob.save()
+
+        return Response("ok")
