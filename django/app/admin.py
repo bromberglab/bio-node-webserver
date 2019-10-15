@@ -6,3 +6,4 @@ from .models import *
 admin.site.register(CronJob)
 admin.site.register(NodeImage)
 admin.site.register(NodeImageTag)
+admin.site.register(Globals)
