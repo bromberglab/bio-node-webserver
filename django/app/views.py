@@ -13,7 +13,8 @@ from .models import *
 
 class IndexView(APIView):
     def get(self, request, format=None):
-        print(request.headers)
+        if request.headers.get('User-Agent', '').startswith('GoogleHC'):
+            return Response("")
         return Response("Bio Node")
 
 
