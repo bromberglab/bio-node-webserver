@@ -2,6 +2,7 @@
 travis-key.json
 webservice-key.json
 kube_configs/secret.yml
+gs_secret.txt
 
 # ^ ADD CUSTOM HERE ^ #
 
