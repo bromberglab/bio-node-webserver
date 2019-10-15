@@ -76,6 +76,7 @@ class CommitView(APIView):
 
 class GoogleStorageWebhook(APIView):
     def post(self, request):
+        print(request.headers.get('X-Goog-Channel-Token', 'token'))
         glob = Globals().instance
         glob.gs_webhook_fired = True
         glob.gs_webhook_working = True
