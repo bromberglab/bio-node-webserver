@@ -14,7 +14,7 @@ from .models import *
 class IndexView(APIView):
     def get(self, request, format=None):
         if request.headers.get('User-Agent', '').startswith('GoogleHC'):
-            return Response("")
+            return Response("ok")
         return Response("Bio Node")
 
 
