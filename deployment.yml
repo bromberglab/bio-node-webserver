@@ -49,23 +49,13 @@ spec:
     spec:
       template:
         spec:
-          volumes:
-            - name: docker-volume
-              hostPath:
-                # directory location on host
-                path: /var/run/docker.sock
           containers:
-            - name: server
-              image: gcr.io/poised-cortex-254814/webservice-server:latest
-              imagePullPolicy: "Always"
-              command: ["python"]
-              args: ["/app/manage.py", "cron"]
-              envFrom:
-                - secretRef:
-                    name: secrets-config
-              volumeMounts:
-                - name: docker-volume
-                  mountPath: /var/run/docker.sock
+            - name: cron-call
+              image: buildpack-deps:curl
+              args:
+                - /bin/sh
+                - -ec
+                - curl -X POST https://bio-no.de/cron/
           restartPolicy: OnFailure
 ---
 apiVersion: v1
