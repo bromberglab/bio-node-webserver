@@ -25,3 +25,19 @@ class NodeImageTag(models.Model):
         NodeImage, related_name='tag_refs', on_delete=models.CASCADE)
     sha = models.CharField(max_length=64)
     name = models.CharField(max_length=64, blank=True, default='')
+
+
+class Globals(models.Model):
+    gs_webhook_working = models.BooleanField(default=False)
+    gs_webhook_fired = models.BooleanField(default=False)
+
+    @property
+    def instance(self) -> 'Globals':
+        try:
+            i = Globals.objects.first()
+            assert i.pk
+        except:
+            i = Globals()
+            i.save()
+
+        return i
