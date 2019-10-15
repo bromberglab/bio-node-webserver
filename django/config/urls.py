@@ -21,10 +21,11 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('.commit/', CommitView.as_view()),
+    path('cron/', CronView.as_view()),
     path('admin/', admin.site.urls),
     path('createadmin/', AdminCreationView.as_view()),
     path('list/', ListImagesView.as_view()),
     path('list/<path:name>/', InspectImageView.as_view()),
     path('webhooks/gs_update/', GoogleStorageWebhook.as_view()),
-    path('', TemplateView.as_view(template_name="index.html"), name='index')
+    path('', IndexView.as_view(), name='index')
 ]

@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render
 from django.views import View as RegView
 from django.http import HttpResponse, Http404
@@ -12,6 +13,7 @@ from .models import *
 
 class IndexView(APIView):
     def get(self, request, format=None):
+        print(request.headers)
         return Response("Bio Node")
 
 
@@ -74,12 +76,19 @@ class CommitView(APIView):
             return Response(f.read().replace('\n', ''))
 
 
+class CronView(APIView):
+    def post(self, request, format=None):
+        from app.management.commands.cron import cron_worker
+        cron_worker()
+        return Response('ok')
+
+
 class GoogleStorageWebhook(APIView):
     def post(self, request):
-        print(request.headers.get('X-Goog-Channel-Token', 'token'))
-        glob = Globals().instance
-        glob.gs_webhook_fired = True
-        glob.gs_webhook_working = True
-        glob.save()
+        if request.headers.get('X-Goog-Channel-Token', '-') == os.environ.get('gs_secret', '-'):
+            glob = Globals().instance
+            glob.gs_webhook_fired = True
+            glob.gs_webhook_working = True
+            glob.save()
 
         return Response("ok")
