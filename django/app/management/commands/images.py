@@ -4,11 +4,9 @@ from app.images import *
 
 
 def cron():
-    glob = Globals().instance()
-
+    glob = Globals().instance
     if glob.gs_webhook_working and not glob.gs_webhook_fired:
         return
-
     glob.gs_webhook_fired = False
     glob.save()
 
