@@ -34,13 +34,13 @@ def cron_worker():
     minutes = 60 * seconds
     hours = 60 * minutes
     days = 24 * hours
-    if not should_run("main", 1 * minutes):
+    if not should_run("main", 30 * seconds):
         return
 
     tasks = [
         # CronTask("some_function", 10 * minutes, some_function),
         # ...
-        CronTask("images_cron", 1 * minutes, images_cron),
+        CronTask("images_cron", 30 * seconds, images_cron),
     ]
 
     for task in tasks:
