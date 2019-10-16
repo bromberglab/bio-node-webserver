@@ -10,6 +10,7 @@ class CronJob(models.Model):
 class NodeImage(models.Model):
     name = models.CharField(max_length=128, primary_key=True)
     labels_string = models.TextField()
+    cmd_string = models.TextField()
 
     @property
     def labels(self):
@@ -18,6 +19,14 @@ class NodeImage(models.Model):
     @labels.setter
     def labels(self, labels):
         self.labels_string = json.dumps(labels)
+
+    @property
+    def cmd(self):
+        return json.loads(self.cmd_string)
+
+    @cmd.setter
+    def cmd(self, cmd):
+        self.cmd_string = json.dumps(cmd)
 
 
 class NodeImageTag(models.Model):

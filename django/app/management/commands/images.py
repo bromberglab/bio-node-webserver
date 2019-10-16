@@ -14,23 +14,26 @@ def cron():
     valid_images = []
 
     for i in images:
-        labels = get_image_labels(i)
+        labels, cmd = get_image_meta(i)
 
         if not labels.get('bio_node', False):
             continue
         valid_images.append(i)
 
         labels_string = json.dumps(labels)
+        cmd_string = json.dumps(cmd)
         tags = get_image_tags(i)
         tag_hashes = [t[0] for t in tags]
 
         try:
             image = NodeImage.objects.get(name=i)
-            if image.labels_string != labels_string:
+            if image.labels_string != labels_string or image.cmd_string != cmd_string:
                 image.labels_string = labels_string
+                image.cmd_string = cmd_string
                 image.save()
         except:
-            image = NodeImage(name=i, labels_string=labels_string)
+            image = NodeImage(
+                name=i, labels_string=labels_string, cmd_string=cmd_string)
             image.save()
 
         for tag_ in tags:
