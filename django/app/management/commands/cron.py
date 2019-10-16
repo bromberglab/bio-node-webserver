@@ -12,7 +12,7 @@ def should_run(name, seconds_interval):
         CronJob(name=name, last_ran=now()).save()
         return True
 
-    if (now() - c.last_ran).total_seconds() >= seconds_interval:
+    if (now() - c.last_ran).total_seconds() >= seconds_interval - 1:
         c.last_ran = now()
         c.save()
         return True
