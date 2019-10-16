@@ -67,6 +67,7 @@ class InspectImageView(APIView):
         return Response({
             'name': name,
             'labels': image.labels,
+            'cmd': image.cmd,
             'tags': tags
         })
 
