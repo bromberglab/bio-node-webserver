@@ -15,13 +15,15 @@ def cron():
 
     for i in images:
         labels, cmd = get_image_meta(i)
+        if labels.get("bionode_entrypoint", False):
+            cmd = labels["bionode_entrypoint"].split(" ")
 
         if not labels.get('bio_node', False):
             continue
         valid_images.append(i)
 
-        labels_string = json.dumps(labels)
-        cmd_string = json.dumps(cmd)
+        labels_string = json.dumps(labels).lower()
+        cmd_string = json.dumps(cmd).lower()
         tags = get_image_tags(i)
         tag_hashes = [t[0] for t in tags]
 
