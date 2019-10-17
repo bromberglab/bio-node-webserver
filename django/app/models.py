@@ -9,9 +9,9 @@ class CronJob(models.Model):
 
 class NodeImage(models.Model):
     name = models.CharField(max_length=128, primary_key=True)
-    labels_string = models.TextField(default='')
-    cmd_string = models.TextField(default='')
-    env_string = models.TextField(default='')
+    labels_string = models.TextField(default='{}')
+    cmd_string = models.TextField(default='[]')
+    env_string = models.TextField(default='[]')
 
     @property
     def labels(self):
