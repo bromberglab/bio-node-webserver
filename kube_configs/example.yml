@@ -1,3 +1,5 @@
+# TODO: Copy to secret.yml and fill vars.
+
 apiVersion: v1
 kind: Secret
 metadata:
