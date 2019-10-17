@@ -11,6 +11,7 @@ class NodeImage(models.Model):
     name = models.CharField(max_length=128, primary_key=True)
     labels_string = models.TextField(default='')
     cmd_string = models.TextField(default='')
+    env_string = models.TextField(default='')
 
     @property
     def labels(self):
@@ -27,6 +28,14 @@ class NodeImage(models.Model):
     @cmd.setter
     def cmd(self, cmd):
         self.cmd_string = json.dumps(cmd)
+
+    @property
+    def env(self):
+        return json.loads(self.env_string)
+
+    @env.setter
+    def env(self, env):
+        self.env_string = json.dumps(env)
 
 
 class NodeImageTag(models.Model):

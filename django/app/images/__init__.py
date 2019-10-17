@@ -17,12 +17,14 @@ def get_image_meta(name):
     subprocess.run(["./inspect.sh", name])
     with open("image_labels.json", 'r') as f:
         labels = json.load(f)
-    with open("image_cmd.json", 'r') as f:
-        cmd = json.load(f)
     with open("image_entrypoint.json", 'r') as f:
         entrypoint = json.load(f)
+    with open("image_cmd.json", 'r') as f:
+        cmd = json.load(f)
+    with open("image_env.json", 'r') as f:
+        env = json.load(f)
 
-    return labels, entrypoint + cmd
+    return labels, entrypoint + cmd, env
 
 
 def get_image_tags(name):

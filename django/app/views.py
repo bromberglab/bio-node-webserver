@@ -68,6 +68,7 @@ class InspectImageView(APIView):
             'name': name,
             'labels': image.labels,
             'cmd': image.cmd,
+            'env': image.env,
             'tags': tags
         })
 
