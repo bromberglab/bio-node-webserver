@@ -1,7 +1,8 @@
 import os
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View as RegView
 from django.http import HttpResponse, Http404
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
@@ -15,7 +16,9 @@ class IndexView(APIView):
     def get(self, request, format=None):
         if request.headers.get('User-Agent', '').startswith('GoogleHC'):
             return Response("ok")
-        return Response("Bio Node")
+        if settings.DEBUG:
+            return Response("Bio Node")
+        return redirect("/app")
 
 
 class AdminCreationView(APIView):
