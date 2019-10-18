@@ -102,6 +102,7 @@ spec:
               mountPath: /var/www
         - name: vue
           image: gcr.io/poised-cortex-254814/webservice-client:latest
+          imagePullPolicy: "Always"
           command: ["sh"]
           args:
             [
