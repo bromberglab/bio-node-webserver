@@ -48,7 +48,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'app.middleware.HttpRedirectMiddleware'
+    'app.middleware.HttpRedirectMiddleware',
+    'app.middleware.DisableCSRF',
 ]
 if DEBUG:
     MIDDLEWARE = ['app.middleware.CorsMiddleware'] + MIDDLEWARE

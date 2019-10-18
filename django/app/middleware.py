@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.shortcuts import redirect
+from django.utils.deprecation import MiddlewareMixin
 
 
 class HttpRedirectMiddleware:
@@ -36,3 +37,8 @@ class CorsMiddleware:
         response["Access-Control-Allow-Methods"] = "*"
 
         return response
+
+
+class DisableCSRF(MiddlewareMixin):
+    def process_request(self, request):
+        setattr(request, '_dont_enforce_csrf_checks', True)
