@@ -24,6 +24,7 @@ api = [
     path('list/<path:name>/', InspectImageView.as_view()),
     path('upload/<str:name>/', FileUploadView.as_view(), name='upload'),
     path('upload/', FileUploadView.as_view()),
+    path('check_auth/', CheckAuthView.as_view()),
 ]
 
 urlpatterns = [

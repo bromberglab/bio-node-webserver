@@ -110,3 +110,8 @@ class FileUploadView(APIView):
         print(file_obj)
 
         return Response(status=200)
+
+
+class CheckAuthView(APIView):
+    def get(self, request, format=None):
+        return Response(request.user.is_authenticated)
