@@ -50,6 +50,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'app.middleware.HttpRedirectMiddleware'
 ]
+if DEBUG:
+    MIDDLEWARE = ['app.middleware.CorsMiddleware'] + MIDDLEWARE
 
 ROOT_URLCONF = 'config.urls'
 
