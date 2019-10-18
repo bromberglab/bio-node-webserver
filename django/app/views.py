@@ -5,6 +5,7 @@ from django.http import HttpResponse, Http404
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser, MultiPartParser
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -98,3 +99,14 @@ class GoogleStorageWebhook(APIView):
             glob.save()
 
         return Response("ok")
+
+
+class FileUploadView(APIView):
+    parser_classes = [MultiPartParser]
+
+    def put(self, request, name=None, format=None):
+        file_obj = request.data['file']
+        print(request.data)
+        print(file_obj)
+
+        return Response(status=200)

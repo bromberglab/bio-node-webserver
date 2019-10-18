@@ -33,5 +33,6 @@ class CorsMiddleware:
         # Code to be executed for each request/response after
         # the view is called.
         response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "*"
 
         return response
