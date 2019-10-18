@@ -1,3 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-nginx-conf
+data:
+  nginx.conf: |-
+    user  nginx;
+    worker_processes  1;
+
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+
+        sendfile        on;
+        keepalive_timeout  65;
+
+        upstream django {
+            server 127.0.0.1:8080;
+        }
+
+        server {
+            listen 80;
+
+            if ($http_x_forwarded_proto = http) {
+                return 301 https://$host$request_uri;
+            }
+
+            location /app {
+                alias   /var/www/dist;
+                index  index.html index.htm;
+            }
+            location / {
+                proxy_set_header       X-Forwarded-Proto $http_x_forwarded_proto;
+                proxy_set_header       Host $host;
+                proxy_set_header       X-Real-IP $http_x_forwarded_for;
+
+                proxy_pass         http://django;
+                proxy_redirect     off;
+            }
+        }
+    }
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,29 +64,53 @@ spec:
         app: server
     spec:
       volumes:
+        - name: html
+          emptyDir: {}
         - name: docker-volume
           hostPath:
             # directory location on host
             path: /var/run/docker.sock
+        - name: nginx-proxy-config
+          configMap:
+            name: proxy-nginx-conf
       terminationGracePeriodSeconds: 15
       containers:
-        - name: server
+        - name: django
           image: gcr.io/poised-cortex-254814/webservice-server:latest
           imagePullPolicy: "Always"
           command: ["bash"]
           args:
             [
               "-c",
-              "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py runserver --insecure 0.0.0.0:80",
+              "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py runserver --insecure 0.0.0.0:8080",
             ]
           envFrom:
             - secretRef:
                 name: secrets-config
-          ports:
-            - containerPort: 80
           volumeMounts:
             - name: docker-volume
               mountPath: /var/run/docker.sock
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-proxy-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: html
+              mountPath: /var/www
+        - name: vue
+          image: gcr.io/poised-cortex-254814/webservice-client:latest
+          command: ["sh"]
+          args:
+            [
+              "-c",
+              "cp -r /app/dist /var/www/dist; while true; do sleep 10; done",
+            ]
+          volumeMounts:
+            - name: html
+              mountPath: /var/www
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
