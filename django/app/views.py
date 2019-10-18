@@ -7,10 +7,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
 from .models import *
+
+
+@login_required
+def login_index_view(request):
+    return Response()
 
 
 class IndexView(APIView):
@@ -19,6 +26,10 @@ class IndexView(APIView):
             return Response("ok")
         if settings.DEBUG:
             return Response("Bio Node")
+
+        if not request.user.is_authenticated:
+            return login_index_view(request)
+
         return redirect("/app")
 
 
@@ -42,6 +53,7 @@ class AdminCreationView(APIView):
             return Response("admin:" + pw)
 
 
+@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='get')
 class ListImagesView(APIView):
     def get(self, request, format=None):
         images = NodeImage.objects.all()
@@ -55,6 +67,7 @@ class ListImagesView(APIView):
         return Response(images)
 
 
+@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='get')
 class InspectImageView(APIView):
     def get(self, request, name, format=None):
         try:
@@ -101,6 +114,7 @@ class GoogleStorageWebhook(APIView):
         return Response("ok")
 
 
+@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='put')
 class FileUploadView(APIView):
     parser_classes = [MultiPartParser]
 
@@ -114,4 +128,4 @@ class FileUploadView(APIView):
 
 class CheckAuthView(APIView):
     def get(self, request, format=None):
-        return Response(request.user.is_authenticated)
+        return Response(request.user.is_authenticated or settings.DEBUG)
