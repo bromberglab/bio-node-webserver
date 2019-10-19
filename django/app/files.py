@@ -23,6 +23,7 @@ def handle_uploaded_file(data):
     chunkNumber = data['chunkNumber']
     totalChunks = int(data['totalChunks'])
     uuid = data['identifier']
+    uuid = uuid.split("/")[0]
     relativePath = data['relativePath']
     filename = data['filename']
     file_type = data.get('type', 'file')
