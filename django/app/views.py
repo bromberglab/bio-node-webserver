@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
+from .files import handle_uploaded_file
 
 
 @login_required
@@ -119,9 +120,7 @@ class FileUploadView(APIView):
     parser_classes = [MultiPartParser]
 
     def put(self, request, name=None, format=None):
-        file_obj = request.data['file']
-        print(request.data)
-        print(file_obj)
+        handle_uploaded_file(request.data)
 
         return Response(status=200)
 
