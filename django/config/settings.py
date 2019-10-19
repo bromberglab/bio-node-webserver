@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'app.apps.AppConfig',
 ]
 
+DATA_PATH = os.path.join(BASE_DIR, 'volume') if DEBUG else '/volume'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

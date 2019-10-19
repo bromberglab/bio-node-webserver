@@ -75,7 +75,11 @@ spec:
         - name: nginx-proxy-config
           configMap:
             name: proxy-nginx-conf
-      terminationGracePeriodSeconds: 15
+        - name: ceph
+          persistentVolumeClaim:
+            claimName: cephfs-pvc
+            readOnly: false
+      terminationGracePeriodSeconds: 5
       containers:
         - name: django
           image: gcr.io/poised-cortex-254814/webservice-server:latest
@@ -92,6 +96,8 @@ spec:
           volumeMounts:
             - name: docker-volume
               mountPath: /var/run/docker.sock
+            - name: ceph
+              mountPath: /volume
         - name: nginx
           image: nginx:alpine
           ports:

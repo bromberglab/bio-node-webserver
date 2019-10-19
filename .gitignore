@@ -3,6 +3,7 @@ travis-key.json
 webservice-key.json
 kube_configs/secret.yml
 gs_secret.txt
+django/volume
 
 # ^ ADD CUSTOM HERE ^ #
 
