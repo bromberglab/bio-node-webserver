@@ -128,3 +128,10 @@ class FileUploadView(APIView):
 class CheckAuthView(APIView):
     def get(self, request, format=None):
         return Response(request.user.is_authenticated or settings.DEBUG)
+
+
+def mail_test(req):
+    from django.core.mail import send_mail
+
+    send_mail('Subject here', 'Here is the message.', 'from@example.com',
+              ['y.spreen@tum.de'], fail_silently=False)

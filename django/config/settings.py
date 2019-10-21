@@ -27,6 +27,13 @@ DEBUG = BASE_DIR != '/app'
 
 ALLOWED_HOSTS = ['*']
 
+# Mail
+SENDGRID_API_KEY = os.getenv('sendgrid_key')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 # Application definition
 
