@@ -26,7 +26,6 @@ api = [
     path('upload/<str:name>/', FileUploadView.as_view(), name='upload'),
     path('upload/', FileUploadView.as_view()),
     path('check_auth/', CheckAuthView.as_view()),
-    path('mail_test/', mail_test),
 ]
 
 urlpatterns = [
