@@ -23,8 +23,8 @@ def cron():
         valid_images.append(i)
 
         labels_string = json.dumps(labels).lower()
-        cmd_string = json.dumps(cmd).lower()
-        env_string = json.dumps(env).lower()
+        cmd_string = json.dumps(cmd)
+        env_string = json.dumps(env)
         tags = get_image_tags(i)
         tag_hashes = [t[0] for t in tags]
 
