@@ -10,3 +10,4 @@ data:
   db_host: "<goes here>"
   gs_secret: "<goes here>"
   sendgrid_key: "<goes here>"
+  sendgrid_sender: "<goes here>"
