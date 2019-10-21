@@ -99,8 +99,9 @@ class CommitView(APIView):
 
 class CronView(APIView):
     def post(self, request, format=None):
-        from app.management.commands.cron import cron_worker
-        cron_worker()
+        from app.management.commands.cron import cron
+
+        cron()
         return Response('ok')
 
 

@@ -34,7 +34,7 @@ def cron_worker():
     minutes = 60 * seconds
     hours = 60 * minutes
     days = 24 * hours
-    if not should_run("main", 30 * seconds):
+    if not should_run("main", 5 * seconds):
         return
 
     tasks = [
@@ -46,6 +46,11 @@ def cron_worker():
     for task in tasks:
         if should_run(task.name, task.seconds_interval):
             task.function()
+
+
+def cron():
+    from threading import Thread
+    Thread(target=cron_worker).start()
 
 
 class Command(BaseCommand):
