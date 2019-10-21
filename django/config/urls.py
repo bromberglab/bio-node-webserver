@@ -37,5 +37,6 @@ urlpatterns = [
     path('createadmin/', AdminCreationView.as_view()),
     path('webhooks/gs_update/', GoogleStorageWebhook.as_view()),
     path('', IndexView.as_view(), name='index'),
+    path('accounts/profile/', RedirectView.as_view(url='/')),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
