@@ -37,6 +37,5 @@ urlpatterns = [
     path('createadmin/', AdminCreationView.as_view()),
     path('webhooks/gs_update/', GoogleStorageWebhook.as_view()),
     path('', IndexView.as_view(), name='index'),
-    path('accounts/login/',
-         auth_views.LoginView.as_view(template_name='admin/login.html')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
