@@ -11,7 +11,8 @@
         "console": "integratedTerminal",
         "args": [
             "runserver",
-            "--nothreading"
+            "--nothreading",
+            "--insecure"
         ],
         "django": true
     }]

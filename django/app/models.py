@@ -1,5 +1,6 @@
 from django.db import models
 import json
+import uuid as uu
 
 
 class CronJob(models.Model):
@@ -59,3 +60,11 @@ class Globals(models.Model):
             i.save()
 
         return i
+
+
+class Job(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
+    scheduled = models.BooleanField(default=False)
+    finished = models.BooleanField(default=False)
+    body = models.TextField(blank=True, default='')
+    status = models.CharField(max_length=32, blank=True, default='')
