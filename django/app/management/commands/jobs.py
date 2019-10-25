@@ -13,17 +13,17 @@ def get_status(pk):
     # setup watch
     w = watch.Watch()
     status = 'failed'
-    name = None
+    pod = None
     for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
         if event['object'].metadata.labels.get('job-name', None) == str(pk):
-            name = event['object'].metadata.name
+            pod = event['object'].metadata.name
             if event['type'] == 'MODIFIED':
                 status = event['object'].status.phase.lower()
                 if status in ['succeeded', 'failed']:
                     break
     w.stop()
 
-    return status, name
+    return status, pod
 
 
 def launch_job(job):
@@ -34,9 +34,11 @@ def launch_job(job):
     resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
 
 
-def delete_job(name):
+def delete_job(name, pod):
     k8s_batch_v1 = client.BatchV1Api()
-    resp = k8s_batch_v1.delete_namespaced_job(name, namespace='default')
+    k8s_v1 = client.CoreV1Api()
+    resp = k8s_batch_v1.delete_namespaced_job(str(name), namespace='default')
+    resp = k8s_v1.delete_namespaced_pod(str(pod), namespace='default')
 
 
 def run_job(job):
@@ -56,11 +58,11 @@ def run_job(job):
     config.load_kube_config()
 
     launch_job(job)
-    job.status, name = get_status(job.pk)
+    job.status, pod = get_status(job.pk)
 
     job.finished = True
     job.save()
-    delete_job(name)
+    delete_job(job.pk, pod)
 
 
 def cron():
