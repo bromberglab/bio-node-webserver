@@ -137,7 +137,7 @@ spec:
               args:
                 - /bin/sh
                 - -ec
-                - curl -L -X POST server-service/cron & for i in $(seq 1 5); do sleep 10; curl -L -X POST server-service/cron & done
+                - curl -L -X POST server-service/cron/ & for i in $(seq 1 5); do sleep 10; curl -L -X POST server-service/cron/ & done
           restartPolicy: OnFailure
 ---
 apiVersion: v1
