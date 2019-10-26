@@ -20,27 +20,6 @@ class HttpRedirectMiddleware:
         return response
 
 
-class CorsMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-        # One-time configuration and initialization.
-
-    def __call__(self, request):
-        # Code to be executed for each request before
-        # the view (and later middleware) are called.
-
-        response = self.get_response(request)
-
-        # Code to be executed for each request/response after
-        # the view is called.
-        response["Access-Control-Allow-Origin"] = "http://localhost:8080"
-        response["Access-Control-Allow-Methods"] = "GET, POST, PUT, OPTIONS, HEAD"
-        response["Access-Control-Allow-Headers"] = "*"
-        response["Access-Control-Allow-Credentials"] = "true"
-
-        return response
-
-
 class DisableCSRF(MiddlewareMixin):
     def process_request(self, request):
         setattr(request, '_dont_enforce_csrf_checks', True)
