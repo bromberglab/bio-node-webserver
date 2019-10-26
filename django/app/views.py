@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
-from .files import handle_uploaded_file, get_upload
+from .files import handle_uploaded_file, get_upload, file_tree
 
 
 @login_required
@@ -139,3 +139,10 @@ class GetUploadView(APIView):
 
     def get(self, request, format=None):
         return Response(get_upload(request).to_json())
+
+
+class UploadTreeView(APIView):
+    def get(self, request, format=None):
+        upload = get_upload(request)
+        tree = file_tree(upload.file_type, upload.uuid)
+        return Response(tree)

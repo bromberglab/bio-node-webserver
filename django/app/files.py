@@ -9,6 +9,7 @@ from app.models import *
 
 base_path = Path(settings.DATA_PATH)
 base_path /= 'data'
+chunk_suffix = '.partial_chunk'
 
 rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
@@ -37,10 +38,48 @@ def handle_uploaded_file(request):
               relativePath / chunkNumber, totalChunks, filename)
 
 
-def save_file(file, path: Path, totalChunks=0, filename="file"):
-    suffix = '.partial_chunk'
+def list_files(type, id, relative=True):
+    path = base_path
+    path /= type
+    path /= str(id)
 
-    path = path.with_suffix(suffix)
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
+    files = [Path(f) for f in files]
+    files = [f for f in files if not f.match('*' + chunk_suffix)]
+
+    if relative:
+        files = [os.path.relpath(f, path) for f in files]
+        files = [Path(f) for f in files]
+
+    return files
+
+
+def file_tree(type, id):
+    files = list_files(type, id)
+    tree = []
+
+    for f in files:
+        t = tree
+        for p in f.parts[:-1]:
+            t_ = [i for i in t if i['name'] == p]
+            if len(t_):
+                t_ = t_[0]
+            else:
+                t_ = {
+                    'name': p,
+                    'children': []
+                }
+                t.append(t_)
+            t = t_['children']
+        t.append({
+            'name': f.parts[-1]
+        })
+
+    return tree
+
+
+def save_file(file, path: Path, totalChunks=0, filename="file"):
+    path = path.with_suffix(chunk_suffix)
     os.makedirs(path.parent, exist_ok=True)
     with open(path, 'wb+') as destination:
         for chunk in file.chunks():
@@ -51,7 +90,7 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
         with open(path.parent.parent / filename, 'wb+') as wfd:
             for i in range(totalChunks):
                 partial_path = path.parent / str(i+1)
-                partial_path = partial_path.with_suffix(suffix)
+                partial_path = partial_path.with_suffix(chunk_suffix)
 
                 with open(partial_path, 'rb+') as fd:
                     shutil.copyfileobj(fd, wfd)
