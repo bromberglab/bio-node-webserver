@@ -6,6 +6,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -13,7 +14,7 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
-from .files import handle_uploaded_file
+from .files import handle_uploaded_file, get_upload
 
 
 @login_required
@@ -54,8 +55,9 @@ class AdminCreationView(APIView):
             return Response("admin:" + pw)
 
 
-@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='get')
 class ListImagesView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         images = NodeImage.objects.all()
         images = [
@@ -68,8 +70,9 @@ class ListImagesView(APIView):
         return Response(images)
 
 
-@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='get')
 class InspectImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, name, format=None):
         try:
             image = NodeImage.objects.get(name=name)
@@ -116,12 +119,12 @@ class GoogleStorageWebhook(APIView):
         return Response("ok")
 
 
-@method_decorator((lambda x: x) if settings.DEBUG else login_required, name='put')
 class FileUploadView(APIView):
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser]
 
     def put(self, request, name=None, format=None):
-        handle_uploaded_file(request.data)
+        handle_uploaded_file(request)
 
         return Response(status=200)
 
@@ -129,3 +132,10 @@ class FileUploadView(APIView):
 class CheckAuthView(APIView):
     def get(self, request, format=None):
         return Response(request.user.is_authenticated or settings.DEBUG)
+
+
+class GetUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        return Response(get_upload(request).to_json())

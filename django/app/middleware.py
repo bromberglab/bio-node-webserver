@@ -33,8 +33,10 @@ class CorsMiddleware:
 
         # Code to be executed for each request/response after
         # the view is called.
-        response["Access-Control-Allow-Origin"] = "*"
-        response["Access-Control-Allow-Methods"] = "*"
+        response["Access-Control-Allow-Origin"] = "http://localhost:8080"
+        response["Access-Control-Allow-Methods"] = "GET, POST, PUT, OPTIONS, HEAD"
+        response["Access-Control-Allow-Headers"] = "*"
+        response["Access-Control-Allow-Credentials"] = "true"
 
         return response
 

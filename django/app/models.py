@@ -1,6 +1,7 @@
 from django.db import models
 import json
 import uuid as uu
+from django.contrib.auth.models import User
 
 
 class CronJob(models.Model):
@@ -68,3 +69,18 @@ class Job(models.Model):
     finished = models.BooleanField(default=False)
     body = models.TextField(blank=True, default='')
     status = models.CharField(max_length=32, blank=True, default='')
+
+
+class Upload(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, blank=True, null=True)
+    file_type = models.CharField(max_length=64, default='file')
+    started_at = models.DateTimeField(auto_now_add=True)
+    is_finished = models.BooleanField(default=False)
+
+    def to_json(self):
+        return {
+            'uuid': self.uuid,
+            'file_type': self.file_type,
+        }
