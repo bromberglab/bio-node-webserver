@@ -38,18 +38,26 @@ def handle_uploaded_file(request):
               relativePath / chunkNumber, totalChunks, filename)
 
 
-def list_files(type, id, relative=True):
+def list_files(type, id, relative=True, only_full_uploads=True):
     path = base_path
     path /= type
     path /= str(id)
 
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
     files = [Path(f) for f in files]
-    files = [f for f in files if not f.match('*' + chunk_suffix)]
+    if only_full_uploads:
+        files = [f for f in files if not f.match('*' + chunk_suffix)]
 
     if relative:
         files = [os.path.relpath(f, path) for f in files]
         files = [Path(f) for f in files]
+
+    return files
+
+
+def list_unfinished_chunks(type, id, relative=True):
+    files = list_files(type, id, relative=relative, only_full_uploads=False)
+    files = [f for f in files if f.match('*' + chunk_suffix)]
 
     return files
 
@@ -112,3 +120,19 @@ def get_upload(request):
         request.session['upload_pk'] = str(pk)
 
     return upload
+
+
+def finish_upload(request, upload):
+    path = base_path
+    path /= "file"
+    path /= str(upload.uuid)
+    to_path = base_path
+    to_path /= upload.file_type
+    to_path /= str(upload.uuid)
+
+    for f in list_unfinished_chunks("file", str(upload.uuid), relative=False):
+        os.remove(f)
+
+    if path != to_path:
+        os.makedirs(to_path.parent, exist_ok=True)
+        shutil.move(path, to_path)

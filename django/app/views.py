@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.views import View as RegView
 from django.http import HttpResponse, Http404
 from django.conf import settings
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
@@ -14,7 +15,8 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
-from .files import handle_uploaded_file, get_upload, file_tree
+from .files import handle_uploaded_file, get_upload, file_tree, finish_upload
+from .serializers import *
 
 
 @login_required
@@ -134,11 +136,20 @@ class CheckAuthView(APIView):
         return Response(request.user.is_authenticated or settings.DEBUG)
 
 
-class GetUploadView(APIView):
-    permission_classes = [IsAuthenticated]
+class MyUploadView(viewsets.ViewSet):
+    def retrieve(self, request):
+        upload = get_upload(request)
+        serializer = UploadSerializer(upload)
+        return Response(serializer.data)
 
-    def get(self, request, format=None):
-        return Response(get_upload(request).to_json())
+    def update(self, request):
+        upload = get_upload(request)
+        serializer = UploadSerializer(upload, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        if upload.is_finished:
+            finish_upload(request, upload)
+        return Response(serializer.data)
 
 
 class UploadTreeView(APIView):
