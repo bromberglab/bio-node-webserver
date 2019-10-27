@@ -78,9 +78,8 @@ class Upload(models.Model):
     file_type = models.CharField(max_length=64, default='file')
     started_at = models.DateTimeField(auto_now_add=True)
     is_finished = models.BooleanField(default=False)
-
-    def to_json(self):
-        return {
-            'uuid': self.uuid,
-            'file_type': self.file_type,
-        }
+    job_count = models.CharField(choices=(
+        ('auto', "Auto"),
+        ('single', "Single"),
+        ('multiple', "Multiple"),
+    ), max_length=16, default='auto')
