@@ -29,7 +29,7 @@ def handle_uploaded_file(request):
     uuid = str(upload.uuid)
     relativePath = data['relativePath']
     filename = data['filename']
-    file_type = data.get('type', 'file')
+    file_type = 'file'
 
     relativePath = Path(relativePath)
     # TODO make better ...
