@@ -32,6 +32,7 @@ api = [
     })),
     path('upload_tree/', UploadTreeView.as_view()),
     path('check_auth/', CheckAuthView.as_view()),
+    path('workflow_storage/', WorkflowStorageView.as_view()),
 ]
 
 urlpatterns = [

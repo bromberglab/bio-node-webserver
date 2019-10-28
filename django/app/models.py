@@ -86,6 +86,19 @@ class FileType(models.Model):
     name = models.CharField(max_length=64, primary_key=True)
 
 
+class Workflow(models.Model):
+    name = models.CharField(max_length=64)
+    json_string = models.TextField(default='{}')
+
+    @property
+    def json(self):
+        return json.loads(self.json_string)
+
+    @json.setter
+    def json(self, value):
+        self.json_string = json.dumps(value)
+
+
 class NodeImageTag(models.Model):
     image = models.ForeignKey(
         NodeImage, related_name='tag_refs', on_delete=models.CASCADE)
