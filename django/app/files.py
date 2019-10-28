@@ -10,6 +10,7 @@ from app.models import *
 base_path = Path(settings.DATA_PATH)
 base_path /= 'data'
 chunk_suffix = '.partial_chunk'
+chunk_suffix_done = chunk_suffix + '_done'
 
 rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
@@ -88,21 +89,25 @@ def file_tree(type, id):
 
 def save_file(file, path: Path, totalChunks=0, filename="file"):
     path = path.with_suffix(chunk_suffix)
+    done_path = path.with_suffix(chunk_suffix_done)
     os.makedirs(path.parent, exist_ok=True)
     with open(path, 'wb+') as destination:
         for chunk in file.chunks():
             destination.write(chunk)
+    done_path.touch()
 
     num_files = len([f for f in os.listdir(path.parent)])
-    if num_files == totalChunks:
+    if num_files == totalChunks * 2:
         with open(path.parent.parent / filename, 'wb+') as wfd:
             for i in range(totalChunks):
                 partial_path = path.parent / str(i+1)
                 partial_path = partial_path.with_suffix(chunk_suffix)
+                partial_path_done = partial_path.with_suffix(chunk_suffix_done)
 
                 with open(partial_path, 'rb+') as fd:
                     shutil.copyfileobj(fd, wfd)
                 os.remove(partial_path)
+                os.remove(partial_path_done)
             os.rmdir(path.parent)
 
 
