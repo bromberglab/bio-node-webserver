@@ -58,6 +58,27 @@ class AdminCreationView(APIView):
             return Response("admin:" + pw)
 
 
+class WorkflowStorageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        name = request.GET.get("name", "")
+        flow = Workflow.objects.get(name=name)
+
+        return Response(flow.json)
+
+    def post(self, request, format=None):
+        name = request.data.get("name", "")
+        try:
+            flow = Workflow.objects.get(name=name)
+        except:
+            flow = Workflow(name=name)
+        flow.json = request.data.get("data", dict())
+        flow.save()
+
+        return Response()
+
+
 class ListImagesView(APIView):
     permission_classes = [IsAuthenticated]
 
