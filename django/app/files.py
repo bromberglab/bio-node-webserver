@@ -47,7 +47,8 @@ def list_files(type, id, relative=True, only_full_uploads=True):
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
     files = [Path(f) for f in files]
     if only_full_uploads:
-        files = [f for f in files if not f.match('*' + chunk_suffix)]
+        files = [f for f in files if not (
+            f.match('*' + chunk_suffix) or f.match('*' + chunk_suffix_done))]
 
     if relative:
         files = [os.path.relpath(f, path) for f in files]
@@ -58,7 +59,8 @@ def list_files(type, id, relative=True, only_full_uploads=True):
 
 def list_unfinished_chunks(type, id, relative=True):
     files = list_files(type, id, relative=relative, only_full_uploads=False)
-    files = [f for f in files if f.match('*' + chunk_suffix)]
+    files = [f for f in files if (
+        f.match('*' + chunk_suffix) or f.match('*' + chunk_suffix_done))]
 
     return files
 
