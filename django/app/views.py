@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -157,3 +158,9 @@ class UploadTreeView(APIView):
         upload = get_upload(request)
         tree = file_tree(upload.file_type, upload.uuid)
         return Response(tree)
+
+
+class FileTypeListView(ListAPIView):
+    queryset = FileType.objects.all()
+    serializer_class = FileTypeSerializer
+    permission_classes = [IsAuthenticated]

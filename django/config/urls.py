@@ -21,6 +21,7 @@ from django.views.generic.base import RedirectView
 from django.views.generic import TemplateView
 
 api = [
+    path('file_types/', FileTypeListView.as_view()),
     path('list/', ListImagesView.as_view()),
     path('list/<path:name>/', InspectImageView.as_view()),
     path('upload/<str:name>/', FileUploadView.as_view(), name='upload'),
