@@ -61,3 +61,5 @@ def cron():
 
     for i in NodeImage.objects.exclude(name__in=valid_images):
         i.delete()
+
+    update_file_types()

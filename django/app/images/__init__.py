@@ -40,3 +40,37 @@ def get_image_tags(name):
     ][:-1]
 
     return r
+
+
+def add_file_type(set, type):
+    for t in type.split('|'):
+        if not '*' in t:
+            set.add(t)
+
+
+def update_file_types():
+    from ..models import Upload, NodeImage, FileType
+
+    file_types = set()
+
+    us = Upload.objects.filter(is_finished=True)
+    for u in us:
+        file_types.add(u.file_type)
+
+    images = NodeImage.objects.all()
+    i: NodeImage
+    for i in images:
+        for t in i.inputs:
+            add_file_type(file_types, t)
+        for t in i.outputs:
+            add_file_type(file_types, t)
+
+    file_types = list(file_types)
+
+    for i in FileType.objects.exclude(name__in=file_types):
+        i.delete()
+    for i in file_types:
+        try:
+            FileType.objects.get(name=i)
+        except:
+            FileType(name=i).save()

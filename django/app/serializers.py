@@ -8,3 +8,10 @@ class UploadSerializer(serializers.ModelSerializer):
         model = Upload
         fields = ['uuid', 'file_type', 'job_count', 'is_finished']
         read_only_fields = ['uuid']
+
+
+class FileTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FileType
+        fields = ['name']
+        read_only_fields = ['name']

@@ -6,6 +6,7 @@ import shutil
 import random
 import string
 from app.models import *
+from .images import update_file_types
 
 base_path = Path(settings.DATA_PATH)
 base_path /= 'data'
@@ -146,3 +147,5 @@ def finish_upload(request, upload):
     if path != to_path:
         os.makedirs(to_path.parent, exist_ok=True)
         shutil.move(path, to_path)
+
+    update_file_types()

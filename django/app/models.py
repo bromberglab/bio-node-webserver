@@ -39,6 +39,52 @@ class NodeImage(models.Model):
     def env(self, env):
         self.env_string = json.dumps(env)
 
+    @property
+    def inputs(self):
+        labels = self.labels
+        if labels.get('input_1', False):
+            # Multi-input mode
+            inputs = []
+            try:
+                i = 1
+                while True:
+                    inputs.append(labels['input_' + i])
+                    i += 1
+            except:  # input_k+1 does not exist, throws
+                pass
+            return inputs
+        single_input = labels.get('input', False)
+        if single_input:
+            # Single-input mode
+            return [single_input]
+        # No-input mode
+        return []
+
+    @property
+    def outputs(self):
+        labels = self.labels
+        if labels.get('output_1', False):
+            # Multi-output mode
+            outputs = []
+            try:
+                i = 1
+                while True:
+                    outputs.append(labels['output_' + i])
+                    i += 1
+            except:  # output_k+1 does not exist, throws
+                pass
+            return outputs
+        single_output = labels.get('output', False)
+        if single_output:
+            # Single-output mode
+            return [single_output]
+        # No-output mode
+        return []
+
+
+class FileType(models.Model):
+    name = models.CharField(max_length=64, primary_key=True)
+
 
 class NodeImageTag(models.Model):
     image = models.ForeignKey(
