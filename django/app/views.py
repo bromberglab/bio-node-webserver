@@ -74,6 +74,7 @@ class WorkflowStorageView(APIView):
         except:
             flow = Workflow(name=name)
         flow.json = request.data.get("data", dict())
+        flow.user = request.user
         flow.save()
 
         return Response()
