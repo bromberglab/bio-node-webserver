@@ -89,6 +89,8 @@ class FileType(models.Model):
 class Workflow(models.Model):
     name = models.CharField(max_length=64)
     json_string = models.TextField(default='{}')
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, blank=True, null=True)
 
     @property
     def json(self):
