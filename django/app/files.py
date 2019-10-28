@@ -117,7 +117,10 @@ def get_upload(request):
     pk = request.session.get('upload_pk', None)
     upload = None
     if pk is not None:
-        upload = Upload.objects.get(pk=pk)
+        try:
+            upload = Upload.objects.get(pk=pk)
+        except:
+            pass  # upload is still None
     if upload is None or upload.is_finished:
         upload = Upload()
         if request.user.is_authenticated:
