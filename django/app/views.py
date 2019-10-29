@@ -30,7 +30,7 @@ class IndexView(APIView):
         if request.headers.get('User-Agent', '').startswith('GoogleHC'):
             return Response("ok")
         if settings.DEBUG:
-            return Response("Bio Node")
+            return Response("Bio-Node")
 
         if not request.user.is_authenticated:
             return login_index_view(request)

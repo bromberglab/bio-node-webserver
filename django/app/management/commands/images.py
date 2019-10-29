@@ -15,10 +15,10 @@ def cron():
 
     for i in images:
         labels, cmd, env = get_image_meta(i)
-        if labels.get("bionode_entrypoint", False):
-            cmd = labels["bionode_entrypoint"].split(" ")
+        if labels.get("bio-node_entrypoint", False):
+            cmd = labels["bio-node_entrypoint"].split(" ")
 
-        if not labels.get('bio_node', False):
+        if not labels.get('bio-node', False):
             continue
         valid_images.append(i)
 
