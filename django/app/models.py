@@ -52,7 +52,7 @@ class NodeImage(models.Model):
             try:
                 i = 1
                 while True:
-                    inputs.append(labels['input_' + i])
+                    inputs.append(labels['input_' + str(i)])
                     i += 1
             except:  # input_k+1 does not exist, throws
                 pass
@@ -73,7 +73,7 @@ class NodeImage(models.Model):
             try:
                 i = 1
                 while True:
-                    outputs.append(labels['output_' + i])
+                    outputs.append(labels['output_' + str(i)])
                     i += 1
             except:  # output_k+1 does not exist, throws
                 pass
