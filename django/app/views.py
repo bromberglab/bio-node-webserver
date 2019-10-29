@@ -80,6 +80,17 @@ class WorkflowStorageView(APIView):
         return Response()
 
 
+class WorkflowRunView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        flow = Workflow(should_run=True, user=request.user)
+        flow.json = request.data.get("data", dict())
+        flow.save()
+
+        return Response()
+
+
 class OldListImagesView(APIView):
     permission_classes = [IsAuthenticated]
 
