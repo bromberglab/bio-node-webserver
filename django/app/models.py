@@ -146,7 +146,8 @@ class Job(models.Model):
     workflow = models.ForeignKey(
         Workflow, null=True, blank=True, on_delete=models.SET_NULL)
 
-    dependencies = models.ManyToManyField('app.Job', related_name='dependents')
+    dependencies = models.ManyToManyField(
+        'app.Job', related_name='dependents', blank=True)
 
     @property
     def json(self):
