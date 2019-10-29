@@ -5,6 +5,7 @@ import string
 from app.models import *
 from app.images import *
 from kubernetes import client, config, watch
+from django.db import transaction
 
 
 def get_status(pk):
@@ -57,6 +58,7 @@ def run_job(job):
     # configure client
     config.load_kube_config()
 
+    job.create_body()
     launch_job(job)
     job.status, pod = get_status(job.pk)
 
@@ -64,12 +66,21 @@ def run_job(job):
     job.save()
     delete_job(job.pk, pod)
 
+    job = Job.objects.get(pk=job.pk)
+    for dependent in job.dependents.all():
+        with transaction.atomic():
+            dependent.dependencies.remove(job)
+            if dependent.dependencies.count() == 0:
+                dependent.dependencies_met = True
+            dependent.save()
+
 
 def cron():
     glob = Globals().instance
 
     while True:
-        job = Job.objects.filter(scheduled=False).first()
+        job = Job.objects.filter(
+            scheduled=False, dependencies_met=True).first()
         if job is None:
             break
 

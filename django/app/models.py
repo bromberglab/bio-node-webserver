@@ -91,10 +91,14 @@ class FileType(models.Model):
 
 
 class Workflow(models.Model):
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, default=uu.uuid4)
     json_string = models.TextField(default='{}')
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, blank=True, null=True)
+    should_run = models.BooleanField(default=False)
+    scheduled = models.BooleanField(default=False)
+    finished = models.BooleanField(default=False)
+    status = models.CharField(max_length=32, blank=True, default='')
 
     @property
     def json(self):
@@ -136,7 +140,27 @@ class Job(models.Model):
     scheduled = models.BooleanField(default=False)
     finished = models.BooleanField(default=False)
     body = models.TextField(blank=True, default='')
+    json_string = models.TextField(default='{}')
     status = models.CharField(max_length=32, blank=True, default='')
+    dependencies_met = models.BooleanField(default=True)
+    workflow = models.ForeignKey(
+        Workflow, null=True, blank=True, on_delete=models.SET_NULL)
+
+    dependencies = models.ManyToManyField('app.Job', related_name='dependents')
+
+    @property
+    def json(self):
+        return json.loads(self.json_string)
+
+    @json.setter
+    def json(self, value):
+        self.json_string = json.dumps(value)
+
+    def create_body(self):
+        if self.body:
+            return
+
+        # TODO
 
 
 class Upload(models.Model):
