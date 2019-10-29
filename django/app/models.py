@@ -16,6 +16,10 @@ class NodeImage(models.Model):
     env_string = models.TextField(default='[]')
 
     @property
+    def tags(self):
+        return self.tag_refs
+
+    @property
     def labels(self):
         return json.loads(self.labels_string)
 
@@ -106,6 +110,9 @@ class NodeImageTag(models.Model):
         NodeImage, related_name='tag_refs', on_delete=models.CASCADE)
     sha = models.CharField(max_length=64)
     name = models.CharField(max_length=64, blank=True, default='')
+
+    def __str__(self):
+        return self.name if self.name else self.sha
 
 
 class Globals(models.Model):

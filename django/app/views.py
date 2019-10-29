@@ -80,7 +80,7 @@ class WorkflowStorageView(APIView):
         return Response()
 
 
-class ListImagesView(APIView):
+class OldListImagesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
@@ -93,6 +93,12 @@ class ListImagesView(APIView):
         ]
 
         return Response(images)
+
+
+class ListImagesView(ListAPIView):
+    queryset = NodeImage.objects.all()
+    serializer_class = NodeImageSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class InspectImageView(APIView):
