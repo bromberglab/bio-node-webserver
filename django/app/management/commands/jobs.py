@@ -55,16 +55,28 @@ def run_job(job):
     if job.status != rnd:
         return
 
-    # configure client
-    config.load_kube_config()
+    status = ''
+    if job.is_node:
+        # configure client
+        config.load_kube_config()
 
-    job.create_body()
-    launch_job(job)
-    job.status, pod = get_status(job.pk)
+        job.create_body()
+        launch_job(job)
+        status, pod = get_status(job.pk)
 
-    job.finished = True
-    job.save()
-    delete_job(job.pk, pod)
+        delete_job(job.pk, pod)
+    elif job.is_data_output:
+        pass  # TODO
+
+    job.status = status
+
+    with transaction.atomic():
+        job.finished = True
+        job.save()
+
+        w = job.workflow
+        if w and w.job_set.filter(finished=False).count() == 0:
+            w.finish()
 
     job = Job.objects.get(pk=job.pk)
     for dependent in job.dependents.all():
