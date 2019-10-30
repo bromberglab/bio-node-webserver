@@ -225,7 +225,7 @@ class Job(models.Model):
             if len(inp['connections']) == 0:
                 continue
             connection = inp['connections'][0]  # TODO: multiple
-            cont_input_paths.append("/input" + str(i+1))
+            cont_input_paths.append("/input/" + str(i+1))
             inp_id = connection['node']  # TODO: multiple
             inp_job = Job.objects.get(pk=inp_id)
             inp_path = 'data/job_outputs/' + inp_id
@@ -245,7 +245,7 @@ class Job(models.Model):
             cont_output_paths = []
             for i in range(len(conf['outputs'])):
                 output_paths.append(out_path + "/" + str(i+1))
-                cont_output_paths.append("/output" + str(i + 1))
+                cont_output_paths.append("/output/" + str(i + 1))
 
         self.body = json.dumps(self.create_json(
             tag,
