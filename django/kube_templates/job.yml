@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: will-be-overridden
+spec:
+  template:
+    spec:
+      volumes:
+        - name: vol
+          persistentVolumeClaim:
+            claimName: cephfs-pvc
+            readOnly: false
+      containers:
+        - name: job
+          image: bash
+          command: ["sleep", "120"]
+          volumeMounts:
+            - mountPath: /input
+              name: inputs
+              subPath: somepath
+      restartPolicy: Never
+  backoffLimit: 1

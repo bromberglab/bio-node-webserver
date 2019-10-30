@@ -2,6 +2,7 @@ from django.db import models
 import json
 import uuid as uu
 from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class CronJob(models.Model):
@@ -108,6 +109,11 @@ class Workflow(models.Model):
     def json(self, value):
         self.json_string = json.dumps(value)
 
+    def finish(self):
+        self.finished = True
+        self.status = 'finished'
+        self.save()
+
 
 class NodeImageTag(models.Model):
     image = models.ForeignKey(
@@ -157,11 +163,129 @@ class Job(models.Model):
     def json(self, value):
         self.json_string = json.dumps(value)
 
+    def create_json(
+        self,
+        tag,
+        input_paths,
+        cont_input_paths,
+        output_paths,
+        cont_output_paths
+    ):
+        import yaml
+        import os
+
+        yaml_dir = settings.BASE_DIR
+        yaml_dir = os.path.join(yaml_dir, 'kube_templates')
+        yaml_dir = os.path.join(yaml_dir, 'job.yml')
+
+        with open(yaml_dir, 'r') as f:
+            body = yaml.safe_load(f)
+
+        c = body['spec']['template']['spec']['containers'][0]
+
+        mounts = []
+        for i, host_path in enumerate(input_paths):
+            cont_path = cont_input_paths[i]
+            mounts.append({
+                'name': 'vol',
+                'mountPath': cont_path,
+                'subPath': host_path,
+                'readOnly': True,
+            })
+        for i, host_path in enumerate(output_paths):
+            cont_path = cont_output_paths[i]
+            mounts.append({
+                'name': 'vol',
+                'mountPath': cont_path,
+                'subPath': host_path,
+            })
+
+        c['volumeMounts'] = mounts
+
+        return body
+
     def create_body(self):
         if self.body:
             return
 
-        # TODO
+        conf = self.json
+
+        id = conf['id']
+
+        image = conf['data']['image']
+        tag = image['name']
+
+        out_path = 'data/job_outputs/' + id
+
+        i = 0
+        input_paths = []
+        cont_input_paths = []
+        for i, inp in enumerate(conf['inputs'].items()):
+            inp = inp[1]  # ignore key, take value
+            if len(inp['connections']) == 0:
+                continue
+            connection = inp['connections'][0]  # TODO: multiple
+            cont_input_paths.append("/input" + str(i+1))
+            inp_id = connection['node']  # TODO: multiple
+            inp_job = Job.objects.get(pk=inp_id)
+            inp_path = 'data/job_outputs/' + inp_id
+            if inp_job.is_data_input:
+                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_input_id
+            elif not inp_job.is_single_output:
+                inp_path += '/' + connection.output[2:]
+            input_paths.append(inp_path)
+        if len(cont_input_paths) == 1:
+            cont_input_paths = ['/input']
+
+        if self.is_single_output:
+            output_paths = [out_path]
+            cont_output_paths = ['/output']
+        else:
+            output_paths = []
+            cont_output_paths = []
+            for i in range(len(conf['outputs'])):
+                output_paths.append(out_path + "/" + str(i+1))
+                cont_output_paths.append("/output" + str(i + 1))
+
+        self.body = json.dumps(self.create_json(
+            tag,
+            input_paths,
+            cont_input_paths,
+            output_paths,
+            cont_output_paths
+        ))
+
+    @property
+    def is_node(self):
+        return self.json['data']['id'].startswith('node/')
+
+    @property
+    def is_data_input(self):
+        return self.json['data']['id'].startswith('from_data/')
+
+    @property
+    def is_data_output(self):
+        return self.json['data']['id'].startswith('to_data/')
+
+    @property
+    def data_input_type(self):
+        return self.json['name'][len('from_data/'):]
+
+    @property
+    def data_input_id(self):
+        return self.json['data']['data_id']
+
+    @property
+    def is_single_input(self):
+        if not self.is_node:
+            return True
+        return len(self.json['inputs']) <= 1
+
+    @property
+    def is_single_output(self):
+        if not self.is_node:
+            return True
+        return len(self.json['outputs']) <= 1
 
 
 class Upload(models.Model):
