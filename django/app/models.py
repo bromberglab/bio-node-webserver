@@ -3,6 +3,7 @@ import json
 import uuid as uu
 from django.contrib.auth.models import User
 from django.conf import settings
+from typing import Union
 
 
 class CronJob(models.Model):
@@ -232,7 +233,7 @@ class Job(models.Model):
             inp_job = Job.objects.get(pk=inp_id)
             inp_path = 'data/job_outputs/' + inp_id
             if inp_job.is_data_input:
-                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_id
+                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_name
             elif not inp_job.is_single_output:
                 inp_path += '/' + connection.output[2:]
             input_paths.append(inp_path)
@@ -274,12 +275,30 @@ class Job(models.Model):
         return self.json['name'][len('from_data/'):]
 
     @property
+    def data_type(self):
+        if self.is_data_input:
+            return self.data_input_type
+
+        return self.data_output_type
+
+    @property
     def data_output_type(self):
         return self.json['name'][len('to_data/'):]
 
     @property
+    def data_name(self):
+        return self.json['data']['data_name']
+
+    @property
     def data_id(self):
-        return self.json['data']['data_id']
+        data_name = self.data_name
+        upload = Upload.for_name(data_name)
+
+        if not upload:
+            upload = Upload(file_type=self.data_type,
+                            is_finished=True, name=data_name)
+            upload.save()
+        return upload.uuid
 
     @property
     def is_single_input(self):
@@ -296,13 +315,25 @@ class Job(models.Model):
 
 class Upload(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
+    name = models.CharField(max_length=64, blank=True, default='')
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, blank=True, null=True)
     file_type = models.CharField(max_length=64, default='file')
     started_at = models.DateTimeField(auto_now_add=True)
     is_finished = models.BooleanField(default=False)
+    is_newest = models.BooleanField(default=True)
     job_count = models.CharField(choices=(
         ('auto', "Auto"),
         ('single', "Single"),
         ('multiple', "Multiple"),
     ), max_length=16, default='auto')
+
+    @property
+    def display_name(self):
+        if self.name:
+            return self.name
+        return str(self.uuid)
+
+    @classmethod
+    def for_name(cls, name) -> Union['Upload', None]:
+        return cls.objects.filter(name=name, is_newest=True).first()

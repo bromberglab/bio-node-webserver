@@ -134,6 +134,10 @@ def get_upload(request):
 
 
 def finish_upload(request, upload):
+    for u in Upload.objects.filter(name=upload.name, is_newest=True):
+        u.is_newest = False
+        u.save()
+
     path = base_path
     path /= "file"
     path /= str(upload.uuid)
