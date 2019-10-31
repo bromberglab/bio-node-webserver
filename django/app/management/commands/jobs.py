@@ -31,7 +31,7 @@ def get_status(pk):
 def create_output(job):
     conf = job.json
     data_output_type = job.data_output_type
-    data_id = job.data_id
+    data_id = str(job.data_id)
     out_path = 'data/' + data_output_type + '/' + data_id
 
     if len(conf['inputs'].items()) != 1:
@@ -48,7 +48,8 @@ def create_output(job):
         inp_job = Job.objects.get(pk=inp_id)
         inp_path = 'data/job_outputs/' + inp_id
         if inp_job.is_data_input:
-            inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_id
+            inp_path = 'data/' + inp_job.data_input_type + \
+                '/' + str(inp_job.data_id)
         elif not inp_job.is_single_output:
             inp_path += '/' + connection.output[2:]
 

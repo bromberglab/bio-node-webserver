@@ -12,7 +12,7 @@ def should_run(name, seconds_interval):
         CronJob(name=name, last_ran=now()).save()
         return True
 
-    if (now() - c.last_ran).total_seconds() >= seconds_interval - 1:
+    if (now() - c.last_ran).total_seconds() >= seconds_interval - 0.5:
         c.last_ran = now()
         c.save()
         return True
@@ -36,15 +36,15 @@ def cron_worker():
     minutes = 60 * seconds
     hours = 60 * minutes
     days = 24 * hours
-    if not should_run("main", 5 * seconds):
+    if not should_run("main", 1 * seconds):
         return
 
     tasks = [
         # CronTask("some_function", 10 * minutes, some_function),
         # ...
         CronTask("images_cron", 30 * seconds, images_cron),
-        CronTask("workflows_cron", 5 * seconds, workflows_cron),
-        CronTask("jobs_cron", 5 * seconds, jobs_cron),
+        CronTask("workflows_cron", 2 * seconds, workflows_cron),
+        CronTask("jobs_cron", 2 * seconds, jobs_cron),
     ]
 
     for task in tasks:
