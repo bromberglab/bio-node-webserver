@@ -13,7 +13,6 @@ spec:
       containers:
         - name: job
           image: bash
-          command: ["sleep", "120"]
           volumeMounts:
             - mountPath: /input
               name: inputs

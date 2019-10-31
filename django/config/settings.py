@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -24,6 +23,11 @@ SECRET_KEY = 'un8&muaf=dz@9df^lgdu-*iu_&q+9#mcbmbs0^)l89^9w$3p#^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = BASE_DIR != '/app'
+
+BASE_BASE_DIR = os.path.dirname(BASE_DIR)
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(
+    BASE_BASE_DIR if DEBUG else BASE_DIR, 'webservice-key.json')
 
 ALLOWED_HOSTS = ['*']
 
