@@ -275,7 +275,7 @@ class Job(models.Model):
 
     @property
     def data_output_type(self):
-        return self.json['name'][len('from_data/'):]
+        return self.json['name'][len('to_data/'):]
 
     @property
     def data_id(self):
