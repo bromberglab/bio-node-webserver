@@ -6,8 +6,9 @@ from .models import *
 class UploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Upload
-        fields = ['uuid', 'file_type', 'job_count', 'is_finished']
-        read_only_fields = ['uuid']
+        fields = ['uuid', 'file_type', 'job_count',
+                  'is_finished', 'name', 'display_name']
+        read_only_fields = ['uuid', 'display_name']
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
