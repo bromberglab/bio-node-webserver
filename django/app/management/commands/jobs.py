@@ -6,6 +6,7 @@ from app.models import *
 from app.images import *
 from kubernetes import client, config, watch
 from django.db import transaction
+from app.files import copy_folder
 
 
 def get_status(pk):
@@ -25,6 +26,33 @@ def get_status(pk):
     w.stop()
 
     return status, pod
+
+
+def create_output(job):
+    conf = job.json
+    data_output_type = job.data_output_type
+    data_id = job.data_id
+    out_path = 'data/' + data_output_type + '/' + data_id
+
+    if len(conf['inputs'].items()) != 1:
+        return  # misconfigured, ignore.
+
+    # TODO: Refactor duplicate code
+    for i, inp in enumerate(conf['inputs'].items()):
+        inp = inp[1]  # ignore key, take value
+        if len(inp['connections']) == 0:
+            return   # misconfigured, ignore.
+        connection = inp['connections'][0]  # TODO: multiple?
+
+        inp_id = connection['node']  # TODO: multiple
+        inp_job = Job.objects.get(pk=inp_id)
+        inp_path = 'data/job_outputs/' + inp_id
+        if inp_job.is_data_input:
+            inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_id
+        elif not inp_job.is_single_output:
+            inp_path += '/' + connection.output[2:]
+
+    copy_folder(inp_path, out_path)
 
 
 def launch_job(job):
@@ -66,7 +94,7 @@ def run_job(job):
 
         delete_job(job.pk, pod)
     elif job.is_data_output:
-        pass  # TODO
+        create_output(job)
 
     job.status = status
 

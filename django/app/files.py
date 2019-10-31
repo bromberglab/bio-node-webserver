@@ -149,3 +149,25 @@ def finish_upload(request, upload):
         shutil.move(path, to_path)
 
     update_file_types()
+
+
+def copy_folder(inp_path, out_path):
+    if '..' in inp_path:
+        return
+    if '..' in out_path:
+        return
+
+    path = Path(settings.DATA_PATH)
+    for p in inp_path.split('/'):
+        path /= p
+    inp_path = path
+    path = Path(settings.DATA_PATH)
+    for p in out_path.split('/'):
+        path /= p
+    out_path = path
+
+    os.makedirs(inp_path, exist_ok=True)
+    os.makedirs(out_path, exist_ok=True)
+    shutil.rmtree(out_path)
+
+    shutil.copytree(inp_path, out_path)
