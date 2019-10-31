@@ -165,7 +165,7 @@ class Job(models.Model):
 
     def create_json(
         self,
-        tag,
+        image,
         input_paths,
         cont_input_paths,
         output_paths,
@@ -182,6 +182,8 @@ class Job(models.Model):
             body = yaml.safe_load(f)
 
         c = body['spec']['template']['spec']['containers'][0]
+
+        c['image'] = image
 
         mounts = []
         for i, host_path in enumerate(input_paths):
@@ -224,7 +226,7 @@ class Job(models.Model):
             inp = inp[1]  # ignore key, take value
             if len(inp['connections']) == 0:
                 continue
-            connection = inp['connections'][0]  # TODO: multiple
+            connection = inp['connections'][0]  # TODO: multiple?
             cont_input_paths.append("/input/" + str(i+1))
             inp_id = connection['node']  # TODO: multiple
             inp_job = Job.objects.get(pk=inp_id)
