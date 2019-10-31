@@ -88,7 +88,7 @@ spec:
           args:
             [
               "-c",
-              "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py runserver --insecure 0.0.0.0:8080",
+              "/app/setup.sh; python /app/manage.py migrate; daphne config.asgi:application -b 0.0.0.0 -p 8080",
             ]
           envFrom:
             - secretRef:

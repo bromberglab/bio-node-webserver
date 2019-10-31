@@ -52,12 +52,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app.apps.AppConfig',
     'corsheaders',
+    'channels',
+    'django_eventstream',
 ]
+
+ASGI_APPLICATION = 'config.routing.application'
 
 DATA_PATH = os.path.join(BASE_DIR, 'volume') if DEBUG else '/volume'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django_grip.GripMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
