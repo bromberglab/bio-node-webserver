@@ -232,7 +232,7 @@ class Job(models.Model):
             inp_job = Job.objects.get(pk=inp_id)
             inp_path = 'data/job_outputs/' + inp_id
             if inp_job.is_data_input:
-                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_input_id
+                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_id
             elif not inp_job.is_single_output:
                 inp_path += '/' + connection.output[2:]
             input_paths.append(inp_path)
@@ -274,7 +274,11 @@ class Job(models.Model):
         return self.json['name'][len('from_data/'):]
 
     @property
-    def data_input_id(self):
+    def data_output_type(self):
+        return self.json['name'][len('from_data/'):]
+
+    @property
+    def data_id(self):
         return self.json['data']['data_id']
 
     @property
