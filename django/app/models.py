@@ -233,7 +233,8 @@ class Job(models.Model):
             inp_job = Job.objects.get(pk=inp_id)
             inp_path = 'data/job_outputs/' + inp_id
             if inp_job.is_data_input:
-                inp_path = 'data/' + inp_job.data_input_type + '/' + inp_job.data_id
+                inp_path = 'data/' + inp_job.data_input_type + \
+                    '/' + str(inp_job.data_id)
             elif not inp_job.is_single_output:
                 inp_path += '/' + connection.output[2:]
             input_paths.append(inp_path)
