@@ -169,7 +169,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/static'
+STATIC_ROOT = os.path.join(
+    BASE_DIR, 'staticroot') if DEBUG else '/var/www/static'
+
+DOWNLOADS_DIR = os.path.join(STATIC_ROOT, 'downloads')
+DOWNLOADS_URL = STATIC_URL + 'downloads/'
+
+os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
