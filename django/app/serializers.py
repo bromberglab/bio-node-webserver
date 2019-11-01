@@ -32,3 +32,10 @@ class NodeImageSerializer(serializers.ModelSerializer):
         model = NodeImage
         read_only_fields = fields = [
             'name', 'labels', 'cmd', 'env', 'inputs', 'outputs', 'tags']
+
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        read_only_fields = fields = ['uuid', 'scheduled', 'finished',
+                                     'status', 'dependencies_met', 'old_id']

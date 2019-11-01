@@ -4,6 +4,7 @@ import uuid as uu
 from django.contrib.auth.models import User
 from django.conf import settings
 from typing import Union
+from app.events import send_event
 
 
 class CronJob(models.Model):
@@ -302,6 +303,10 @@ class Job(models.Model):
         return upload.uuid
 
     @property
+    def old_id(self):
+        return self.json['old_id']
+
+    @property
     def is_single_input(self):
         if not self.is_node:
             return True
@@ -312,6 +317,16 @@ class Job(models.Model):
         if not self.is_node:
             return True
         return len(self.json['outputs']) <= 1
+
+    def finish(self):
+        from app.serializers import JobSerializer
+
+        self.finished = True
+        self.save()
+
+        data = JobSerializer(self).data
+        data['type'] = 'job'
+        send_event('status-change', data)
 
 
 class Upload(models.Model):

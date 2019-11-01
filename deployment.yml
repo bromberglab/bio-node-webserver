@@ -49,6 +49,13 @@ data:
         }
     }
 ---
+apiVersion: cloud.google.com/v1beta1
+kind: BackendConfig
+metadata:
+  name: backend-config
+spec:
+  timeoutSec: 86400
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -146,6 +153,8 @@ metadata:
   name: server-service
   labels:
     app: server
+  annotations:
+    beta.cloud.google.com/backend-config: '{"ports": {"443" :"backend-config","80" :"backend-config"}}'
 spec:
   ports:
     - port: 80

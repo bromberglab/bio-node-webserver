@@ -23,6 +23,7 @@ def prepare_workflow(workflow):
     for key, value in body['nodes'].items():
         i = id_for(key, workflow_ids)
         value['id'] = i
+        value['old_id'] = key
         for _, v in value['inputs'].items():
             v = v['connections']
             for c in v:
