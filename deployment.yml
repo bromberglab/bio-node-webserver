@@ -38,6 +38,10 @@ data:
                 alias   /var/www/dist;
                 index  index.html index.htm;
             }
+
+            location /static {
+                alias   /var/www/static;
+            }
             location / {
                 proxy_set_header       X-Forwarded-Proto $http_x_forwarded_proto;
                 proxy_set_header       Host $host;
