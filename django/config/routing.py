@@ -6,9 +6,9 @@ import django_eventstream
 
 application = ProtocolTypeRouter({
     'http': URLRouter([
-        url(r'^events/', AuthMiddlewareStack(
+        url(r'^api/events/', AuthMiddlewareStack(
             URLRouter(django_eventstream.routing.urlpatterns)
-        ), {'channels': ['test']}),
+        ), {'channels': ['event']}),
         url(r'', AsgiHandler),
     ]
     ),

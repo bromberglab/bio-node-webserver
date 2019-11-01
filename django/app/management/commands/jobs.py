@@ -100,8 +100,7 @@ def run_job(job):
     job.status = status
 
     with transaction.atomic():
-        job.finished = True
-        job.save()
+        job.finish()
 
         w = job.workflow
         if w and w.job_set.filter(finished=False).count() == 0:
