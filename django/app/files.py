@@ -7,6 +7,7 @@ import random
 import string
 from app.models import *
 from .images import update_file_types
+import subprocess
 
 base_path = Path(settings.DATA_PATH)
 base_path /= 'data'
@@ -175,3 +176,22 @@ def copy_folder(inp_path, out_path):
     shutil.rmtree(out_path)
 
     shutil.copytree(inp_path, out_path)
+
+
+def make_download_link(rel_path, name='download'):
+    import random
+    import string
+    from_path = base_path
+    for p in rel_path.split('/'):
+        from_path /= p
+
+    to_path = settings.DOWNLOADS_DIR
+    folder = ''.join(random.choices(
+        string.ascii_lowercase + string.digits, k=10))
+
+    os.makedirs(os.path.join(to_path, folder), exist_ok=True)
+    to_file = os.path.join(to_path, folder, name + '.tar.gz')
+
+    subprocess.run(["tar", '-czvf', to_file, '-C', str(from_path), '.'])
+
+    return settings.DOWNLOADS_URL + folder + '/' + name + '.tar.gz'

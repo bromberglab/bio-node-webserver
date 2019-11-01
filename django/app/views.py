@@ -203,3 +203,15 @@ class FileTypeListView(ListAPIView):
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
     permission_classes = [IsAuthenticated]
+
+
+class CreateDownload(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        name = request.data.get('name', '')
+        path = Upload.for_name(name).make_download_link()
+
+        return Response({
+            'url': request.build_absolute_uri(path)
+        })

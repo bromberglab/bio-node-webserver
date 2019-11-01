@@ -353,3 +353,12 @@ class Upload(models.Model):
     @classmethod
     def for_name(cls, name) -> Union['Upload', None]:
         return cls.objects.filter(name=name, is_newest=True).first()
+
+    def make_download_link(self):
+        from app.files import make_download_link
+
+        path = self.file_type + '/' + str(self.uuid)
+        return make_download_link(rel_path=path, name=self.name if self.name else 'download')
+
+    def __str__(self):
+        return self.name if self.name else str(self.uuid)
