@@ -319,11 +319,13 @@ class Job(models.Model):
         return len(self.json['outputs']) <= 1
 
     def finish(self):
-        from app.serializers import JobSerializer
-
         self.finished = True
         self.save()
 
+        self.status_change()
+
+    def status_change(self):
+        from app.serializers import JobSerializer
         data = JobSerializer(self).data
         data['type'] = 'job'
         send_event('status-change', data)

@@ -84,6 +84,7 @@ def run_job(job):
     if job.status != rnd:
         return
 
+    job.status_change()
     status = ''
     if job.is_node:
         # configure client
