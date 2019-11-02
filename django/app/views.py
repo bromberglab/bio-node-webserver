@@ -216,3 +216,18 @@ class CreateDownload(APIView):
         return Response({
             'url': request.build_absolute_uri(path)
         })
+
+
+class NamesForTypeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        f_type = request.GET.get('type', 'file')
+
+        names = []
+
+        for u in Upload.objects.filter(file_type=f_type, is_newest=True):
+            if u.name:
+                names.append(u.name)
+
+        return Response(names)
