@@ -362,3 +362,8 @@ class Upload(models.Model):
 
     def __str__(self):
         return self.name if self.name else str(self.uuid)
+
+
+class Download(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    path = models.TextField(default="")

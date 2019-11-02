@@ -31,6 +31,7 @@ def cron_worker():
     from .images import cron as images_cron
     from .jobs import cron as jobs_cron
     from .workflows import cron as workflows_cron
+    from .downloads import cron as downloads_cron
 
     seconds = 1
     minutes = 60 * seconds
@@ -45,6 +46,7 @@ def cron_worker():
         CronTask("images_cron", 30 * seconds, images_cron),
         CronTask("workflows_cron", 2 * seconds, workflows_cron),
         CronTask("jobs_cron", 2 * seconds, jobs_cron),
+        CronTask("downloads_cron", 15 * minutes, downloads_cron),
     ]
 
     for task in tasks:

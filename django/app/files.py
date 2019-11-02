@@ -194,4 +194,6 @@ def make_download_link(rel_path, name='download'):
 
     subprocess.run(["tar", '-czvf', to_file, '-C', str(from_path), '.'])
 
+    Download(path=to_file).save()
+
     return settings.DOWNLOADS_URL + folder + '/' + name + '.tar.gz'
