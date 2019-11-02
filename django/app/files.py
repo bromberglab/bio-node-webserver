@@ -135,7 +135,10 @@ def get_upload(request):
 
 
 def finish_upload(request, upload):
-    for u in Upload.objects.filter(name=upload.name, is_newest=True).exclude(pk=upload.pk):
+    for u in Upload.objects.filter(
+            name=upload.name,
+            is_newest=True,
+            file_type=upload.file_type).exclude(pk=upload.pk):
         u.is_newest = False
         u.save()
 

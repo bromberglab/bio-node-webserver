@@ -294,7 +294,7 @@ class Job(models.Model):
     @property
     def data_id(self):
         data_name = self.data_name
-        upload = Upload.for_name(data_name)
+        upload = Upload.for_name(data_name, self.data_type)
 
         if not upload:
             upload = Upload(file_type=self.data_type,
@@ -351,8 +351,8 @@ class Upload(models.Model):
         return str(self.uuid)
 
     @classmethod
-    def for_name(cls, name) -> Union['Upload', None]:
-        return cls.objects.filter(name=name, is_newest=True).first()
+    def for_name(cls, name, type='file') -> Union['Upload', None]:
+        return cls.objects.filter(name=name, is_newest=True, file_type=type).first()
 
     def make_download_link(self):
         from app.files import make_download_link

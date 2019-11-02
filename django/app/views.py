@@ -210,7 +210,8 @@ class CreateDownload(APIView):
 
     def post(self, request, format=None):
         name = request.data.get('name', '')
-        path = Upload.for_name(name).make_download_link()
+        f_type = request.data.get('type', '')
+        path = Upload.for_name(name, f_type).make_download_link()
 
         return Response({
             'url': request.build_absolute_uri(path)
