@@ -195,7 +195,7 @@ class MyUploadView(viewsets.ViewSet):
 class UploadTreeView(APIView):
     def get(self, request, format=None):
         upload = get_upload(request)
-        tree = file_tree(upload.file_type, upload.uuid)
+        tree = file_tree('file', upload.uuid)
         return Response(tree)
 
 
