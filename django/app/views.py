@@ -187,9 +187,12 @@ class MyUploadView(viewsets.ViewSet):
         serializer = UploadSerializer(upload, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        if upload.is_finished:
-            finish_upload(request, upload)
         return Response(serializer.data)
+
+
+class FinishUploadView(APIView):
+    def post(self, request, format=None):
+        return Response(finish_upload(request, get_upload(request)))
 
 
 class UploadTreeView(APIView):
@@ -231,3 +234,12 @@ class NamesForTypeView(APIView):
                 names.append(u.name)
 
         return Response(names)
+
+
+class CookieInfoView(APIView):
+    def get(self, request, format=None):
+        return Response(request.session.get('show_cookie_info', True))
+
+    def post(self, request, format=None):
+        request.session['show_cookie_info'] = False
+        return Response(request.session.get('show_cookie_info', True))

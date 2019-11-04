@@ -8,7 +8,7 @@ class UploadSerializer(serializers.ModelSerializer):
         model = Upload
         fields = ['uuid', 'file_type', 'job_count',
                   'is_finished', 'name', 'display_name']
-        read_only_fields = ['uuid', 'display_name']
+        read_only_fields = ['uuid', 'display_name', 'is_finished']
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
