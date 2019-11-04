@@ -32,6 +32,7 @@ api = [
     })),
     path('upload_tree/', UploadTreeView.as_view()),
     path('finish_upload/', FinishUploadView.as_view()),
+    path('finalize_upload/', FinalizeUploadView.as_view()),
     path('check_auth/', CheckAuthView.as_view()),
     path('workflow_storage/', WorkflowStorageView.as_view()),
     path('workflow_run/', WorkflowRunView.as_view()),
