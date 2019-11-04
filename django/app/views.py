@@ -16,7 +16,7 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
-from .files import handle_uploaded_file, get_upload, file_tree, finish_upload
+from .files import handle_uploaded_file, get_upload, file_tree, finish_upload, finalize_upload
 from .serializers import *
 
 
@@ -193,6 +193,11 @@ class MyUploadView(viewsets.ViewSet):
 class FinishUploadView(APIView):
     def post(self, request, format=None):
         return Response(finish_upload(request, get_upload(request)))
+
+
+class FinalizeUploadView(APIView):
+    def post(self, request, format=None):
+        return Response(finalize_upload(request, get_upload(request)))
 
 
 class UploadTreeView(APIView):

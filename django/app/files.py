@@ -281,6 +281,10 @@ def finish_upload(request, upload):
         }
 
 
+def finalize_upload(request, upload):
+    return {}
+
+
 def copy_folder(inp_path, out_path):
     if '..' in inp_path:
         return
