@@ -396,7 +396,7 @@ def finalize_upload(request, upload):
                             uuid,
                             file,
                             type,
-                            prefix,
+                            job=prefix,
                             copy=(t != checkboxes[i][-1]),
                         )
                     break
@@ -404,7 +404,14 @@ def finalize_upload(request, upload):
         for i in range(len_suffixes):
             for t in checkboxes[i]:
                 type = types[t]
-                move_file(path, uuid, file, type, prefix, copy=(t != checkboxes[i][-1]))
+                move_file(
+                    path / dir,
+                    uuid,
+                    suffixes[i],
+                    type,
+                    job=dir,
+                    copy=(t != checkboxes[i][-1]),
+                )
 
     shutil.rmtree(base_path / "file" / (uuid + "_"))
     upload.is_finished = True
