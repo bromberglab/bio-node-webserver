@@ -18,6 +18,8 @@ chunk_suffix_done = chunk_suffix + '_done'
 
 rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
+delimiters = '([,_.\s-])'
+
 
 def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(src, *args, **kwargs):
     src = str(src)
@@ -54,10 +56,11 @@ def handle_uploaded_file(request):
               relativePath / chunkNumber, totalChunks, filename)
 
 
-def list_all_files(type, id, relative=True, only_full_uploads=True):
-    path = base_path
-    path /= type
-    path /= str(id)
+def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=True):
+    if path is None:
+        path = base_path
+        path /= type
+        path /= str(id)
 
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
     files = [Path(f) for f in files]
@@ -81,7 +84,7 @@ def matches_any_suffix(f, suffixes):
 
 
 def list_cleanup_files(type, id, relative=True):
-    files = list_all_files(type, id, relative=relative,
+    files = list_all_files(None, type, id, relative=relative,
                            only_full_uploads=False)
 
     suffixes = [
@@ -118,7 +121,7 @@ def to_file_tree(files):
 
 
 def file_tree(type, id):
-    files = list_all_files(type, id)
+    files = list_all_files(None, type, id)
 
     return to_file_tree(files)
 
@@ -260,7 +263,7 @@ def get_prefixes(files):
 
     while len(unmatched):
         file = unmatched[0]
-        splits = re.split('([,_.\s-])', file)
+        splits = re.split(delimiters, file)
 
         prefix = find_prefix(splits, files)
 
@@ -304,10 +307,34 @@ def finish_upload_(request, upload):
         for f in prefixes[prefix]:
             suffixes.append(f[len(prefix):])
             files.append(Path('<job>' + f[len(prefix):]))
+
+        suffixes = [re.sub('^' + delimiters + '+', '', s) for s in suffixes]
         return to_file_tree(files), files, suffixes, prefixes, False
 
-    else:
-        return [], [], [], [], 'Format not supported right now.'
+    if len(files) == 0 and len(dirs) > 0:
+        found = 0, None
+        for d in dirs:
+            files = list_all_files(path / d)
+            if len(files) > found[0]:
+                found = len(files), files
+
+        files = found[1]
+        json_dump = json.dumps([str(f) for f in files])
+        dirs = list(filter(
+            lambda i: json.dumps(
+                [str(f) for f in list_all_files(
+                    path / i
+                )]
+            ) == json_dump, dirs
+        ))
+
+        suffixes = [str(f).split('/')[-1] for f in files]
+        files = [
+            '<job>' / f for f in files
+        ]
+        return to_file_tree(files), files, suffixes, dirs, False
+
+    return [], [], [], [], 'Format not supported right now.'
 
 
 def finish_upload(request, upload):
@@ -352,9 +379,6 @@ def finalize_upload(request, upload):
     path = base_path / "file" / (uuid + '_')
     move(base_path / "file" / uuid, path)
 
-    # # redundant
-    # for t in types:
-    #     os.makedirs(base_path / t / uuid)
     for prefix, files in prefixes.items():
         for file in files:
             for i in range(len_suffixes):
