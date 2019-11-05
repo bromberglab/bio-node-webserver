@@ -18,6 +18,7 @@ chunk_suffix_done = chunk_suffix + '_done'
 
 rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
+# valid delimiters to separate job-name from file-name. i.e. job1-file.txt, job1_file.txt, etc.
 delimiters = '([,_.\s-])'
 
 
@@ -270,10 +271,18 @@ def get_prefixes(files):
         matched[prefix] = []
         for i in filter_start(unmatched, prefix):
             matched[prefix].append(i)
-            if i in unmatched:
-                unmatched.remove(i)
+            unmatched.remove(i)
 
     return matched
+
+
+def unwrap_path(path):
+    dirs = list_dirs(path)
+    files = list_files(path)
+
+    if len(dirs) == 1 and len(files) == 0:
+        return unwrap_path(path / dirs[0])
+    return path
 
 
 def finish_upload_(request, upload):
@@ -285,14 +294,9 @@ def finish_upload_(request, upload):
     for f in list_cleanup_files("file", str(upload.uuid), relative=False):
         os.remove(f)
 
+    path = unwrap_path(path)
     dirs = list_dirs(path)
     files = list_files(path)
-
-    if len(dirs) == 1 and len(files) == 0:
-        move(path / dirs[0], base_path / 'file' / (uuid + '_'))
-        shutil.rmtree(path)
-        move(base_path / 'file' / (uuid + '_'), path)
-        return finish_upload_(request, upload)
 
     if len(files) > 0 and len(dirs) == 0:
         prefixes = get_prefixes(files)
@@ -309,7 +313,7 @@ def finish_upload_(request, upload):
             files.append(Path('<job>' + f[len(prefix):]))
 
         suffixes = [re.sub('^' + delimiters + '+', '', s) for s in suffixes]
-        return to_file_tree(files), files, suffixes, prefixes, False
+        return to_file_tree(files), files, suffixes, [], prefixes, False
 
     if len(files) == 0 and len(dirs) > 0:
         found = 0, None
@@ -329,16 +333,16 @@ def finish_upload_(request, upload):
         ))
 
         suffixes = [str(f).split('/')[-1] for f in files]
-        files = [
+        return to_file_tree([
             '<job>' / f for f in files
-        ]
-        return to_file_tree(files), files, suffixes, dirs, False
+        ]), files, suffixes, dirs, {}, False
 
-    return [], [], [], [], 'Format not supported right now.'
+    return [], [], [], [], [], 'Format not supported right now.'
 
 
 def finish_upload(request, upload):
-    tree, files, suffixes, prefixes, error = finish_upload_(request, upload)
+    tree, files, suffixes, dirs, prefixes, error = finish_upload_(
+        request, upload)
 
     return {
         'tree': to_file_tree(files),
@@ -364,7 +368,8 @@ def move_file(path, upload_id, file, type, job, copy=False):
 def finalize_upload(request, upload):
     uuid = str(upload.uuid)
     # avoid name duplicate if 'file' is part of the types
-    tree, files, suffixes, prefixes, error = finish_upload_(request, upload)
+    tree, files, suffixes, dirs, prefixes, error = finish_upload_(
+        request, upload)
 
     suffixes.sort(key=lambda i: -len(i))
 
@@ -378,6 +383,7 @@ def finalize_upload(request, upload):
 
     path = base_path / "file" / (uuid + '_')
     move(base_path / "file" / uuid, path)
+    path = unwrap_path(path)
 
     for prefix, files in prefixes.items():
         for file in files:
@@ -388,6 +394,12 @@ def finalize_upload(request, upload):
                         move_file(path, uuid, file, type, prefix,
                                   copy=(t != checkboxes[i][-1]))
                     break
+    for dir in dirs:
+        for i in range(len_suffixes):
+            for t in checkboxes[i]:
+                type = types[t]
+                move_file(path, uuid, file, type, prefix,
+                            copy=(t != checkboxes[i][-1]))
 
     shutil.rmtree(path)
     upload.is_finished = True
