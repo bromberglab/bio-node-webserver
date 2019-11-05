@@ -4,6 +4,7 @@ from django.conf import settings
 import os
 import re
 import shutil
+from shutil import move as stupid_broken_move
 import random
 import string
 from app.models import *
@@ -16,6 +17,17 @@ chunk_suffix = '.partial_chunk'
 chunk_suffix_done = chunk_suffix + '_done'
 
 rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+
+
+def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(src, *args, **kwargs):
+    src = str(src)
+    if src[-1] == '/':
+        src = src[:-1]
+    return stupid_broken_move(src, *args, **kwargs)
+
+
+# shorter alias
+move = fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has
 
 
 def _handle_uploaded_file(request):
@@ -204,7 +216,7 @@ def finalize_upload(request, upload):
 
     if path != to_path:
         os.makedirs(to_path.parent, exist_ok=True)
-        shutil.move(path, to_path)
+        move(path, to_path)
 
     update_file_types()
 
@@ -257,9 +269,9 @@ def finish_upload_(request, upload):
     files = list_files(path)
 
     if len(dirs) == 1 and len(files) == 0:
-        shutil.move(path / dirs[0], base_path / 'file' / (uuid + '_'))
+        move(path / dirs[0], base_path / 'file' / (uuid + '_'))
         shutil.rmtree(path)
-        shutil.move(base_path / 'file' / (uuid + '_'), path)
+        move(base_path / 'file' / (uuid + '_'), path)
         return finish_upload_(request, upload)
 
     if len(files) > 0 and len(dirs) == 0:
@@ -302,7 +314,7 @@ def move_file(path, upload_id, file, type, job, copy=False):
     if copy:
         shutil.copy(from_path, to_path)
     else:
-        shutil.move(from_path, to_path)
+        move(from_path, to_path)
 
 
 def finalize_upload(request, upload):
@@ -321,7 +333,7 @@ def finalize_upload(request, upload):
     len_types = len(types)
 
     path = base_path / "file" / (uuid + '_')
-    shutil.move(base_path / "file" / uuid, path)
+    move(base_path / "file" / uuid, path)
 
     # # redundant
     # for t in types:
