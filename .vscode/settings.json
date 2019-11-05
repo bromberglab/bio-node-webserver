@@ -1,8 +1,10 @@
 {
-    "python.pythonPath": ".pyenv/bin/python",
-    "cSpell.words": [
-        "kubernetes",
-        "shutil"
-    ],
-    "python.formatting.provider": "black"
+  "python.pythonPath": ".pyenv/bin/python",
+  "cSpell.words": ["kubernetes", "shutil"],
+  "python.formatting.provider": "black",
+
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false
+  }
 }
