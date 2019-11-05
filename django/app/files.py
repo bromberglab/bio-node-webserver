@@ -275,15 +275,19 @@ def finish_upload_(request, upload):
         for f in prefixes[prefix]:
             suffixes.append(f[len(prefix):])
             files.append(Path('<job>' + f[len(prefix):]))
-        return to_file_tree(files), files, suffixes, prefixes
+        return to_file_tree(files), files, suffixes, prefixes, False
+
+    else:
+        return [], [], [], [], 'Format not supported right now.'
 
 
 def finish_upload(request, upload):
-    tree, files, suffixes, prefixes = finish_upload_(request, upload)
+    tree, files, suffixes, prefixes, error = finish_upload_(request, upload)
 
     return {
         'tree': to_file_tree(files),
-        'suffixes': suffixes
+        'suffixes': suffixes,
+        'error': error
     }
 
 
@@ -304,7 +308,7 @@ def move_file(path, upload_id, file, type, job, copy=False):
 def finalize_upload(request, upload):
     uuid = str(upload.uuid)
     # avoid name duplicate if 'file' is part of the types
-    tree, files, suffixes, prefixes = finish_upload_(request, upload)
+    tree, files, suffixes, prefixes, error = finish_upload_(request, upload)
 
     suffixes.sort(key=lambda i: -len(i))
 
