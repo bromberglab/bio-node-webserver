@@ -72,11 +72,24 @@ def list_all_files(type, id, relative=True, only_full_uploads=True):
     return files
 
 
-def list_unfinished_chunks(type, id, relative=True):
+def matches_any_suffix(f, suffixes):
+    for s in suffixes:
+        if f.match('*' + s):
+            return True
+
+    return False
+
+
+def list_cleanup_files(type, id, relative=True):
     files = list_all_files(type, id, relative=relative,
                            only_full_uploads=False)
-    files = [f for f in files if (
-        f.match('*' + chunk_suffix) or f.match('*' + chunk_suffix_done))]
+
+    suffixes = [
+        chunk_suffix,
+        chunk_suffix_done,
+        '.DS_Store',
+    ]
+    files = [f for f in files if matches_any_suffix(f, suffixes)]
 
     return files
 
@@ -196,7 +209,7 @@ def is_single_dir(path):
     path = Path(path)
 
 
-def finalize_upload(request, upload):
+def old_finalize_upload(request, upload):
     for u in Upload.objects.filter(
             name=upload.name,
             is_newest=True,
@@ -211,7 +224,7 @@ def finalize_upload(request, upload):
     to_path /= upload.file_type
     to_path /= str(upload.uuid)
 
-    for f in list_unfinished_chunks("file", str(upload.uuid), relative=False):
+    for f in list_cleanup_files("file", str(upload.uuid), relative=False):
         os.remove(f)
 
     if path != to_path:
@@ -228,11 +241,12 @@ def filter_start(items, prefix):
 
 
 def find_prefix(splits, files):
+    n = len(files)
     files.sort()
     prev_prefix = prefix = ''.join(splits[:1])
     splits = splits[1:]
 
-    while len(filter_start(files, prefix)) > 1 and len(splits):
+    while (len(filter_start(files, prev_prefix)) == n or len(filter_start(files, prefix)) > 1) and len(splits):
         prev_prefix = prefix
         prefix += ''.join(splits[:2])
         splits = splits[2:]
@@ -264,6 +278,9 @@ def finish_upload_(request, upload):
     path = base_path
     path /= "file"
     path /= uuid
+
+    for f in list_cleanup_files("file", str(upload.uuid), relative=False):
+        os.remove(f)
 
     dirs = list_dirs(path)
     files = list_files(path)
