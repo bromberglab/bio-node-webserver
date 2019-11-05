@@ -18,7 +18,8 @@ chunk_suffix_done = chunk_suffix + "_done"
 
 rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
-# valid delimiters to separate job-name from file-name. i.e. job1-file.txt, job1_file.txt, etc.
+# valid delimiters to separate job-name from file-name.
+# i.e. job1-file.txt, job1_file.txt, etc.
 delimiters = "([,_.\s-])"
 
 
@@ -287,6 +288,7 @@ def unwrap_path(path):
 
 
 def finish_upload_(request, upload):
+    error = lambda e: ([], [], [], [], [], e)
     uuid = str(upload.uuid)
     path = base_path
     path /= "file"
@@ -299,7 +301,11 @@ def finish_upload_(request, upload):
     dirs = list_dirs(path)
     files = list_files(path)
 
-    if len(files) > 0 and len(dirs) == 0:
+    if len(files) + len(dirs) == 0:
+        return error("Nothing uploaded.")
+
+    prefixes = {}
+    if len(files) > 0:
         prefixes = get_prefixes(files)
         prefix = None, 0
         for k, v in prefixes.items():
@@ -313,18 +319,17 @@ def finish_upload_(request, upload):
             suffixes.append(f[len(prefix) :])
             files.append(Path("<job>" + f[len(prefix) :]))
 
-        suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
-        return to_file_tree(files), files, suffixes, [], prefixes, False
+        file_suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
 
-    if len(files) == 0 and len(dirs) > 0:
+    if len(dirs) > 0:
         found = 0, None
         for d in dirs:
-            files = list_all_files(path / d)
-            if len(files) > found[0]:
-                found = len(files), files
+            dir_files = list_all_files(path / d)
+            if len(dir_files) > found[0]:
+                found = len(dir_files), dir_files
 
-        files = found[1]
-        json_dump = json.dumps([str(f) for f in files])
+        dir_files = found[1]
+        json_dump = json.dumps([str(f) for f in dir_files])
         dirs = list(
             filter(
                 lambda i: json.dumps([str(f) for f in list_all_files(path / i)])
@@ -333,17 +338,29 @@ def finish_upload_(request, upload):
             )
         )
 
-        suffixes = [str(f).split("/")[-1] for f in files]
+        dir_suffixes = [str(f).split("/")[-1] for f in dir_files]
+        files += ["<job>" / f for f in dir_files]
+
+    if len(dirs) == 0:
         return (
-            to_file_tree(["<job>" / f for f in files]),
+            to_file_tree(files),
             files,
-            suffixes,
+            file_suffixes,
             dirs,
-            {},
+            prefixes,
+            False,
+        )
+    if len(prefixes) == 0:
+        return (
+            to_file_tree(files),
+            files,
+            dir_suffixes,
+            dirs,
+            prefixes,
             False,
         )
 
-    return [], [], [], [], [], "Format not supported right now."
+    return error("Format not supported right now.")
 
 
 def finish_upload(request, upload):
@@ -352,10 +369,17 @@ def finish_upload(request, upload):
     return {"tree": to_file_tree(files), "suffixes": suffixes, "error": error}
 
 
-def move_file(path, upload_id, file, type, job, copy=False):
+def move_file(path, upload_id, file, type, job, copy=False, remove_prefix=False):
     assert isinstance(file, str)
 
     from_path = path / file
+
+    if remove_prefix:
+        file = file.split("/")
+        if file[-1].startswith(job):
+            file[-1] = "file" + file[-1][len(job) :]
+        file = "/".join(file)
+
     to_path = base_path / type / upload_id / (job + ".job") / file
 
     os.makedirs(to_path.parent, exist_ok=True)
@@ -371,8 +395,6 @@ def finalize_upload(request, upload):
     # avoid name duplicate if 'file' is part of the types
     tree, files, suffixes, dirs, prefixes, error = finish_upload_(request, upload)
 
-    suffixes.sort(key=lambda i: -len(i))
-
     data = request.data
     manual_format = data.get("manual_format", False)
     checkboxes = data.get("checkboxes", [])
@@ -387,19 +409,24 @@ def finalize_upload(request, upload):
 
     for prefix, files in prefixes.items():
         for file in files:
+            longest_find = 0, 0
             for i in range(len_suffixes):
                 if file.endswith(suffixes[i]):
-                    for t in checkboxes[i]:
-                        type = types[t]
-                        move_file(
-                            path,
-                            uuid,
-                            file,
-                            type,
-                            job=prefix,
-                            copy=(t != checkboxes[i][-1]),
-                        )
-                    break
+                    if len(suffixes[i]) > longest_find[0]:
+                        longest_find = len(suffixes[i]), i
+            i = longest_find[1]
+
+            for t in checkboxes[i]:
+                type = types[t]
+                move_file(
+                    path,
+                    uuid,
+                    file,
+                    type,
+                    job=prefix,
+                    copy=(t != checkboxes[i][-1]),
+                    remove_prefix=True,
+                )
     for dir in dirs:
         for i in range(len_suffixes):
             for t in checkboxes[i]:
