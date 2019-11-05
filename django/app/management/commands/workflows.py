@@ -20,20 +20,20 @@ def prepare_workflow(workflow):
     nodes = {}
     workflow_ids = {}
 
-    for key, value in body['nodes'].items():
+    for key, value in body["nodes"].items():
         i = id_for(key, workflow_ids)
-        value['id'] = i
-        value['old_id'] = key
-        for _, v in value['inputs'].items():
-            v = v['connections']
+        value["id"] = i
+        value["old_id"] = key
+        for _, v in value["inputs"].items():
+            v = v["connections"]
             for c in v:
-                c['node'] = id_for(c['node'], workflow_ids)
-        for _, v in value['outputs'].items():
-            v = v['connections']
+                c["node"] = id_for(c["node"], workflow_ids)
+        for _, v in value["outputs"].items():
+            v = v["connections"]
             for c in v:
-                c['node'] = id_for(c['node'], workflow_ids)
+                c["node"] = id_for(c["node"], workflow_ids)
         nodes[i] = value
-    body['nodes'] = nodes
+    body["nodes"] = nodes
     workflow.json = body
     workflow.save()
 
@@ -42,7 +42,7 @@ def launch_workflow(workflow):
     body = workflow.json
 
     jobs = []
-    for i, node in body['nodes'].items():
+    for i, node in body["nodes"].items():
         j = Job(uuid=i, workflow=workflow, dependencies_met=False)
         j.json = node
         j.save()
@@ -52,10 +52,10 @@ def launch_workflow(workflow):
         j.has_no_dependencies = True
 
     for j in jobs:
-        node = body['nodes'][j.pk]
-        for _, inp in node['inputs'].items():
-            for c in inp['connections']:
-                dep = Job.objects.get(pk=c['node'])
+        node = body["nodes"][j.pk]
+        for _, inp in node["inputs"].items():
+            for c in inp["connections"]:
+                dep = Job.objects.get(pk=c["node"])
                 j.dependencies.add(dep)
                 j.has_no_dependencies = False
         j.save()
@@ -66,7 +66,7 @@ def launch_workflow(workflow):
 
 
 def run_workflow(workflow):
-    rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
     workflow.status = rnd
     workflow.scheduled = True
@@ -80,15 +80,14 @@ def run_workflow(workflow):
 
     prepare_workflow(workflow)
     launch_workflow(workflow)
-    workflow.status = 'running'
+    workflow.status = "running"
 
     workflow.save()
 
 
 def cron():
     while True:
-        workflow = Workflow.objects.filter(
-            should_run=True, scheduled=False).first()
+        workflow = Workflow.objects.filter(should_run=True, scheduled=False).first()
         if workflow is None:
             break
 

@@ -14,14 +14,14 @@ def get_status(pk):
 
     # setup watch
     w = watch.Watch()
-    status = 'failed'
+    status = "failed"
     pod = None
     for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
-        if event['object'].metadata.labels.get('job-name', None) == str(pk):
-            pod = event['object'].metadata.name
-            if event['type'] == 'MODIFIED':
-                status = event['object'].status.phase.lower()
-                if status in ['succeeded', 'failed']:
+        if event["object"].metadata.labels.get("job-name", None) == str(pk):
+            pod = event["object"].metadata.name
+            if event["type"] == "MODIFIED":
+                status = event["object"].status.phase.lower()
+                if status in ["succeeded", "failed"]:
                     break
     w.stop()
 
@@ -32,26 +32,25 @@ def create_output(job):
     conf = job.json
     data_output_type = job.data_output_type
     data_id = str(job.data_id)
-    out_path = 'data/' + data_output_type + '/' + data_id
+    out_path = "data/" + data_output_type + "/" + data_id
 
-    if len(conf['inputs'].items()) != 1:
+    if len(conf["inputs"].items()) != 1:
         return  # misconfigured, ignore.
 
     # TODO: Refactor duplicate code
-    for i, inp in enumerate(conf['inputs'].items()):
+    for i, inp in enumerate(conf["inputs"].items()):
         inp = inp[1]  # ignore key, take value
-        if len(inp['connections']) == 0:
-            return   # misconfigured, ignore.
-        connection = inp['connections'][0]  # TODO: multiple?
+        if len(inp["connections"]) == 0:
+            return  # misconfigured, ignore.
+        connection = inp["connections"][0]  # TODO: multiple?
 
-        inp_id = connection['node']  # TODO: multiple
+        inp_id = connection["node"]  # TODO: multiple
         inp_job = Job.objects.get(pk=inp_id)
-        inp_path = 'data/job_outputs/' + inp_id
+        inp_path = "data/job_outputs/" + inp_id
         if inp_job.is_data_input:
-            inp_path = 'data/' + inp_job.data_input_type + \
-                '/' + str(inp_job.data_id)
+            inp_path = "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
         elif not inp_job.is_single_output:
-            inp_path += '/' + connection.output[2:]
+            inp_path += "/" + connection.output[2:]
 
     copy_folder(inp_path, out_path)
 
@@ -59,7 +58,7 @@ def create_output(job):
 def launch_job(job):
     dep = json.loads(job.body)
 
-    dep['metadata']['name'] = str(job.pk)
+    dep["metadata"]["name"] = str(job.pk)
     k8s_batch_v1 = client.BatchV1Api()
     resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
 
@@ -67,12 +66,12 @@ def launch_job(job):
 def delete_job(name, pod):
     k8s_batch_v1 = client.BatchV1Api()
     k8s_v1 = client.CoreV1Api()
-    resp = k8s_batch_v1.delete_namespaced_job(str(name), namespace='default')
-    resp = k8s_v1.delete_namespaced_pod(str(pod), namespace='default')
+    resp = k8s_batch_v1.delete_namespaced_job(str(name), namespace="default")
+    resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
 
 
 def run_job(job):
-    rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
     job.status = rnd
     job.scheduled = True
@@ -85,7 +84,7 @@ def run_job(job):
         return
 
     job.status_change()
-    status = ''
+    status = ""
     if job.is_node:
         # configure client
         config.load_kube_config()
@@ -120,8 +119,7 @@ def cron():
     glob = Globals().instance
 
     while True:
-        job = Job.objects.filter(
-            scheduled=False, dependencies_met=True).first()
+        job = Job.objects.filter(scheduled=False, dependencies_met=True).first()
         if job is None:
             break
 

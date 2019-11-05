@@ -19,23 +19,24 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'un8&muaf=dz@9df^lgdu-*iu_&q+9#mcbmbs0^)l89^9w$3p#^'
+SECRET_KEY = "un8&muaf=dz@9df^lgdu-*iu_&q+9#mcbmbs0^)l89^9w$3p#^"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = BASE_DIR != '/app'
+DEBUG = BASE_DIR != "/app"
 
 BASE_BASE_DIR = os.path.dirname(BASE_DIR)
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(
-    BASE_BASE_DIR if DEBUG else BASE_DIR, 'webservice-key.json')
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
+    BASE_BASE_DIR if DEBUG else BASE_DIR, "webservice-key.json"
+)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Mail
-SENDGRID_API_KEY = os.getenv('sendgrid_key')
-SENDGRID_SENDER = os.getenv('sendgrid_sender')
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey'
+SENDGRID_API_KEY = os.getenv("sendgrid_key")
+SENDGRID_SENDER = os.getenv("sendgrid_sender")
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST_USER = "apikey"
 EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -44,90 +45,90 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL = SENDGRID_SENDER
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'app.apps.AppConfig',
-    'corsheaders',
-    'channels',
-    'django_eventstream',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "app.apps.AppConfig",
+    "corsheaders",
+    "channels",
+    "django_eventstream",
 ]
 
-ASGI_APPLICATION = 'config.routing.application'
+ASGI_APPLICATION = "config.routing.application"
 
-DATA_PATH = os.path.join(BASE_DIR, 'volume') if DEBUG else '/volume'
+DATA_PATH = os.path.join(BASE_DIR, "volume") if DEBUG else "/volume"
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django_grip.GripMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'app.middleware.DisableCSRF',
+    "corsheaders.middleware.CorsMiddleware",
+    "django_grip.GripMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "app.middleware.DisableCSRF",
 ]
 
 CORS_ORIGIN_WHITELIST = []
 if DEBUG:
-    CORS_ORIGIN_WHITELIST = ['http://localhost:8080']
+    CORS_ORIGIN_WHITELIST = ["http://localhost:8080"]
     CORS_ALLOW_METHODS = [
-        'DELETE',
-        'GET',
-        'OPTIONS',
-        'PATCH',
-        'POST',
-        'PUT',
+        "DELETE",
+        "GET",
+        "OPTIONS",
+        "PATCH",
+        "POST",
+        "PUT",
     ]
     CORS_ALLOW_CREDENTIALS = True
     SESSION_COOKIE_SAMESITE = None
-    EVENTSTREAM_ALLOW_ORIGIN = 'http://localhost:8080'
+    EVENTSTREAM_ALLOW_ORIGIN = "http://localhost:8080"
 
 EVENTSTREAM_ALLOW_CREDENTIALS = True
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
 }
 if not DEBUG:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'django',
-            'USER': 'django',
-            'PASSWORD': os.environ.get('db_pw', 'password'),
-            'HOST': os.environ.get('db_host', 'localhost'),
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": "django",
+            "USER": "django",
+            "PASSWORD": os.environ.get("db_pw", "password"),
+            "HOST": os.environ.get("db_host", "localhost"),
         }
     }
 
@@ -137,26 +138,20 @@ if not DEBUG:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -168,20 +163,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(
-    BASE_DIR, 'staticroot') if DEBUG else '/var/www/static'
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticroot") if DEBUG else "/var/www/static"
 
-DOWNLOADS_DIR = os.path.join(STATIC_ROOT, 'downloads')
-DOWNLOADS_URL = STATIC_URL + 'downloads/'
+DOWNLOADS_DIR = os.path.join(STATIC_ROOT, "downloads")
+DOWNLOADS_URL = STATIC_URL + "downloads/"
 
 os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.JSONParser',
-    )
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
 }

@@ -12,19 +12,21 @@ from .images import update_file_types
 import subprocess
 
 base_path = Path(settings.DATA_PATH)
-base_path /= 'data'
-chunk_suffix = '.partial_chunk'
-chunk_suffix_done = chunk_suffix + '_done'
+base_path /= "data"
+chunk_suffix = ".partial_chunk"
+chunk_suffix_done = chunk_suffix + "_done"
 
-rnd = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
 # valid delimiters to separate job-name from file-name. i.e. job1-file.txt, job1_file.txt, etc.
-delimiters = '([,_.\s-])'
+delimiters = "([,_.\s-])"
 
 
-def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(src, *args, **kwargs):
+def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(
+    src, *args, **kwargs
+):
     src = str(src)
-    if src[-1] == '/':
+    if src[-1] == "/":
         src = src[:-1]
     return stupid_broken_move(src, *args, **kwargs)
 
@@ -41,20 +43,24 @@ def handle_uploaded_file(request):
     data = request.data
     upload = get_upload(request)
 
-    file = data['file']
-    chunkNumber = data['chunkNumber']
-    totalChunks = int(data['totalChunks'])
+    file = data["file"]
+    chunkNumber = data["chunkNumber"]
+    totalChunks = int(data["totalChunks"])
     uuid = str(upload.uuid)
-    relativePath = data['relativePath']
-    filename = data['filename']
-    file_type = 'file'
+    relativePath = data["relativePath"]
+    filename = data["filename"]
+    file_type = "file"
 
     relativePath = Path(relativePath)
     # TODO make better ...
     relativePath = relativePath.parent / (rnd + "_" + relativePath.name)
 
-    save_file(file, base_path / file_type / uuid /
-              relativePath / chunkNumber, totalChunks, filename)
+    save_file(
+        file,
+        base_path / file_type / uuid / relativePath / chunkNumber,
+        totalChunks,
+        filename,
+    )
 
 
 def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=True):
@@ -66,8 +72,11 @@ def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=Tr
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
     files = [Path(f) for f in files]
     if only_full_uploads:
-        files = [f for f in files if not (
-            f.match('*' + chunk_suffix) or f.match('*' + chunk_suffix_done))]
+        files = [
+            f
+            for f in files
+            if not (f.match("*" + chunk_suffix) or f.match("*" + chunk_suffix_done))
+        ]
 
     if relative:
         files = [os.path.relpath(f, path) for f in files]
@@ -78,20 +87,19 @@ def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=Tr
 
 def matches_any_suffix(f, suffixes):
     for s in suffixes:
-        if f.match('*' + s):
+        if f.match("*" + s):
             return True
 
     return False
 
 
 def list_cleanup_files(type, id, relative=True):
-    files = list_all_files(None, type, id, relative=relative,
-                           only_full_uploads=False)
+    files = list_all_files(None, type, id, relative=relative, only_full_uploads=False)
 
     suffixes = [
         chunk_suffix,
         chunk_suffix_done,
-        '.DS_Store',
+        ".DS_Store",
     ]
     files = [f for f in files if matches_any_suffix(f, suffixes)]
 
@@ -104,19 +112,14 @@ def to_file_tree(files):
     for f in files:
         t = tree
         for p in f.parts[:-1]:
-            t_ = [i for i in t if i['name'] == p]
+            t_ = [i for i in t if i["name"] == p]
             if len(t_):
                 t_ = t_[0]
             else:
-                t_ = {
-                    'name': p,
-                    'children': []
-                }
+                t_ = {"name": p, "children": []}
                 t.append(t_)
-            t = t_['children']
-        t.append({
-            'name': f.parts[-1]
-        })
+            t = t_["children"]
+        t.append({"name": f.parts[-1]})
 
     return tree
 
@@ -131,20 +134,20 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
     path = path.with_suffix(chunk_suffix)
     done_path = path.with_suffix(chunk_suffix_done)
     os.makedirs(path.parent, exist_ok=True)
-    with open(path, 'wb+') as destination:
+    with open(path, "wb+") as destination:
         for chunk in file.chunks():
             destination.write(chunk)
     done_path.touch()
 
     num_files = len([f for f in os.listdir(path.parent)])
     if num_files == totalChunks * 2:
-        with open(path.parent.parent / filename, 'wb+') as wfd:
+        with open(path.parent.parent / filename, "wb+") as wfd:
             for i in range(totalChunks):
-                partial_path = path.parent / str(i+1)
+                partial_path = path.parent / str(i + 1)
                 partial_path = partial_path.with_suffix(chunk_suffix)
                 partial_path_done = partial_path.with_suffix(chunk_suffix_done)
 
-                with open(partial_path, 'rb+') as fd:
+                with open(partial_path, "rb+") as fd:
                     shutil.copyfileobj(fd, wfd)
                 os.remove(partial_path)
                 os.remove(partial_path_done)
@@ -152,7 +155,7 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
 
 
 def get_upload(request):
-    pk = request.session.get('upload_pk', None)
+    pk = request.session.get("upload_pk", None)
     upload = None
     if pk is not None:
         try:
@@ -165,17 +168,17 @@ def get_upload(request):
             upload.user = request.user
         upload.save()
         pk = upload.pk
-        request.session['upload_pk'] = str(pk)
+        request.session["upload_pk"] = str(pk)
 
     return upload
 
 
 def file_extension(p: Path):
     name = p.name
-    if name.startswith('.') and not '.' in name[1:]:
+    if name.startswith(".") and not "." in name[1:]:
         return name
-    if name.endswith('.tar.gz'):
-        return '.tar.gz'
+    if name.endswith(".tar.gz"):
+        return ".tar.gz"
 
     return p.suffix
 
@@ -183,9 +186,7 @@ def file_extension(p: Path):
 def list_dirs(path):
     path = Path(path)
     files = os.listdir(path)
-    files = [
-        f for f in files if os.path.isdir(path / f)
-    ]
+    files = [f for f in files if os.path.isdir(path / f)]
 
     return files
 
@@ -193,9 +194,7 @@ def list_dirs(path):
 def list_files(path):
     path = Path(path)
     files = os.listdir(path)
-    files = [
-        f for f in files if os.path.isfile(path / f)
-    ]
+    files = [f for f in files if os.path.isfile(path / f)]
 
     return files
 
@@ -215,9 +214,8 @@ def is_single_dir(path):
 
 def old_finalize_upload(request, upload):
     for u in Upload.objects.filter(
-            name=upload.name,
-            is_newest=True,
-            file_type=upload.file_type).exclude(pk=upload.pk):
+        name=upload.name, is_newest=True, file_type=upload.file_type
+    ).exclude(pk=upload.pk):
         u.is_newest = False
         u.save()
 
@@ -247,12 +245,15 @@ def filter_start(items, prefix):
 def find_prefix(splits, files):
     n = len(files)
     files.sort()
-    prev_prefix = prefix = ''.join(splits[:1])
+    prev_prefix = prefix = "".join(splits[:1])
     splits = splits[1:]
 
-    while (len(filter_start(files, prev_prefix)) == n or len(filter_start(files, prefix)) > 1) and len(splits):
+    while (
+        len(filter_start(files, prev_prefix)) == n
+        or len(filter_start(files, prefix)) > 1
+    ) and len(splits):
         prev_prefix = prefix
-        prefix += ''.join(splits[:2])
+        prefix += "".join(splits[:2])
         splits = splits[2:]
 
     return prev_prefix
@@ -309,10 +310,10 @@ def finish_upload_(request, upload):
         files = []
         suffixes = []
         for f in prefixes[prefix]:
-            suffixes.append(f[len(prefix):])
-            files.append(Path('<job>' + f[len(prefix):]))
+            suffixes.append(f[len(prefix) :])
+            files.append(Path("<job>" + f[len(prefix) :]))
 
-        suffixes = [re.sub('^' + delimiters + '+', '', s) for s in suffixes]
+        suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
         return to_file_tree(files), files, suffixes, [], prefixes, False
 
     if len(files) == 0 and len(dirs) > 0:
@@ -324,38 +325,38 @@ def finish_upload_(request, upload):
 
         files = found[1]
         json_dump = json.dumps([str(f) for f in files])
-        dirs = list(filter(
-            lambda i: json.dumps(
-                [str(f) for f in list_all_files(
-                    path / i
-                )]
-            ) == json_dump, dirs
-        ))
+        dirs = list(
+            filter(
+                lambda i: json.dumps([str(f) for f in list_all_files(path / i)])
+                == json_dump,
+                dirs,
+            )
+        )
 
-        suffixes = [str(f).split('/')[-1] for f in files]
-        return to_file_tree([
-            '<job>' / f for f in files
-        ]), files, suffixes, dirs, {}, False
+        suffixes = [str(f).split("/")[-1] for f in files]
+        return (
+            to_file_tree(["<job>" / f for f in files]),
+            files,
+            suffixes,
+            dirs,
+            {},
+            False,
+        )
 
-    return [], [], [], [], [], 'Format not supported right now.'
+    return [], [], [], [], [], "Format not supported right now."
 
 
 def finish_upload(request, upload):
-    tree, files, suffixes, dirs, prefixes, error = finish_upload_(
-        request, upload)
+    tree, files, suffixes, dirs, prefixes, error = finish_upload_(request, upload)
 
-    return {
-        'tree': to_file_tree(files),
-        'suffixes': suffixes,
-        'error': error
-    }
+    return {"tree": to_file_tree(files), "suffixes": suffixes, "error": error}
 
 
 def move_file(path, upload_id, file, type, job, copy=False):
     assert isinstance(file, str)
 
     from_path = path / file
-    to_path = base_path / type / upload_id / (job + '.job') / file
+    to_path = base_path / type / upload_id / (job + ".job") / file
 
     os.makedirs(to_path.parent, exist_ok=True)
 
@@ -368,20 +369,19 @@ def move_file(path, upload_id, file, type, job, copy=False):
 def finalize_upload(request, upload):
     uuid = str(upload.uuid)
     # avoid name duplicate if 'file' is part of the types
-    tree, files, suffixes, dirs, prefixes, error = finish_upload_(
-        request, upload)
+    tree, files, suffixes, dirs, prefixes, error = finish_upload_(request, upload)
 
     suffixes.sort(key=lambda i: -len(i))
 
     data = request.data
-    manual_format = data.get('manual_format', False)
-    checkboxes = data.get('checkboxes', [])
-    types = data.get('types', [])
+    manual_format = data.get("manual_format", False)
+    checkboxes = data.get("checkboxes", [])
+    types = data.get("types", [])
 
     len_suffixes = len(suffixes)
     len_types = len(types)
 
-    path = base_path / "file" / (uuid + '_')
+    path = base_path / "file" / (uuid + "_")
     move(base_path / "file" / uuid, path)
     path = unwrap_path(path)
 
@@ -391,17 +391,22 @@ def finalize_upload(request, upload):
                 if file.endswith(suffixes[i]):
                     for t in checkboxes[i]:
                         type = types[t]
-                        move_file(path, uuid, file, type, prefix,
-                                  copy=(t != checkboxes[i][-1]))
+                        move_file(
+                            path,
+                            uuid,
+                            file,
+                            type,
+                            prefix,
+                            copy=(t != checkboxes[i][-1]),
+                        )
                     break
     for dir in dirs:
         for i in range(len_suffixes):
             for t in checkboxes[i]:
                 type = types[t]
-                move_file(path, uuid, file, type, prefix,
-                            copy=(t != checkboxes[i][-1]))
+                move_file(path, uuid, file, type, prefix, copy=(t != checkboxes[i][-1]))
 
-    shutil.rmtree(path)
+    shutil.rmtree(base_path / "file" / (uuid + "_"))
     upload.is_finished = True
     upload.save()
 
@@ -409,17 +414,17 @@ def finalize_upload(request, upload):
 
 
 def copy_folder(inp_path, out_path):
-    if '..' in inp_path:
+    if ".." in inp_path:
         return
-    if '..' in out_path:
+    if ".." in out_path:
         return
 
     path = Path(settings.DATA_PATH)
-    for p in inp_path.split('/'):
+    for p in inp_path.split("/"):
         path /= p
     inp_path = path
     path = Path(settings.DATA_PATH)
-    for p in out_path.split('/'):
+    for p in out_path.split("/"):
         path /= p
     out_path = path
 
@@ -430,22 +435,23 @@ def copy_folder(inp_path, out_path):
     shutil.copytree(inp_path, out_path)
 
 
-def make_download_link(rel_path, name='download'):
+def make_download_link(rel_path, name="download"):
     import random
     import string
+
     from_path = base_path
-    for p in rel_path.split('/'):
+    for p in rel_path.split("/"):
         from_path /= p
 
     to_path = settings.DOWNLOADS_DIR
-    folder = ''.join(random.choices(
-        string.ascii_lowercase + string.digits, k=10))
+    folder = "".join(random.choices(string.ascii_lowercase + string.digits, k=10))
 
     os.makedirs(os.path.join(to_path, folder), exist_ok=True)
-    to_file = os.path.join(to_path, folder, name + '.tar.gz')
+    to_file = os.path.join(to_path, folder, name + ".tar.gz")
 
-    subprocess.run(["tar", '-czvf', to_file, '-C', str(from_path), '.'])
+    subprocess.run(["tar", "-czvf", to_file, "-C", str(from_path), "."])
 
     Download(path=to_file).save()
 
-    return settings.DOWNLOADS_URL + folder + '/' + name + '.tar.gz'
+    return settings.DOWNLOADS_URL + folder + "/" + name + ".tar.gz"
+
