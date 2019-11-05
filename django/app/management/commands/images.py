@@ -18,7 +18,7 @@ def cron():
         if labels.get("bio-node_entrypoint", False):
             cmd = labels["bio-node_entrypoint"].split(" ")
 
-        if not labels.get('bio-node', False):
+        if not labels.get("bio-node", False):
             continue
         valid_images.append(i)
 
@@ -30,17 +30,21 @@ def cron():
 
         try:
             image = NodeImage.objects.get(name=i)
-            if image.labels_string != labels_string \
-                    or image.cmd_string != cmd_string \
-                    or image.env_string != env_string:
+            if (
+                image.labels_string != labels_string
+                or image.cmd_string != cmd_string
+                or image.env_string != env_string
+            ):
                 image.labels_string = labels_string
                 image.cmd_string = cmd_string
                 image.env_string = env_string
                 image.save()
         except:
             image = NodeImage(
-                name=i, labels_string=labels_string,
-                cmd_string=cmd_string, env_string=env_string
+                name=i,
+                labels_string=labels_string,
+                cmd_string=cmd_string,
+                env_string=env_string,
             )
             image.save()
 

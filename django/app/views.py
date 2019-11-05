@@ -16,7 +16,13 @@ from django.utils.decorators import method_decorator
 # Create your views here.
 
 from .models import *
-from .files import handle_uploaded_file, get_upload, file_tree, finish_upload, finalize_upload
+from .files import (
+    handle_uploaded_file,
+    get_upload,
+    file_tree,
+    finish_upload,
+    finalize_upload,
+)
 from .serializers import *
 
 
@@ -27,7 +33,7 @@ def login_index_view(request):
 
 class IndexView(APIView):
     def get(self, request, format=None):
-        if request.headers.get('User-Agent', '').startswith('GoogleHC'):
+        if request.headers.get("User-Agent", "").startswith("GoogleHC"):
             return Response("ok")
         if settings.DEBUG:
             return redirect("/admin")
@@ -48,9 +54,10 @@ class AdminCreationView(APIView):
             return Response("User exists")
 
         except User.DoesNotExist:
-            a = User(username='admin', email="admin@localhost")
-            pw = ''.join(random.choices(
-                string.ascii_lowercase + string.digits + '!+-._', k=24))
+            a = User(username="admin", email="admin@localhost")
+            pw = "".join(
+                random.choices(string.ascii_lowercase + string.digits + "!+-._", k=24)
+            )
             a.set_password(pw)
             a.is_superuser = True
             a.is_staff = True
@@ -96,12 +103,7 @@ class OldListImagesView(APIView):
 
     def get(self, request, format=None):
         images = NodeImage.objects.all()
-        images = [
-            {
-                'name': i.name,
-                'labels': i.labels
-            } for i in images
-        ]
+        images = [{"name": i.name, "labels": i.labels} for i in images]
 
         return Response(images)
 
@@ -121,25 +123,22 @@ class InspectImageView(APIView):
         except:
             return Response(status=404)
         tags = image.tag_refs.all()
-        tags = [
+        tags = [{"name": i.name, "sha": i.sha} for i in tags]
+        return Response(
             {
-                'name': i.name,
-                'sha': i.sha
-            } for i in tags
-        ]
-        return Response({
-            'name': name,
-            'labels': image.labels,
-            'cmd': image.cmd,
-            'env': image.env,
-            'tags': tags
-        })
+                "name": name,
+                "labels": image.labels,
+                "cmd": image.cmd,
+                "env": image.env,
+                "tags": tags,
+            }
+        )
 
 
 class CommitView(APIView):
     def get(self, request, format=None):
         with open(".commit", "r") as f:
-            return Response(f.read().replace('\n', ''))
+            return Response(f.read().replace("\n", ""))
 
 
 class CronView(APIView):
@@ -147,12 +146,14 @@ class CronView(APIView):
         from app.management.commands.cron import cron
 
         cron()
-        return Response('ok')
+        return Response("ok")
 
 
 class GoogleStorageWebhook(APIView):
     def post(self, request):
-        if request.headers.get('X-Goog-Channel-Token', '-') == os.environ.get('gs_secret', '-'):
+        if request.headers.get("X-Goog-Channel-Token", "-") == os.environ.get(
+            "gs_secret", "-"
+        ):
             glob = Globals().instance
             glob.gs_webhook_fired = True
             glob.gs_webhook_working = True
@@ -203,7 +204,7 @@ class FinalizeUploadView(APIView):
 class UploadTreeView(APIView):
     def get(self, request, format=None):
         upload = get_upload(request)
-        tree = file_tree('file', upload.uuid)
+        tree = file_tree("file", upload.uuid)
         return Response(tree)
 
 
@@ -217,20 +218,18 @@ class CreateDownload(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        name = request.data.get('name', '')
-        f_type = request.data.get('type', '')
+        name = request.data.get("name", "")
+        f_type = request.data.get("type", "")
         path = Upload.for_name(name, f_type).make_download_link()
 
-        return Response({
-            'url': request.build_absolute_uri(path)
-        })
+        return Response({"url": request.build_absolute_uri(path)})
 
 
 class NamesForTypeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
-        f_type = request.GET.get('type', 'file')
+        f_type = request.GET.get("type", "file")
 
         names = []
 
@@ -243,8 +242,9 @@ class NamesForTypeView(APIView):
 
 class CookieInfoView(APIView):
     def get(self, request, format=None):
-        return Response(request.session.get('show_cookie_info', True))
+        return Response(request.session.get("show_cookie_info", True))
 
     def post(self, request, format=None):
-        request.session['show_cookie_info'] = False
-        return Response(request.session.get('show_cookie_info', True))
+        request.session["show_cookie_info"] = False
+        return Response(request.session.get("show_cookie_info", True))
+

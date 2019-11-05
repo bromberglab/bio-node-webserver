@@ -3,5 +3,6 @@
     "cSpell.words": [
         "kubernetes",
         "shutil"
-    ]
+    ],
+    "python.formatting.provider": "black"
 }

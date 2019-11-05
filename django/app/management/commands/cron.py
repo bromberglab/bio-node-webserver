@@ -56,11 +56,12 @@ def cron_worker():
 
 def cron():
     from threading import Thread
+
     Thread(target=cron_worker).start()
 
 
 class Command(BaseCommand):
-    help = 'Runs all required cron commands'
+    help = "Runs all required cron commands"
 
     def handle(self, *_, **__):
         cron_worker()

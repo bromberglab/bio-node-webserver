@@ -9,9 +9,9 @@ class HttpRedirectMiddleware:
 
     def __call__(self, request):
         if not settings.DEBUG:
-            if request.headers.get("X-Forwarded-Proto", "") == 'http':
-                path = 'https://'
-                path += request.META.get('HTTP_HOST')
+            if request.headers.get("X-Forwarded-Proto", "") == "http":
+                path = "https://"
+                path += request.META.get("HTTP_HOST")
                 path += request.get_full_path()
                 return redirect(path)
 
@@ -22,4 +22,4 @@ class HttpRedirectMiddleware:
 
 class DisableCSRF(MiddlewareMixin):
     def process_request(self, request):
-        setattr(request, '_dont_enforce_csrf_checks', True)
+        setattr(request, "_dont_enforce_csrf_checks", True)
