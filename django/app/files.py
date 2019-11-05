@@ -268,7 +268,7 @@ def get_prefixes(files):
         prefix = find_prefix(splits, files)
 
         matched[prefix] = []
-        for i in filter_start(files, prefix):
+        for i in filter_start(unmatched, prefix):
             matched[prefix].append(i)
             if i in unmatched:
                 unmatched.remove(i)
