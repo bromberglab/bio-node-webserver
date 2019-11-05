@@ -247,7 +247,7 @@ def get_prefixes(files):
     return matched
 
 
-def finish_upload(request, upload):
+def finish_upload_(request, upload):
     uuid = str(upload.uuid)
     path = base_path
     path /= "file"
@@ -260,7 +260,7 @@ def finish_upload(request, upload):
         shutil.move(path / dirs[0], base_path / 'file' / (uuid + '_'))
         shutil.rmtree(path)
         shutil.move(base_path / 'file' / (uuid + '_'), path)
-        return finish_upload(request, upload)
+        return finish_upload_(request, upload)
 
     if len(files) > 0 and len(dirs) == 0:
         prefixes = get_prefixes(files)
@@ -275,14 +275,68 @@ def finish_upload(request, upload):
         for f in prefixes[prefix]:
             suffixes.append(f[len(prefix):])
             files.append(Path('<job>' + f[len(prefix):]))
-        return {
-            'tree': to_file_tree(files),
-            'suffixes': suffixes
-        }
+        return to_file_tree(files), files, suffixes, prefixes
+
+
+def finish_upload(request, upload):
+    tree, files, suffixes, prefixes = finish_upload_(request, upload)
+
+    return {
+        'tree': to_file_tree(files),
+        'suffixes': suffixes
+    }
+
+
+def move_file(path, upload_id, file, type, job, copy=False):
+    assert isinstance(file, str)
+
+    from_path = path / file
+    to_path = base_path / type / upload_id / (job + '.job') / file
+
+    os.makedirs(to_path.parent, exist_ok=True)
+
+    if copy:
+        shutil.copy(from_path, to_path)
+    else:
+        shutil.move(from_path, to_path)
 
 
 def finalize_upload(request, upload):
-    return {}
+    uuid = str(upload.uuid)
+    # avoid name duplicate if 'file' is part of the types
+    tree, files, suffixes, prefixes = finish_upload_(request, upload)
+
+    suffixes.sort(key=lambda i: -len(i))
+
+    data = request.data
+    manual_format = data.get('manual_format', False)
+    checkboxes = data.get('checkboxes', [])
+    types = data.get('types', [])
+
+    len_suffixes = len(suffixes)
+    len_types = len(types)
+
+    path = base_path / "file" / (uuid + '_')
+    shutil.move(base_path / "file" / uuid, path)
+
+    # # redundant
+    # for t in types:
+    #     os.makedirs(base_path / t / uuid)
+    for prefix, files in prefixes.items():
+        for file in files:
+            for i in range(len_suffixes):
+                if file.endswith(suffixes[i]):
+                    for t in checkboxes[i]:
+                        type = types[t]
+                        move_file(path, uuid, file, type, prefix,
+                                  copy=(t != checkboxes[i][-1]))
+                    break
+
+    shutil.rmtree(path)
+    upload.is_finished = True
+    upload.save()
+
+    return 0
 
 
 def copy_folder(inp_path, out_path):
