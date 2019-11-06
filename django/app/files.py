@@ -299,6 +299,7 @@ def finish_upload_(request, upload):
         return error("Nothing uploaded.")
 
     prefixes = {}
+    suffixes = []
     if len(files) > 0:
         prefixes = get_prefixes(files)
         prefix = None, 0
@@ -313,7 +314,7 @@ def finish_upload_(request, upload):
             suffixes.append(f[len(prefix) :])
             files.append(Path("<job>" + f[len(prefix) :]))
 
-        file_suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
+        suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
 
     if len(dirs) > 0:
         found = 0, None
@@ -332,23 +333,14 @@ def finish_upload_(request, upload):
             )
         )
 
-        dir_suffixes = [str(f).split("/")[-1] for f in dir_files]
+        suffixes += [str(f).split("/")[-1] for f in dir_files]
         files += ["<job>" / f for f in dir_files]
 
-    if len(dirs) == 0:
+    if len(dirs) == 0 or len(prefixes) == 0:
         return (
             to_file_tree(files),
             files,
-            file_suffixes,
-            dirs,
-            prefixes,
-            False,
-        )
-    if len(prefixes) == 0:
-        return (
-            to_file_tree(files),
-            files,
-            dir_suffixes,
+            suffixes,
             dirs,
             prefixes,
             False,
@@ -377,6 +369,15 @@ def finish_upload_(request, upload):
                 )
                 % (d, "\n".join(dirs))
             )
+
+    return (
+        to_file_tree(files),
+        files,
+        suffixes,
+        dirs,
+        prefixes,
+        False,
+    )
 
     return error("Format not supported right now.")
 
@@ -437,6 +438,8 @@ def finalize_upload(request, upload):
 
     len_suffixes = len(suffixes)
     len_types = len(types)
+    num_files = len(tree) - 1
+    num_dirs = len(files) - num_files
 
     path = base_path / "file" / (uuid + "_")
     move(base_path / "file" / uuid, path)
@@ -445,7 +448,7 @@ def finalize_upload(request, upload):
     for prefix, files in prefixes.items():
         for file in files:
             longest_find = 0, 0
-            for i in range(len_suffixes):
+            for i in range(num_files):
                 if file.endswith(suffixes[i]):
                     if len(suffixes[i]) > longest_find[0]:
                         longest_find = len(suffixes[i]), i
@@ -463,7 +466,8 @@ def finalize_upload(request, upload):
                     remove_prefix=True,
                 )
     for dir in dirs:
-        for i in range(len_suffixes):
+        for i in range(num_dirs):
+            i += num_files
             for t in checkboxes[i]:
                 type = types[t]
                 move_file(
