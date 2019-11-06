@@ -362,6 +362,16 @@ class Upload(models.Model):
     def __str__(self):
         return self.name if self.name else str(self.uuid)
 
+    def save(self, *args, **kwargs):
+        if self.is_finished and self.is_newest:
+            for u in Upload.objects.filter(
+                name=self.name, is_newest=True, file_type=self.file_type
+            ).exclude(pk=self.pk):
+                u.is_newest = False
+                u.save()
+
+        return super().save(*args, **kwargs)
+
 
 class Download(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

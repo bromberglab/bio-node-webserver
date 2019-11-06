@@ -214,12 +214,6 @@ def is_single_dir(path):
 
 
 def old_finalize_upload(request, upload):
-    for u in Upload.objects.filter(
-        name=upload.name, is_newest=True, file_type=upload.file_type
-    ).exclude(pk=upload.pk):
-        u.is_newest = False
-        u.save()
-
     path = base_path
     path /= "file"
     path /= str(upload.uuid)
@@ -360,6 +354,30 @@ def finish_upload_(request, upload):
             False,
         )
 
+    for d in dirs:
+        if d not in list(prefixes.keys()):
+            return error(
+                (
+                    "Parsing failed. We found a folder called '%s' that was not part of "
+                    "any of the jobs we found. If an upload contains both folders and "
+                    "files, we try to match them. If the jobs were not correctly detected, "
+                    "try following the best practices for naming.\n\nFound jobs:\n%s"
+                )
+                % (d, "\n".join(prefixes.keys()))
+            )
+    for d in prefixes.keys():
+        if d not in dirs:
+            return error(
+                (
+                    "Parsing failed. We found a job called '%s' that was not part of "
+                    "any of the folders we found. If an upload contains both folders and "
+                    "files, we try to match them. If the jobs were not correctly detected, "
+                    "try following the best practices for naming. Folders that don't have "
+                    "all necessary files are ignored.\n\nFound folders:\n%s"
+                )
+                % (d, "\n".join(dirs))
+            )
+
     return error("Format not supported right now.")
 
 
@@ -369,8 +387,25 @@ def finish_upload(request, upload):
     return {"tree": to_file_tree(files), "suffixes": suffixes, "error": error}
 
 
+sub_uploads = {}
+
+
 def move_file(path, upload_id, file, type, job, copy=False, remove_prefix=False):
+    global sub_uploads
     assert isinstance(file, str)
+
+    sub_uploads = sub_uploads[upload_id] = sub_uploads.get(upload_id, {})
+    upload = sub_uploads.get(type, None)
+    if upload is None:
+        parent_upload = Upload.objects.get(pk=upload_id)
+        upload = sub_uploads[type] = Upload(
+            file_type=type,
+            name=parent_upload.display_name,
+            is_finished=True,
+            is_newest=True,
+            user=parent_upload.user,
+        )
+        upload.save()
 
     from_path = path / file
 
@@ -380,7 +415,7 @@ def move_file(path, upload_id, file, type, job, copy=False, remove_prefix=False)
             file[-1] = "file" + file[-1][len(job) :]
         file = "/".join(file)
 
-    to_path = base_path / type / upload_id / (job + ".job") / file
+    to_path = base_path / type / str(upload.pk) / (job + ".job") / file
 
     os.makedirs(to_path.parent, exist_ok=True)
 
@@ -441,8 +476,7 @@ def finalize_upload(request, upload):
                 )
 
     shutil.rmtree(base_path / "file" / (uuid + "_"))
-    upload.is_finished = True
-    upload.save()
+    upload.delete()
 
     return 0
 
