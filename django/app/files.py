@@ -26,6 +26,7 @@ delimiters = "([,_.\s-])"
 def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(
     src, *args, **kwargs
 ):
+    """ pathlib's move fails with a path argument as src sometimes """
     src = str(src)
     if src[-1] == "/":
         src = src[:-1]
@@ -36,11 +37,8 @@ def fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has(
 move = fixed_move_that_fixes_the_super_stupid_annoying_bug_that_pathlib_has
 
 
-def _handle_uploaded_file(request):
-    threading.Thread(target=lambda: _handle_uploaded_file(request)).start()
-
-
 def handle_uploaded_file(request):
+    """ stores a chunk of an uploaded file """
     data = request.data
     upload = get_upload(request)
 
@@ -65,6 +63,13 @@ def handle_uploaded_file(request):
 
 
 def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=True):
+    """
+    returns an array of path objects for all files in a directory.
+    path: One way to set the path. Alternative is to specify type and id.
+    If relative: removes the suffix `path`.
+    If only_full_uploads: Filters out partial chunks.
+    """
+
     if path is None:
         path = base_path
         path /= type
@@ -86,7 +91,9 @@ def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=Tr
     return files
 
 
-def matches_any_suffix(f, suffixes):
+def matches_any_suffix(f: Path, suffixes):
+    """ true, if any of the suffixes match the path f """
+
     for s in suffixes:
         if f.match("*" + s):
             return True
@@ -95,6 +102,8 @@ def matches_any_suffix(f, suffixes):
 
 
 def list_cleanup_files(type, id, relative=True):
+    """ returns an array of files to be deleted, i.e. partial chunks """
+
     files = list_all_files(None, type, id, relative=relative, only_full_uploads=False)
 
     suffixes = [
@@ -108,6 +117,7 @@ def list_cleanup_files(type, id, relative=True):
 
 
 def to_file_tree(files):
+    """ turns a list of files into a vue-compatible tree structure """
     tree = []
 
     for f in files:
@@ -126,12 +136,14 @@ def to_file_tree(files):
 
 
 def file_tree(type, id):
+    """ convenience method to return the tree structure of an upload """
     files = list_all_files(None, type, id)
 
     return to_file_tree(files)
 
 
 def save_file(file, path: Path, totalChunks=0, filename="file"):
+    """ handles a single chunk after upload, and re-assambles finished uploads """
     path = path.with_suffix(chunk_suffix)
     done_path = path.with_suffix(chunk_suffix_done)
     os.makedirs(path.parent, exist_ok=True)
@@ -141,10 +153,12 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
     done_path.touch()
 
     num_files = len([f for f in os.listdir(path.parent)])
+
+    # x2 because every chunk should have a partial file and a completion flag
     if num_files == totalChunks * 2:
         with open(path.parent.parent / filename, "wb+") as wfd:
             for i in range(totalChunks):
-                partial_path = path.parent / str(i + 1)
+                partial_path = path.parent / str(i + 1)  # chunk numbering starts with 1
                 partial_path = partial_path.with_suffix(chunk_suffix)
                 partial_path_done = partial_path.with_suffix(chunk_suffix_done)
 
@@ -156,6 +170,8 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
 
 
 def get_upload(request):
+    """ every request has an upload associated to it via the session. Not thread safe """
+
     pk = request.session.get("upload_pk", None)
     upload = None
     if pk is not None:
@@ -174,17 +190,8 @@ def get_upload(request):
     return upload
 
 
-def file_extension(p: Path):
-    name = p.name
-    if name.startswith(".") and not "." in name[1:]:
-        return name
-    if name.endswith(".tar.gz"):
-        return ".tar.gz"
-
-    return p.suffix
-
-
 def list_dirs(path):
+    """ return a non-recursive list of directories in a folder """
     path = Path(path)
     files = os.listdir(path)
     files = [f for f in files if os.path.isdir(path / f)]
@@ -193,6 +200,7 @@ def list_dirs(path):
 
 
 def list_files(path):
+    """ return a non-recursive list of files in a folder """
     path = Path(path)
     files = os.listdir(path)
     files = [f for f in files if os.path.isfile(path / f)]
@@ -200,26 +208,22 @@ def list_files(path):
     return files
 
 
-def get_structure(path):
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk(path) for f in fn]
-    files = [os.path.relpath(f, path) for f in files]
-    files = [Path(f) for f in files]
-    files = [os.path.join(str(f.parent), file_extension(f)) for f in files]
-
-    return files
-
-
-def is_single_dir(path):
-    path = Path(path)
-
-
 def filter_start(items, prefix):
+    """ from a list of strings, return those that start with prefix """
     items = filter(lambda i: i.startswith(prefix), items)
 
     return list(items)
 
 
 def find_prefix(splits, files):
+    """
+    Tries to guess a common prefix for files in a directory,
+    with a single file as a basis.
+    splits: Pre-split filename, split according to a list of delimiters. The
+            list should include all delimiters as separate entities.
+            abc.txt would become [abc . txt]
+    files: All files in this directory.
+    """
     n = len(files)
     files.sort()
     prev_prefix = prefix = "".join(splits[:1])
@@ -237,6 +241,18 @@ def find_prefix(splits, files):
 
 
 def get_prefixes(files):
+    """
+    Tries to guess all common prefixes for files in a directory.
+    If a files matches multiple prefixes, this method isn't useful.
+
+    examples (tests):
+    >>> ["a.txt", "a.pdf", "b.txt", "b.pdf"]
+    {'a': ['a.pdf', 'a.txt'], 'b': ['b.pdf', 'b.txt']}
+
+    files: All files in this directory.
+
+    returns: A dictionary with prefixes as keys and found files as values.
+    """
     matched = {}
     unmatched = files
 
@@ -255,6 +271,11 @@ def get_prefixes(files):
 
 
 def unwrap_path(path):
+    """
+    As long as a path contains only a single directory, add
+    the subdirectory to the path and continue recursively.
+    """
+
     dirs = list_dirs(path)
     files = list_files(path)
 
@@ -264,6 +285,19 @@ def unwrap_path(path):
 
 
 def finish_upload_(request, upload):
+    """
+    Returns the format structure of an upload after it is finished.
+
+    returns:
+     tree: vue-compatible tree structure of the format.
+     files: list of path objects of the format.
+     suffixes: list of string objects of the format (no prefix).
+     dirs: list of directories that are part of the format.
+     prefixes: returned by get_prefixes.
+     error: False, or an error message string.
+            In case of an error, the other outputs might be unusable.
+    """
+
     error = lambda e: ([], [], [], [], [], e)
     uuid = str(upload.uuid)
     path = base_path
@@ -283,6 +317,7 @@ def finish_upload_(request, upload):
     prefixes = {}
     suffixes = []
     if len(files) > 0:
+        # process files
         prefixes = get_prefixes(files)
         prefix = None, 0
         for k, v in prefixes.items():
@@ -299,6 +334,7 @@ def finish_upload_(request, upload):
         suffixes = [re.sub("^" + delimiters + "+", "", s) for s in suffixes]
 
     if len(dirs) > 0:
+        # process directories
         found = 0, None
         for d in dirs:
             dir_files = list_all_files(path / d)
@@ -319,6 +355,7 @@ def finish_upload_(request, upload):
         files += ["<job>" / f for f in dir_files]
 
     if len(dirs) == 0 or len(prefixes) == 0:
+        # no matching needed, return
         return (
             to_file_tree(files),
             files,
@@ -352,6 +389,7 @@ def finish_upload_(request, upload):
                 % (d, "\n".join(dirs))
             )
 
+    # all jobs matched
     return (
         to_file_tree(files),
         files,
@@ -373,15 +411,25 @@ def finish_upload(request, upload):
 sub_uploads = {}
 
 
-def move_file(path, upload_id, file, type, job, copy=False, remove_prefix=False):
+def move_file(path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False):
+    """
+    For a file from an uploaded structure,
+    move or copy it to the right location.
+
+    path: (unwrapped) path of the upload.
+    file: slash-separated sub path of the file.
+    if remove_prefix: replace `job` at the begginning of the
+                      file name with 'file'.
+    """
     global sub_uploads
     assert isinstance(file, str)
 
+    # For every type and type_id, get the correct child-upload
     sub_uploads = sub_uploads[upload_id] = sub_uploads.get(upload_id, {})
-    upload = sub_uploads.get(type, None)
+    upload = sub_uploads.get(type + str(type_id), None)
     if upload is None:
         parent_upload = Upload.objects.get(pk=upload_id)
-        upload = sub_uploads[type] = Upload(
+        upload = sub_uploads[type + str(type_id)] = Upload(
             file_type=type,
             name=parent_upload.display_name,
             is_finished=True,
@@ -409,8 +457,8 @@ def move_file(path, upload_id, file, type, job, copy=False, remove_prefix=False)
 
 
 def finalize_upload(request, upload):
+    """ move files according to the format annotations from the user """
     uuid = str(upload.uuid)
-    # avoid name duplicate if 'file' is part of the types
     tree, files, suffixes, dirs, prefixes, error = finish_upload_(request, upload)
 
     data = request.data
@@ -420,9 +468,13 @@ def finalize_upload(request, upload):
 
     len_suffixes = len(suffixes)
     len_types = len(types)
+
+    # the tree consists of one <job> folder at the end,
+    # all other entries are the files.
     num_files = len(tree) - 1
     num_dirs = len(files) - num_files
 
+    # avoid name duplicate if 'file' is part of the types
     path = base_path / "file" / (uuid + "_")
     move(base_path / "file" / uuid, path)
     path = unwrap_path(path)
@@ -430,6 +482,7 @@ def finalize_upload(request, upload):
     if not manual_format:
         for prefix, files in prefixes.items():
             for file in files:
+                # we want the longest suffix that the file matches.
                 longest_find = 0, 0
                 for i in range(num_files):
                     if file.endswith(suffixes[i]):
@@ -444,6 +497,7 @@ def finalize_upload(request, upload):
                         uuid,
                         file,
                         type,
+                        type_id=t,
                         job=prefix,
                         copy=(t != checkboxes[i][-1]),
                         remove_prefix=True,
@@ -458,6 +512,7 @@ def finalize_upload(request, upload):
                         uuid,
                         suffixes[i],
                         type,
+                        type_id=t,
                         job=dir,
                         copy=(t != checkboxes[i][-1]),
                     )
@@ -468,6 +523,7 @@ def finalize_upload(request, upload):
             pass
         upload.delete()
     else:
+        # manual format, just specify the file type.
         upload.file_type = manual_format
         upload.is_finished = True
         upload.save()
