@@ -14,7 +14,7 @@ def cron():
     valid_images = []
 
     for i in images:
-        labels, cmd, env = get_image_meta(i)
+        labels, entrypoint, cmd, env = get_image_meta(i)
         if labels.get("bio-node_entrypoint", False):
             cmd = labels["bio-node_entrypoint"].split(" ")
 
@@ -23,6 +23,7 @@ def cron():
         valid_images.append(i)
 
         labels_string = json.dumps(labels).lower()
+        entrypoint_string = json.dumps(entrypoint)
         cmd_string = json.dumps(cmd)
         env_string = json.dumps(env)
         tags = get_image_tags(i)
@@ -32,10 +33,12 @@ def cron():
             image = NodeImage.objects.get(name=i)
             if (
                 image.labels_string != labels_string
+                or image.entrypoint_string != entrypoint_string
                 or image.cmd_string != cmd_string
                 or image.env_string != env_string
             ):
                 image.labels_string = labels_string
+                image.entrypoint_string = entrypoint_string
                 image.cmd_string = cmd_string
                 image.env_string = env_string
                 image.save()
@@ -43,6 +46,7 @@ def cron():
             image = NodeImage(
                 name=i,
                 labels_string=labels_string,
+                entrypoint_string=entrypoint_string,
                 cmd_string=cmd_string,
                 env_string=env_string,
             )

@@ -246,5 +246,5 @@ class CookieInfoView(APIView):
 
     def post(self, request, format=None):
         request.session["show_cookie_info"] = False
-        return Response(request.session.get("show_cookie_info", True))
+        return Response(False)
 

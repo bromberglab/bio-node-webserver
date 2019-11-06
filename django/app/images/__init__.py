@@ -22,7 +22,7 @@ def get_image_meta(name):
     with open("image_env.json", "r") as f:
         env = json.load(f)
 
-    return labels, entrypoint + cmd, env
+    return labels, entrypoint, cmd, env
 
 
 def get_image_tags(name):
