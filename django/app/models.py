@@ -16,6 +16,7 @@ class NodeImage(models.Model):
     name = models.CharField(max_length=128, primary_key=True)
     labels_string = models.TextField(default="{}")
     cmd_string = models.TextField(default="[]")
+    entrypoint_string = models.TextField(default="[]")
     env_string = models.TextField(default="[]")
 
     @property
@@ -37,6 +38,14 @@ class NodeImage(models.Model):
     @cmd.setter
     def cmd(self, cmd):
         self.cmd_string = json.dumps(cmd)
+
+    @property
+    def entrypoint(self):
+        return json.loads(self.entrypoint_string)
+
+    @entrypoint.setter
+    def entrypoint(self, entrypoint):
+        self.entrypoint_string = json.dumps(entrypoint)
 
     @property
     def env(self):
