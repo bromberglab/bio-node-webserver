@@ -411,7 +411,9 @@ def finish_upload(request, upload):
 sub_uploads = {}
 
 
-def move_file(path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False):
+def move_file(
+    path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False
+):
     """
     For a file from an uploaded structure,
     move or copy it to the right location.
@@ -423,12 +425,15 @@ def move_file(path, upload_id, file, type, job, type_id=0, copy=False, remove_pr
     """
     global sub_uploads
     assert isinstance(file, str)
+    assert not ".." in file, "Illegal sequence: .."
+    assert not ".." in type, "Illegal sequence: .."
 
     # For every type and type_id, get the correct child-upload
     sub_uploads = sub_uploads[upload_id] = sub_uploads.get(upload_id, {})
     upload = sub_uploads.get(type + str(type_id), None)
     if upload is None:
         parent_upload = Upload.objects.get(pk=upload_id)
+        assert not ".." in parent_upload.display_name, "Illegal sequence: .."
         upload = sub_uploads[type + str(type_id)] = Upload(
             file_type=type,
             name=parent_upload.display_name,
@@ -465,6 +470,8 @@ def finalize_upload(request, upload):
     manual_format = data.get("manual_format", False)
     checkboxes = data.get("checkboxes", [])
     types = data.get("types", [])
+    for t in types:
+        assert not ".." in t, "Illegal sequence: .."
 
     len_suffixes = len(suffixes)
     len_types = len(types)
@@ -504,7 +511,9 @@ def finalize_upload(request, upload):
                     )
         for dir in dirs:
             for i in range(num_dirs):
-                i += num_files
+                i += (
+                    num_files  # suffixes is files and dirs, add an offset to the index.
+                )
                 for t in checkboxes[i]:
                     type = types[t]
                     move_file(
@@ -524,6 +533,8 @@ def finalize_upload(request, upload):
         upload.delete()
     else:
         # manual format, just specify the file type.
+
+        assert not ".." in manual_format, "Illegal sequence: .."
         upload.file_type = manual_format
         upload.is_finished = True
         upload.save()
@@ -544,10 +555,8 @@ def finalize_upload(request, upload):
 
 
 def copy_folder(inp_path, out_path):
-    if ".." in inp_path:
-        return
-    if ".." in out_path:
-        return
+    assert not ".." in inp_path, "Illegal sequence: .."
+    assert not ".." in out_path, "Illegal sequence: .."
 
     path = Path(settings.DATA_PATH)
     for p in inp_path.split("/"):
