@@ -478,7 +478,7 @@ def finalize_upload(request, upload):
 
     # the tree consists of one <job> folder at the end,
     # all other entries are the files.
-    num_files = len(tree) - 1
+    num_files = len(tree) - (1 if len(dirs) else 0)
     num_dirs = len(files) - num_files
 
     # avoid name duplicate if 'file' is part of the types
@@ -490,7 +490,7 @@ def finalize_upload(request, upload):
         for prefix, files in prefixes.items():
             for file in files:
                 # we want the longest suffix that the file matches.
-                longest_find = 0, 0
+                longest_find = 0, None
                 for i in range(num_files):
                     if file.endswith(suffixes[i]):
                         if len(suffixes[i]) > longest_find[0]:
