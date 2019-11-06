@@ -213,24 +213,6 @@ def is_single_dir(path):
     path = Path(path)
 
 
-def old_finalize_upload(request, upload):
-    path = base_path
-    path /= "file"
-    path /= str(upload.uuid)
-    to_path = base_path
-    to_path /= upload.file_type
-    to_path /= str(upload.uuid)
-
-    for f in list_cleanup_files("file", str(upload.uuid), relative=False):
-        os.remove(f)
-
-    if path != to_path:
-        os.makedirs(to_path.parent, exist_ok=True)
-        move(path, to_path)
-
-    update_file_types()
-
-
 def filter_start(items, prefix):
     items = filter(lambda i: i.startswith(prefix), items)
 
@@ -445,43 +427,63 @@ def finalize_upload(request, upload):
     move(base_path / "file" / uuid, path)
     path = unwrap_path(path)
 
-    for prefix, files in prefixes.items():
-        for file in files:
-            longest_find = 0, 0
-            for i in range(num_files):
-                if file.endswith(suffixes[i]):
-                    if len(suffixes[i]) > longest_find[0]:
-                        longest_find = len(suffixes[i]), i
-            i = longest_find[1]
+    if not manual_format:
+        for prefix, files in prefixes.items():
+            for file in files:
+                longest_find = 0, 0
+                for i in range(num_files):
+                    if file.endswith(suffixes[i]):
+                        if len(suffixes[i]) > longest_find[0]:
+                            longest_find = len(suffixes[i]), i
+                i = longest_find[1]
 
-            for t in checkboxes[i]:
-                type = types[t]
-                move_file(
-                    path,
-                    uuid,
-                    file,
-                    type,
-                    job=prefix,
-                    copy=(t != checkboxes[i][-1]),
-                    remove_prefix=True,
-                )
-    for dir in dirs:
-        for i in range(num_dirs):
-            i += num_files
-            for t in checkboxes[i]:
-                type = types[t]
-                move_file(
-                    path / dir,
-                    uuid,
-                    suffixes[i],
-                    type,
-                    job=dir,
-                    copy=(t != checkboxes[i][-1]),
-                )
+                for t in checkboxes[i]:
+                    type = types[t]
+                    move_file(
+                        path,
+                        uuid,
+                        file,
+                        type,
+                        job=prefix,
+                        copy=(t != checkboxes[i][-1]),
+                        remove_prefix=True,
+                    )
+        for dir in dirs:
+            for i in range(num_dirs):
+                i += num_files
+                for t in checkboxes[i]:
+                    type = types[t]
+                    move_file(
+                        path / dir,
+                        uuid,
+                        suffixes[i],
+                        type,
+                        job=dir,
+                        copy=(t != checkboxes[i][-1]),
+                    )
 
-    shutil.rmtree(base_path / "file" / (uuid + "_"))
-    upload.delete()
+        try:
+            shutil.rmtree(base_path / "file" / (uuid + "_"))
+        except:
+            pass
+        upload.delete()
+    else:
+        upload.file_type = manual_format
+        upload.is_finished = True
+        upload.save()
 
+        to_path = base_path
+        to_path /= upload.file_type
+        to_path /= str(upload.uuid)
+        if path != to_path:
+            os.makedirs(to_path.parent, exist_ok=True)
+            move(path, to_path)
+        try:
+            shutil.rmtree(base_path / "file" / (uuid + "_"))
+        except:
+            pass
+
+    update_file_types()
     return 0
 
 
