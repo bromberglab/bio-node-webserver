@@ -56,7 +56,11 @@ class NodeImage(models.Model):
         self.env_string = json.dumps(env)
 
     @property
-    def inputs(self):
+    def bio_node_entrypoint(self):
+        return self.labels.get("bio-node_entrypoint", False)
+
+    @property
+    def inputs_raw(self):
         labels = self.labels
         if labels.get("input_1", False):
             # Multi-input mode
@@ -77,7 +81,28 @@ class NodeImage(models.Model):
         return []
 
     @property
-    def outputs(self):
+    def inputs_meta(self):
+        inputs = self.inputs_raw
+
+        result = []
+        for i in inputs:
+            input = i.split(",")
+            defaults = ["file", "", "required", "file"]
+            for i in range(len(defaults)):
+                try:
+                    assert input[i] != ""
+                except:
+                    input.append(defaults[i])
+            result.append(input)
+
+        return result
+
+    @property
+    def inputs(self):
+        return [i[0] for i in self.inputs_meta]
+
+    @property
+    def outputs_raw(self):
         labels = self.labels
         if labels.get("output_1", False):
             # Multi-output mode
@@ -96,6 +121,27 @@ class NodeImage(models.Model):
             return [single_output]
         # No-output mode
         return []
+
+    @property
+    def outputs_meta(self):
+        outputs = self.outputs_raw
+
+        result = []
+        for i in outputs:
+            output = i.split(",")
+            defaults = ["file", "stdout", "out.file"]
+            for i in range(len(defaults)):
+                try:
+                    assert output[i] != ""
+                except:
+                    output.append(defaults[i])
+            result.append(output)
+
+        return result
+
+    @property
+    def outputs(self):
+        return [i[0] for i in self.outputs_meta]
 
 
 class FileType(models.Model):
@@ -191,7 +237,9 @@ class Job(models.Model):
 
         c = body["spec"]["template"]["spec"]["containers"][0]
 
-        c["image"] = image
+        tag = image["name"]
+        img: NodeImage = NodeImage.objects.get(name=tag)
+        c["image"] = tag
 
         mounts = []
         for i, host_path in enumerate(input_paths):
@@ -206,11 +254,38 @@ class Job(models.Model):
             )
         for i, host_path in enumerate(output_paths):
             cont_path = cont_output_paths[i]
-            mounts.append(
-                {"name": "vol", "mountPath": cont_path, "subPath": host_path,}
-            )
+            mounts.append({"name": "vol", "mountPath": cont_path, "subPath": host_path})
 
         c["volumeMounts"] = mounts
+
+        env = image["env"]
+        c["env"] = []
+        for e in env:
+            c["env"].append(
+                {"name": e.split("=")[0], "value": "=".join(e.split("=")[1:])}
+            )
+
+        bio_node_entrypoint = image["bio_node_entrypoint"]
+        if bio_node_entrypoint:
+            c["command"] = bio_node_entrypoint.split(" ")
+            c["args"] = []
+
+        else:
+            if len(image["entrypoint"]):
+                c["command"] = image["entrypoint"]
+                c["args"] = image["cmd"]
+            else:
+                c["command"] = image["cmd"]
+                c["args"] = []
+
+        entrypoint = " ".join(image["entrypoint"])
+        cmd = " ".join(image["cmd"])
+        inputs = ";".join([",".join(i) for i in image["inputs_meta"]])
+        outputs = ";".join([",".join(i) for i in image["outputs_meta"]])
+        c["env"].append({"name": "PREV_ENTRYPOINT", "value": entrypoint})
+        c["env"].append({"name": "PREV_COMMAND", "value": cmd})
+        c["env"].append({"name": "INPUTS_META", "value": inputs})
+        c["env"].append({"name": "OUTPUTS_META", "value": outputs})
 
         return body
 
@@ -223,7 +298,6 @@ class Job(models.Model):
         id = conf["id"]
 
         image = conf["data"]["image"]
-        tag = image["name"]
 
         out_path = "data/job_outputs/" + id
 
@@ -261,7 +335,7 @@ class Job(models.Model):
 
         self.body = json.dumps(
             self.create_json(
-                tag, input_paths, cont_input_paths, output_paths, cont_output_paths
+                image, input_paths, cont_input_paths, output_paths, cont_output_paths
             )
         )
 

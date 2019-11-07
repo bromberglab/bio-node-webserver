@@ -15,8 +15,6 @@ def cron():
 
     for i in images:
         labels, entrypoint, cmd, env = get_image_meta(i)
-        if labels.get("bio-node_entrypoint", False):
-            cmd = labels["bio-node_entrypoint"].split(" ")
 
         if not labels.get("bio-node", False):
             continue
