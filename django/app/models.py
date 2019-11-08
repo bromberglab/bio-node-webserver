@@ -133,7 +133,12 @@ class NodeImage(models.Model):
         result = []
         for i in outputs:
             output = i.split(",")
-            defaults = ["file", "stdout", "out.file"]
+            defaults = ["file", "stdout", "results.out"]
+
+            if len(output) >= 3 and output[2] == "":
+                # If the output filename is '', then don't override it. Foldername will be used as parameter.
+                defaults[3] = ""
+
             for i in range(len(defaults)):
                 try:
                     assert output[i] != ""
