@@ -87,7 +87,11 @@ class NodeImage(models.Model):
         result = []
         for i in inputs:
             input = i.split(",")
-            defaults = ["file", "", "required", "file"]
+            defaults = ["file", "", "required", "filename", ""]
+
+            if len(input) >= 2 and input[1] == "stdin":
+                defaults[3] = "content"
+
             for i in range(len(defaults)):
                 try:
                     assert input[i] != ""

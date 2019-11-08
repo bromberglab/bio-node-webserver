@@ -254,7 +254,7 @@ def get_prefixes(files):
     returns: A dictionary with prefixes as keys and found files as values.
     """
     matched = {}
-    unmatched = files
+    unmatched = [f for f in files]
 
     while len(unmatched):
         file = unmatched[0]
