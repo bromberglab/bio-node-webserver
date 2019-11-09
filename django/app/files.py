@@ -436,7 +436,7 @@ def move_file(
         assert not ".." in parent_upload.display_name, "Illegal sequence: .."
         upload = sub_uploads[type + str(type_id)] = Upload(
             file_type=type,
-            name=parent_upload.display_name,
+            name=parent_upload.display_name + " " + str(type_id), # TODO temporary
             is_finished=True,
             is_newest=True,
             user=parent_upload.user,
