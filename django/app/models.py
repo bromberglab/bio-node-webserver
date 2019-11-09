@@ -292,12 +292,14 @@ class Job(models.Model):
         inputs = ";".join([",".join(i) for i in image["inputs_meta"]])
         outputs = ";".join([",".join(i) for i in image["outputs_meta"]])
 
-        ignore_entrypoint = image["labels"].get("ignore_entrypoint", False)
-        if not ignore_entrypoint:
+        app_entrypoint = image["labels"].get("app_entrypoint", None)
+        if app_entrypoint is None:
             c["env"].append({"name": "PREV_ENTRYPOINT", "value": entrypoint})
+        else:
+            c["env"].append({"name": "PREV_ENTRYPOINT", "value": app_entrypoint})
 
         ignore_cmd = image["labels"].get("ignore_cmd", True)
-        if not ignore_cmd:
+        if ignore_cmd in [0, "0", False, "false", "no", "f", "n"]:
             c["env"].append({"name": "PREV_COMMAND", "value": cmd})
 
         param = image["labels"].get("parameters", "")
