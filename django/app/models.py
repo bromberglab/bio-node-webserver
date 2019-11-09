@@ -137,7 +137,7 @@ class NodeImage(models.Model):
 
             if len(output) >= 3 and output[2] == "":
                 # If the output filename is '', then don't override it. Foldername will be used as parameter.
-                defaults[3] = ""
+                defaults[2] = ""
 
             for i in range(len(defaults)):
                 try:
