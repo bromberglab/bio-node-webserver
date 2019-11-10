@@ -34,7 +34,7 @@ def login_index_view(request):
 class IndexView(APIView):
     def get(self, request, format=None):
         if request.headers.get("User-Agent", "").startswith("GoogleHC"):
-            return Response("ok")
+            return Response(status=200)
         if settings.DEBUG:
             return redirect("/admin")
 
@@ -146,7 +146,7 @@ class CronView(APIView):
         from app.management.commands.cron import cron
 
         cron()
-        return Response("ok")
+        return Response(status=200)
 
 
 class GoogleStorageWebhook(APIView):
@@ -159,7 +159,7 @@ class GoogleStorageWebhook(APIView):
             glob.gs_webhook_working = True
             glob.save()
 
-        return Response("ok")
+        return Response(status=200)
 
 
 class FileUploadView(APIView):

@@ -1,4 +1,4 @@
-from app.models import *
+from app.models import Globals, Job
 from django.core.management.base import BaseCommand
 
 
