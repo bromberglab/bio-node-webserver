@@ -247,10 +247,9 @@ class Job(models.Model):
         for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
             if event["object"].metadata.labels.get("job-name", None) == str(self.pk):
                 pod = event["object"].metadata.name
-                if event["type"] == "MODIFIED":
-                    status = event["object"].status.phase.lower()
-                    if status in ["succeeded", "failed"]:
-                        break
+                status = event["object"].status.phase.lower()
+                if status in ["succeeded", "failed"]:
+                    break
         w.stop()
 
         return status, pod
