@@ -7,7 +7,6 @@ import shutil
 from shutil import move as stupid_broken_move
 import random
 import string
-from app.models import *
 from .images import update_file_types
 import subprocess
 
@@ -170,6 +169,7 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
 
 
 def get_upload(request):
+    from .models import Upload
     """ every request has an upload associated to it via the session. Not thread safe """
 
     pk = request.session.get("upload_pk", None)
@@ -423,6 +423,7 @@ def move_file(
     if remove_prefix: replace `job` at the begginning of the
                       file name with 'file'.
     """
+    from .models import Upload
     global sub_uploads
     assert isinstance(file, str)
     assert not ".." in file, "Illegal sequence: .."
@@ -577,6 +578,7 @@ def copy_folder(inp_path, out_path):
 def make_download_link(rel_path, name="download"):
     import random
     import string
+    from .models import Download
 
     from_path = base_path
     for p in rel_path.split("/"):
