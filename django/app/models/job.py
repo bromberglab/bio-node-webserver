@@ -313,12 +313,12 @@ class Job(models.Model):
         status = ""
         if job.is_node:
             job.create_body()
-            launch_job(job)
+            job.launch_job()
             status, pod = job.get_status()
 
             job.delete_job(pod)
         elif job.is_data_output:
-            create_output(job)
+            job.create_output()
 
         job.status = status
 
