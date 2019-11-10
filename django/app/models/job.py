@@ -113,7 +113,7 @@ class Job(models.Model):
 
         timeout = image.get("timeout", None)
         if timeout is not None:
-            c["env"].append({"name": "TIMEOUT", "value": timeout})
+            c["env"].append({"name": "TIMEOUT", "value": str(timeout)})
 
         param = image["labels"].get("parameters", "")
         c["env"].append({"name": "ADD_PARAMETERS", "value": param})
