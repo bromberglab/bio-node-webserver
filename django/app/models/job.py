@@ -12,6 +12,8 @@ from ..files import copy_folder
 from .workflow import Workflow
 from .upload import Upload
 from .node_image import NodeImage
+from .globals import Globals
+from .notification import Notification
 
 
 class Job(models.Model):
@@ -224,6 +226,10 @@ class Job(models.Model):
             return True
         return len(self.json["outputs"]) <= 1
 
+    @property
+    def display_name(self):
+        return self.json["data"]["displayName"]
+
     def finish(self):
         self.finished = True
         self.save()
@@ -251,6 +257,15 @@ class Job(models.Model):
                 if status in ["succeeded", "failed"]:
                     break
         w.stop()
+
+        logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+        length = Globals().instance.log_chars_kept
+
+        if len(logs) > length:
+            length = length // 2 - 5
+            logs = logs[:length] + "\n...\n" + logs[-length:]
+
+        Notification.job_finished(self, status, pod, logs)
 
         return status, pod
 
