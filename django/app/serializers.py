@@ -61,3 +61,15 @@ class JobSerializer(serializers.ModelSerializer):
             "dependencies_met",
             "old_id",
         ]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        read_only_fields = fields = [
+            "pk",
+            "user",
+            "short_text",
+            "long_text",
+            "importance",
+        ]
