@@ -228,6 +228,16 @@ class CreateDownload(APIView):
         return Response({"url": request.build_absolute_uri(path)})
 
 
+class GetNotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        id = request.GET.get("id", "")
+        n = Notification.objects.get(pk=id)
+        n = NotificationSerializer(n).data
+        return Response(n)
+
+
 class NamesForTypeView(APIView):
     permission_classes = [IsAuthenticated]
 

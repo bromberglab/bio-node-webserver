@@ -36,6 +36,7 @@ api = [
     path("create_download/", CreateDownload.as_view()),
     path("names_for_type/", NamesForTypeView.as_view()),
     path("show_cookie_info/", CookieInfoView.as_view()),
+    path("notification/", GetNotificationView.as_view()),
 ]
 
 urlpatterns = [

@@ -54,4 +54,4 @@ class Notification(models.Model):
         obj.notify()
 
     def notify(self):
-        send_event("notification", {"user": user.pk, "id": self.pk})
+        send_event("notification", {"user": self.user.pk, "id": self.pk})
