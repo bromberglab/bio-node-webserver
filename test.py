@@ -1,0 +1,7 @@
+import json
+import yaml
+
+json_s = '{"apiVersion": "batch/v1", "kind": "Job", "metadata": {"name": "will-be-overridden"}, "spec": {"template": {"spec": {"volumes": [{"name": "vol", "persistentVolumeClaim": {"claimName": "cephfs-pvc", "readOnly": false}}], "containers": [{"name": "job", "image": "gcr.io/poised-cortex-254814/mifaser_dev", "volumeMounts": [{"name": "vol", "mountPath": "/input", "subPath": "data/fasta_file/512bd64c-32bc-4002-9eb1-e4923cef1d25", "readOnly": true}, {"name": "vol", "mountPath": "/output", "subPath": "data/job_outputs/0658ae3a-666d-40c1-b887-f8997a5b4f81"}], "env": [{"name": "PATH", "value": "/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}, {"name": "LANG", "value": "C.UTF-8"}, {"name": "GPG_KEY", "value": "0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D"}, {"name": "PYTHON_VERSION", "value": "3.7.3"}, {"name": "PYTHON_PIP_VERSION", "value": "19.0.3"}, {"name": "INPUT_PATH", "value": "/input"}, {"name": "OUTPUT_PATH", "value": "/output"}, {"name": "PREV_ENTRYPOINT", "value": "python -m mifaser.cli"}, {"name": "ADD_PARAMETERS", "value": ""}, {"name": "INPUTS_META", "value": "fasta_file|fasta_gz|fastq_file|fastq_gz|url|sra_id,-f,required,filename,;fasta_file|fasta_gz|fastq_file|fastq_gz|url|sra_id,-l,optional,filename,"}, {"name": "OUTPUTS_META", "value": "mifaser_output,-o,,"}], "command": ["/bio-node/entry.sh"], "args": []}], "restartPolicy": "Never"}}, "backoffLimit": 1}}'
+
+with open("test.yml", "w") as f:
+    yaml.dump(json.loads(json_s), f)

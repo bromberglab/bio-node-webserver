@@ -6,7 +6,7 @@ from app.events import send_event
 import time
 import random
 import string
-from kubernetes import client, config, watch
+from kubernetes import client, watch
 from django.db import transaction
 from ..files import copy_folder
 from .workflow import Workflow
@@ -312,9 +312,6 @@ class Job(models.Model):
         job.status_change()
         status = ""
         if job.is_node:
-            # configure client
-            config.load_kube_config()
-
             job.create_body()
             launch_job(job)
             status, pod = job.get_status()
