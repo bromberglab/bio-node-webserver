@@ -341,7 +341,7 @@ class Job(models.Model):
             elif not inp_job.is_single_output:
                 inp_path += "/" + connection.output[2:]
             input_paths.append(inp_path)
-        if len(cont_input_paths) == 1:
+        if len(conf["inputs"].items()) == 1:
             cont_input_paths = ["/input"]
 
         if self.is_single_output:
