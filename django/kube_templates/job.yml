@@ -18,4 +18,3 @@ spec:
               name: inputs
               subPath: somepath
       restartPolicy: Never
-  backoffLimit: 1
