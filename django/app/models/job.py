@@ -111,6 +111,10 @@ class Job(models.Model):
         if ignore_cmd in [0, "0", False, "false", "no", "f", "n"]:
             c["env"].append({"name": "PREV_COMMAND", "value": cmd})
 
+        timeout = image.get("timeout", None)
+        if timeout is not None:
+            c["env"].append({"name": "TIMEOUT", "value": timeout})
+
         param = image["labels"].get("parameters", "")
         c["env"].append({"name": "ADD_PARAMETERS", "value": param})
 
