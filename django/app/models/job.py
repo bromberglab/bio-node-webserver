@@ -8,7 +8,7 @@ import random
 import string
 from kubernetes import client, watch
 from django.db import transaction
-from ..files import copy_folder
+from ..files import copy_folder, list_dirs
 from .workflow import Workflow
 from .upload import Upload
 from .node_image import NodeImage
@@ -28,6 +28,7 @@ class Job(models.Model):
     workflow = models.ForeignKey(
         Workflow, null=True, blank=True, on_delete=models.SET_NULL
     )
+    parallel_runs = models.IntegerField(default=-1)
 
     dependencies = models.ManyToManyField(
         "app.Job", related_name="dependents", blank=True
@@ -41,8 +42,8 @@ class Job(models.Model):
     def json(self, value):
         self.json_string = json.dumps(value)
 
-    def create_json(
-        self, image, input_paths, cont_input_paths, output_paths, cont_output_paths
+    def create_body(
+        self, image, input_paths, cont_input_paths, output_paths, cont_output_paths, k
     ):
         import yaml
         import os
@@ -113,7 +114,7 @@ class Job(models.Model):
         if ignore_cmd in [0, "0", False, "false", "no", "f", "n"]:
             c["env"].append({"name": "PREV_COMMAND", "value": cmd})
 
-        timeout = image.get("timeout", None)
+        timeout = image["labels"].get("timeout", None)
         if timeout is not None:
             c["env"].append({"name": "TIMEOUT", "value": str(timeout)})
 
@@ -122,10 +123,11 @@ class Job(models.Model):
 
         c["env"].append({"name": "INPUTS_META", "value": inputs})
         c["env"].append({"name": "OUTPUTS_META", "value": outputs})
+        c["env"].append({"name": "K", "value": k})
 
         return body
 
-    def create_body(self):
+    def prepare_job(self):
         if self.body:
             return
 
@@ -134,6 +136,10 @@ class Job(models.Model):
         id = conf["id"]
 
         image = conf["data"]["image"]
+
+        parallelism = image.get("parallelism", "1.0")
+        parallelism = float(parallelism)
+        assert 0.0 <= parallelism <= 1.0
 
         out_path = "data/job_outputs/" + id
 
@@ -169,9 +175,34 @@ class Job(models.Model):
                 output_paths.append(out_path + "/" + str(i + 1))
                 cont_output_paths.append("/output/" + str(i + 1))
 
+        if parallelism > 0:
+            if len(input_paths) == 1:
+                path = input_paths[0]
+            else:
+                inputs = image["inputs_meta"]
+                path = None
+                for t in ["required", "optional", "static"]:
+                    for i in len(inputs):
+                        if path is not None:
+                            break
+                        if inputs[i][2] == t:
+                            for inp in input_paths:
+                                if inp.startswith(str(i) + "/"):
+                                    path = inp
+                                    break
+            jobs = list_dirs(path)
+
+            n = len(jobs)
+            k = n * (1.0 - parallelism)
+            k = int(k)
+            if k < 1:
+                k = 1
+            self.parallel_runs = (n // k) + 1
+            self.save()
+
         self.body = json.dumps(
-            self.create_json(
-                image, input_paths, cont_input_paths, output_paths, cont_output_paths
+            self.create_body(
+                image, input_paths, cont_input_paths, output_paths, cont_output_paths, k
             )
         )
 
@@ -250,7 +281,17 @@ class Job(models.Model):
         send_event("status-change", data)
 
     def get_status(self):
-        status, pod, logs = kube_status(str(self.pk))
+        status = None
+        logs = ""
+        if self.parallel_runs < 0:
+            status, pod, logs = kube_status(str(self.pk))
+        else:
+            for i in range(self.parallel_runs):
+                name = str(self.pk) + "/" + str(i)
+                job_status, pod, job_logs = kube_status(name)
+                if status is None or job_status == "failed":
+                    status = job_status
+                    logs += job_logs
         length = Globals().instance.log_chars_kept
 
         if len(logs) > length:
@@ -292,9 +333,13 @@ class Job(models.Model):
     def launch_job(self):
         dep = json.loads(self.body)
 
-        dep["metadata"]["name"] = str(self.pk)
         k8s_batch_v1 = client.BatchV1Api()
-        resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+        if self.parallel_runs < 0:
+            dep["metadata"]["name"] = str(self.pk)
+            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+        for i in range(self.parallel_runs):
+            dep["metadata"]["name"] = str(self.pk) + "/" + str(i)
+            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
 
     def delete_job(self, pod):
         k8s_batch_v1 = client.BatchV1Api()
@@ -318,7 +363,7 @@ class Job(models.Model):
         job.status_change()
         status = ""
         if job.is_node:
-            job.create_body()
+            job.prepare_job()
             job.launch_job()
             status, pod = job.get_status()
 
