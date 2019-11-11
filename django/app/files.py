@@ -9,6 +9,7 @@ import random
 import string
 from .images import update_file_types
 import subprocess
+import json
 
 base_path = Path(settings.DATA_PATH)
 base_path /= "data"
