@@ -175,3 +175,29 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
 }
+
+if not DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "verbose": {"format": "%(levelname)s [%(asctime)s] %(module)s %(message)s"},
+        },
+        "handlers": {
+            "console": {"level": "ERROR", "class": "logging.StreamHandler"},
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "formatter": "verbose",
+                "filename": "/app/debug.log",
+                "maxBytes": 1024000,
+                "backupCount": 1,
+            },
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["file", "console"],
+                "propagate": True,
+                "level": "DEBUG",
+            },
+        },
+    }
