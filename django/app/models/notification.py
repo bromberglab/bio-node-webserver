@@ -4,6 +4,7 @@ from app.events import send_event
 
 
 class Notification(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     short_text = models.CharField(max_length=256)
     long_text = models.TextField()
