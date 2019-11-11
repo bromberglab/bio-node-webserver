@@ -8,9 +8,6 @@ class AppConfig(AppConfig):
         import os
         from kubernetes import config
 
-        if os.environ.get("RUN_MAIN", None) != "true":
-            return
-
         config.load_kube_config()
 
         from django.conf import settings
