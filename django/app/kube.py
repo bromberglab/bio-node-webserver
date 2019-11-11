@@ -1,11 +1,8 @@
 from kubernetes import client, watch
 
 
-api = client.CoreV1Api()
-k8s_batch_v1 = client.BatchV1Api()
-
-
 def get_status(name):
+    api = client.CoreV1Api()
     # setup watch
     w = watch.Watch()
     status = "failed"
@@ -24,6 +21,8 @@ def get_status(name):
 
 
 def launch_delete_job(body):
+    api = client.CoreV1Api()
+    k8s_batch_v1 = client.BatchV1Api()
     name = str(body["metadata"]["name"])
     resp = k8s_batch_v1.create_namespaced_job(body=body, namespace="default")
     status, pod, logs = get_status(name)
