@@ -245,6 +245,12 @@ class NotificationView(APIView):
         n.notify()
         return Response(serializer.data)
 
+    def delete(self, request, format=None):
+        n = Notification.objects.get(pk=request.data["pk"])
+        assert n.user == request.user
+        n.delete()
+        return Response()
+
 
 class NamesForTypeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -280,3 +286,10 @@ class NotificationsList(ListAPIView):
         """
         user = self.request.user
         return Notification.objects.filter(user=user)
+
+    def delete(self, request, format=None):
+        user = self.request.user
+        ns = Notification.objects.filter(user=user)
+        for n in ns:
+            n.delete()
+        return Response()
