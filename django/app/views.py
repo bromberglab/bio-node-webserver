@@ -228,14 +228,22 @@ class CreateDownload(APIView):
         return Response({"url": request.build_absolute_uri(path)})
 
 
-class GetNotificationView(APIView):
+class NotificationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
         id = request.GET.get("id", "")
         n = Notification.objects.get(pk=id)
+        assert n.user == request.user
         n = NotificationSerializer(n).data
         return Response(n)
+
+    def post(self, request, format=None):
+        serializer = NotificationSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        n: Notification = serializer.save(user=request.user)
+        n.notify()
+        return Response(serializer.data)
 
 
 class NamesForTypeView(APIView):
@@ -261,3 +269,14 @@ class CookieInfoView(APIView):
         request.session["show_cookie_info"] = False
         return Response(False)
 
+
+class NotificationsList(ListAPIView):
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Notification.objects.filter(user=user)

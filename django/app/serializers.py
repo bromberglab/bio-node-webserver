@@ -66,10 +66,16 @@ class JobSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        read_only_fields = fields = [
+        fields = [
             "pk",
             "user",
             "short_text",
             "long_text",
             "importance",
+            "created_at",
+        ]
+        read_only_fields = [
+            "pk",
+            "user",
+            "created_at",
         ]
