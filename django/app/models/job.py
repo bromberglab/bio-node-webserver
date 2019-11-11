@@ -14,6 +14,7 @@ from .upload import Upload
 from .node_image import NodeImage
 from .globals import Globals
 from .notification import Notification
+from ..kube import get_status as kube_status
 
 
 class Job(models.Model):
@@ -73,6 +74,7 @@ class Job(models.Model):
         for i, host_path in enumerate(output_paths):
             cont_path = cont_output_paths[i]
             mounts.append({"name": "vol", "mountPath": cont_path, "subPath": host_path})
+        mounts.append({"name": "vol", "mountPath": "/bio-node", "subPath": "bio-node"})
 
         c["volumeMounts"] = mounts
 
@@ -83,7 +85,7 @@ class Job(models.Model):
                 {"name": e.split("=")[0], "value": "=".join(e.split("=")[1:])}
             )
 
-        bio_node_entrypoint = image["bio_node_entrypoint"]
+        bio_node_entrypoint = image.get("bio_node_entrypoint", "/bio-node/entry.sh")
         if bio_node_entrypoint:
             c["command"] = bio_node_entrypoint.split(" ")
             c["args"] = []
@@ -248,21 +250,7 @@ class Job(models.Model):
         send_event("status-change", data)
 
     def get_status(self):
-        api = client.CoreV1Api()
-
-        # setup watch
-        w = watch.Watch()
-        status = "failed"
-        pod = None
-        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
-            if event["object"].metadata.labels.get("job-name", None) == str(self.pk):
-                pod = event["object"].metadata.name
-                status = event["object"].status.phase.lower()
-                if status in ["succeeded", "failed"]:
-                    break
-        w.stop()
-
-        logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+        status, pod, logs = kube_status(str(self.pk))
         length = Globals().instance.log_chars_kept
 
         if len(logs) > length:

@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: copy-bio-node
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+        - args: ["-r", "/bio-node", "/mounted"]
+          command:
+            - ["cp"]
+          image: bromberglab/bio-node
+          name: job
+          volumeMounts:
+            - mountPath: /mounted
+              name: vol
+              subPath: bio-node
+      restartPolicy: Never
+      volumes:
+        - name: vol
+          persistentVolumeClaim:
+            claimName: cephfs-pvc
+            readOnly: false
