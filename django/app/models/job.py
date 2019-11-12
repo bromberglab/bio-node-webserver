@@ -201,8 +201,10 @@ class Job(models.Model):
             if k < 1:
                 k = 1
             self.parallel_runs = k
-            k = int((n // (k + 0.0001)) + 1)
             self.save()
+            k = int((n // (k + 0.0001)) + 1)
+        else:
+            k = -1
 
         self.body = json.dumps(
             self.create_body(
