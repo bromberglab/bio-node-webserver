@@ -589,11 +589,11 @@ def make_download_link(rel_path, name="download"):
     folder = "".join(random.choices(string.ascii_lowercase + string.digits, k=10))
 
     os.makedirs(os.path.join(to_path, folder), exist_ok=True)
-    to_file = os.path.join(to_path, folder, name + ".tar.gz")
+    to_file = os.path.join(to_path, folder, name + ".tar")
 
-    subprocess.run(["tar", "-czvf", to_file, "-C", str(from_path), "."])
+    subprocess.run(["tar", "-cvf", to_file, "-C", str(from_path), "."])
 
     Download(path=to_file).save()
 
-    return settings.DOWNLOADS_URL + folder + "/" + name + ".tar.gz"
+    return settings.DOWNLOADS_URL + folder + "/" + name + ".tar"
 

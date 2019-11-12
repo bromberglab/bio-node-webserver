@@ -39,6 +39,11 @@ data:
                 index  index.html index.htm;
             }
 
+            location /static/downloads {
+                alias   /var/www/static/downloads;
+                sendfile           on;
+                sendfile_max_chunk 1m;
+            }
             location /static {
                 alias   /var/www/static;
             }
