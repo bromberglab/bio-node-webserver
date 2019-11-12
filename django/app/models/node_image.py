@@ -50,10 +50,6 @@ class NodeImage(models.Model):
         self.env_string = json.dumps(env)
 
     @property
-    def bio_node_entrypoint(self):
-        return self.labels.get("bio-node_entrypoint", False)
-
-    @property
     def inputs_raw(self):
         labels = self.labels
         if labels.get("input_1", False):

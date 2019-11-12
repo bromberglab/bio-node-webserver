@@ -38,7 +38,6 @@ class NodeImageSerializer(serializers.ModelSerializer):
         read_only_fields = fields = [
             "name",
             "labels",
-            "bio_node_entrypoint",
             "entrypoint",
             "cmd",
             "env",
