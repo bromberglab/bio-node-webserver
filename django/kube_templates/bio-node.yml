@@ -19,5 +19,5 @@ spec:
       volumes:
         - name: vol
           persistentVolumeClaim:
-            claimName: cephfs-pvc
+            claimName: default-pvc
             readOnly: false
