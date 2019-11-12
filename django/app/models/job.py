@@ -57,6 +57,9 @@ class Job(models.Model):
             body = yaml.safe_load(f)
 
         c = body["spec"]["template"]["spec"]["containers"][0]
+        resources = c["resources"]["requests"]
+        resources["memory"] = image['labels'].get('memory', resources["memory"])
+        resources["cpu"] = image['labels'].get('cpu', resources["cpu"])
 
         tag = image["name"]
         img: NodeImage = NodeImage.objects.get(name=tag)
