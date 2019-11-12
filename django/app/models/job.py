@@ -15,6 +15,7 @@ from .node_image import NodeImage
 from .globals import Globals
 from .notification import Notification
 from ..kube import get_status as kube_status
+from pathlib import Path
 
 
 class Job(models.Model):
@@ -123,7 +124,7 @@ class Job(models.Model):
 
         c["env"].append({"name": "INPUTS_META", "value": inputs})
         c["env"].append({"name": "OUTPUTS_META", "value": outputs})
-        c["env"].append({"name": "K", "value": k})
+        c["env"].append({"name": "K", "value": str(k)})
 
         return body
 
@@ -137,7 +138,7 @@ class Job(models.Model):
 
         image = conf["data"]["image"]
 
-        parallelism = image.get("parallelism", "1.0")
+        parallelism = image["labels"].get("parallelism", "1.0")
         parallelism = float(parallelism)
         assert 0.0 <= parallelism <= 1.0
 
@@ -190,14 +191,16 @@ class Job(models.Model):
                                 if inp.startswith(str(i) + "/"):
                                     path = inp
                                     break
+            path = Path(settings.DATA_PATH) / path
             jobs = list_dirs(path)
 
             n = len(jobs)
-            k = n * (1.0 - parallelism)
+            k = n * parallelism
             k = int(k)
             if k < 1:
                 k = 1
-            self.parallel_runs = (n // k) + 1
+            self.parallel_runs = k
+            k = (n // k) + 1
             self.save()
 
         self.body = json.dumps(
@@ -286,12 +289,19 @@ class Job(models.Model):
         if self.parallel_runs < 0:
             status, pod, logs = kube_status(str(self.pk))
         else:
+            k8s_v1 = client.CoreV1Api()
+            k8s_batch_v1 = client.BatchV1Api()
             for i in range(self.parallel_runs):
-                name = str(self.pk) + "/" + str(i)
+                name = str(self.pk) + "-" + str(i)
                 job_status, pod, job_logs = kube_status(name)
                 if status is None or job_status == "failed":
                     status = job_status
                     logs += job_logs
+
+                resp = k8s_batch_v1.delete_namespaced_job(
+                    name, namespace="default"
+                )
+                resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
         length = Globals().instance.log_chars_kept
 
         if len(logs) > length:
@@ -338,7 +348,7 @@ class Job(models.Model):
             dep["metadata"]["name"] = str(self.pk)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
         for i in range(self.parallel_runs):
-            dep["metadata"]["name"] = str(self.pk) + "/" + str(i)
+            dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
 
     def delete_job(self, pod):
@@ -367,7 +377,8 @@ class Job(models.Model):
             job.launch_job()
             status, pod = job.get_status()
 
-            job.delete_job(pod)
+            if job.parallel_runs < 0:
+                job.delete_job(pod)
         elif job.is_data_output:
             job.create_output()
 
