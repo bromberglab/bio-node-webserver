@@ -125,6 +125,7 @@ class Job(models.Model):
         c["env"].append({"name": "INPUTS_META", "value": inputs})
         c["env"].append({"name": "OUTPUTS_META", "value": outputs})
         c["env"].append({"name": "K", "value": str(k)})
+        c["env"].append({"name": "I", "value": "0"})
 
         return body
 
@@ -298,9 +299,7 @@ class Job(models.Model):
                     status = job_status
                     logs += job_logs
 
-                resp = k8s_batch_v1.delete_namespaced_job(
-                    name, namespace="default"
-                )
+                resp = k8s_batch_v1.delete_namespaced_job(name, namespace="default")
                 resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
         length = Globals().instance.log_chars_kept
 
@@ -349,6 +348,8 @@ class Job(models.Model):
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
         for i in range(self.parallel_runs):
             dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
+            c = dep["spec"]["template"]["spec"]["containers"][0]
+            c["env"][-1]["value"] = str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
 
     def delete_job(self, pod):
