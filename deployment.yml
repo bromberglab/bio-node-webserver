@@ -117,7 +117,7 @@ spec:
             - name: html
               mountPath: /var/www
         - name: nginx
-          image: nginx:alpine
+          image: yspreen/nginx
           ports:
             - containerPort: 80
           volumeMounts:
