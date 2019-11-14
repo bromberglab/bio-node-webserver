@@ -7,7 +7,6 @@ data:
     user  nginx;
     worker_processes  1;
 
-    error_log  /var/log/nginx/error.log warn;
     pid        /var/run/nginx.pid;
 
     events {
@@ -40,6 +39,7 @@ data:
             }
 
             location /static/downloads {
+                disable_symlinks off;
                 alias   /var/www/static/downloads;
                 sendfile           on;
                 sendfile_max_chunk 1m;
@@ -51,6 +51,7 @@ data:
                 proxy_set_header       X-Forwarded-Proto $http_x_forwarded_proto;
                 proxy_set_header       Host $host;
                 proxy_set_header       X-Real-IP $http_x_forwarded_for;
+                proxy_set_header       Accept-Encoding identity;
 
                 proxy_pass         http://django;
                 proxy_redirect     off;
@@ -126,6 +127,8 @@ spec:
               subPath: nginx.conf
             - name: html
               mountPath: /var/www
+            - name: ceph
+              mountPath: /volume
         - name: vue
           image: gcr.io/poised-cortex-254814/webservice-client:latest
           imagePullPolicy: "Always"

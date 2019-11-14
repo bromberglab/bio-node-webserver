@@ -34,6 +34,7 @@ api = [
     path("workflow_storage/", WorkflowStorageView.as_view()),
     path("workflow_run/", WorkflowRunView.as_view()),
     path("create_download/", CreateDownload.as_view()),
+    path("download/<str:name>/", DownloadView.as_view()),
     path("names_for_type/", NamesForTypeView.as_view()),
     path("show_cookie_info/", CookieInfoView.as_view()),
     path("notification/", NotificationView.as_view()),
