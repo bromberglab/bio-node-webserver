@@ -414,7 +414,7 @@ sub_uploads = {}
 
 
 def move_file(
-    path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False
+    path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False, duplicates=None
 ):
     """
     For a file from an uploaded structure,
@@ -432,15 +432,25 @@ def move_file(
     assert not ".." in file, "Illegal sequence: .."
     assert not ".." in type, "Illegal sequence: .."
 
+    duplicate = False
+    if duplicates is not None and type in duplicates:
+        duplicate = True
+
     # For every type and type_id, get the correct child-upload
     sub_uploads = sub_uploads[upload_id] = sub_uploads.get(upload_id, {})
     upload = sub_uploads.get(type + str(type_id), None)
     if upload is None:
         parent_upload = Upload.objects.get(pk=upload_id)
         assert not ".." in parent_upload.display_name, "Illegal sequence: .."
+
+        if duplicate:
+            name = parent_upload.display_name + " " + str(type_id)
+        else:
+            name = parent_upload.display_name
+
         upload = sub_uploads[type + str(type_id)] = Upload(
             file_type=type,
-            name=parent_upload.display_name + " " + str(type_id),  # TODO temporary
+            name=name,
             is_finished=True,
             is_newest=True,
             user=parent_upload.user,
@@ -491,6 +501,13 @@ def finalize_upload(request, upload):
     path = unwrap_path(path)
 
     if not manual_format:
+        types_ = []
+        duplicates = []
+        for t in types:
+            if t in types_:
+                duplicates.append(t)
+            types_.append(t)
+
         for prefix, files in prefixes.items():
             for file in files:
                 # we want the longest suffix that the file matches.
@@ -512,6 +529,7 @@ def finalize_upload(request, upload):
                         job=prefix,
                         copy=(t != checkboxes[i][-1]),
                         remove_prefix=True,
+                        duplicates=duplicates,
                     )
         for dir in dirs:
             for i in range(num_dirs):
