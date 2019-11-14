@@ -227,7 +227,7 @@ class CreateDownload(APIView):
         f_type = request.data.get("type", "")
         folder = Upload.for_name(name, f_type).make_download_link()
 
-        url = reverse("app:download", kwargs={"name": folder})
+        url = reverse("app:download", kwargs={"name": folder, "filename": name})
         url = request.build_absolute_uri(url)
         return Response({"url": url})
 
@@ -235,12 +235,14 @@ class CreateDownload(APIView):
 class DownloadView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, name="", format=None):
+    def get(self, request, name="", filename="", format=None):
 
         path = settings.DOWNLOADS_DIR
         path = os.path.join(path, name)
 
-        return FolderZipResponse(path, url_prefix=settings.DOWNLOADS_URL)
+        return FolderZipResponse(
+            path, url_prefix=settings.DOWNLOADS_URL, filename=filename
+        )
 
 
 class NotificationView(APIView):
