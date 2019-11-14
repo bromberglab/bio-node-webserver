@@ -171,6 +171,7 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
 
 def get_upload(request):
     from .models import Upload
+
     """ every request has an upload associated to it via the session. Not thread safe """
 
     pk = request.session.get("upload_pk", None)
@@ -425,6 +426,7 @@ def move_file(
                       file name with 'file'.
     """
     from .models import Upload
+
     global sub_uploads
     assert isinstance(file, str)
     assert not ".." in file, "Illegal sequence: .."
@@ -438,7 +440,7 @@ def move_file(
         assert not ".." in parent_upload.display_name, "Illegal sequence: .."
         upload = sub_uploads[type + str(type_id)] = Upload(
             file_type=type,
-            name=parent_upload.display_name + " " + str(type_id), # TODO temporary
+            name=parent_upload.display_name + " " + str(type_id),  # TODO temporary
             is_finished=True,
             is_newest=True,
             user=parent_upload.user,
@@ -582,18 +584,17 @@ def make_download_link(rel_path, name="download"):
     from .models import Download
 
     from_path = base_path
-    for p in rel_path.split("/"):
-        from_path /= p
+    from_path /= rel_path
 
     to_path = settings.DOWNLOADS_DIR
+    os.makedirs(to_path, exist_ok=True)
+
     folder = "".join(random.choices(string.ascii_lowercase + string.digits, k=10))
+    to_path = os.path.join(to_path, folder)
 
-    os.makedirs(os.path.join(to_path, folder), exist_ok=True)
-    to_file = os.path.join(to_path, folder, name + ".tar")
+    subprocess.run(["ln", "-s", str(from_path), to_path])
 
-    subprocess.run(["tar", "-cvf", to_file, "-C", str(from_path), "."])
+    Download(path=to_path).save()
 
-    Download(path=to_file).save()
-
-    return settings.DOWNLOADS_URL + folder + "/" + name + ".tar"
+    return to_path
 

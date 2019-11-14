@@ -12,6 +12,7 @@ from rest_framework.generics import ListAPIView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django_zip_stream.responses import FolderZipResponse
 
 # Create your views here.
 
@@ -226,6 +227,19 @@ class CreateDownload(APIView):
         path = Upload.for_name(name, f_type).make_download_link()
 
         return Response({"url": request.build_absolute_uri(path)})
+
+
+class DownloadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, name="", format=None):
+
+        path = settings.DOWNLOADS_DIR
+        path = os.path.join(path, name)
+
+        r = FolderZipResponse(path, url_prefix=settings.DOWNLOADS_URL)
+        print(r.content)
+        return r
 
 
 class NotificationView(APIView):
