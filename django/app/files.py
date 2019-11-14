@@ -596,5 +596,5 @@ def make_download_link(rel_path, name="download"):
 
     Download(path=to_path).save()
 
-    return to_path
+    return folder
 

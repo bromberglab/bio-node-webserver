@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.views import View as RegView
 from django.http import HttpResponse, Http404
 from django.conf import settings
+from django.urls import reverse
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -224,9 +225,11 @@ class CreateDownload(APIView):
     def post(self, request, format=None):
         name = request.data.get("name", "")
         f_type = request.data.get("type", "")
-        path = Upload.for_name(name, f_type).make_download_link()
+        folder = Upload.for_name(name, f_type).make_download_link()
 
-        return Response({"url": request.build_absolute_uri(path)})
+        url = reverse("app:download", kwargs={"name": folder})
+        url = request.build_absolute_uri(url)
+        return Response({"url": url})
 
 
 class DownloadView(APIView):
@@ -237,9 +240,7 @@ class DownloadView(APIView):
         path = settings.DOWNLOADS_DIR
         path = os.path.join(path, name)
 
-        r = FolderZipResponse(path, url_prefix=settings.DOWNLOADS_URL)
-        print(r.content)
-        return r
+        return FolderZipResponse(path, url_prefix=settings.DOWNLOADS_URL)
 
 
 class NotificationView(APIView):
