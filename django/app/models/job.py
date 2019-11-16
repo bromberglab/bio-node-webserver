@@ -364,6 +364,16 @@ class Job(models.Model):
         resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
 
     def run_job(self):
+        try:
+            self.run_job_()
+        except Exception as e:
+            if self.workflow and self.workflow.user:
+                u = self.workflow.user
+                Notification.send(u, "Scheduling Failed", str(e), 15)
+            else:
+                raise e
+
+    def run_job_(self):
         rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
         self.status = rnd
