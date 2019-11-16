@@ -58,8 +58,8 @@ class Job(models.Model):
 
         c = body["spec"]["template"]["spec"]["containers"][0]
         resources = c["resources"]["requests"]
-        resources["memory"] = image['labels'].get('memory', resources["memory"])
-        resources["cpu"] = image['labels'].get('cpu', resources["cpu"])
+        resources["memory"] = image["labels"].get("memory", resources["memory"])
+        resources["cpu"] = image["labels"].get("cpu", resources["cpu"])
 
         tag = image["name"]
         img: NodeImage = NodeImage.objects.get(name=tag)
@@ -165,7 +165,7 @@ class Job(models.Model):
                     "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
                 )
             elif not inp_job.is_single_output:
-                inp_path += "/" + connection.output[2:]
+                inp_path += "/" + connection["output"][2:]
             input_paths.append(inp_path)
         if len(conf["inputs"].items()) == 1:
             cont_input_paths = ["/input"]
@@ -340,7 +340,7 @@ class Job(models.Model):
                     "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
                 )
             elif not inp_job.is_single_output:
-                inp_path += "/" + connection.output[2:]
+                inp_path += "/" + connection["output"][2:]
 
         copy_folder(inp_path, out_path)
 
