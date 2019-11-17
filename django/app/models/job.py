@@ -217,19 +217,19 @@ class Job(models.Model):
 
     @property
     def is_node(self):
-        return self.json["data"]["id"].startswith("node/")
+        return self.json["name"].startswith("node/")
 
     @property
     def is_data_input(self):
-        return self.json["data"]["id"].startswith("from_data/")
+        return self.json["name"].startswith("from_data")
 
     @property
     def is_data_output(self):
-        return self.json["data"]["id"].startswith("to_data/")
+        return self.json["name"].startswith("to_data")
 
     @property
     def data_input_type(self):
-        return self.json["name"][len("from_data/") :]
+        return self.json["data"]["type"]
 
     @property
     def data_type(self):
@@ -240,7 +240,7 @@ class Job(models.Model):
 
     @property
     def data_output_type(self):
-        return self.json["name"][len("to_data/") :]
+        return self.json["data"]["type"]
 
     @property
     def data_name(self):
