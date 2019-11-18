@@ -128,6 +128,9 @@ class NodeImage(models.Model):
             if len(output) >= 3 and output[2] == "":
                 # If the output filename is '', then don't override it. Foldername will be used as parameter.
                 defaults[2] = ""
+            if len(output) >= 2 and output[1] == "workingdir":
+                # Default for workingdir: Move all created files
+                defaults[2] = ""
 
             for i in range(len(defaults)):
                 try:
