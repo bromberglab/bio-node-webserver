@@ -191,9 +191,9 @@ class Job(models.Model):
                         if path is not None:
                             break
                         if inputs[i][2] == t:
-                            for inp in input_paths:
-                                if inp.startswith(str(i) + "/"):
-                                    path = inp
+                            for j in range(len(input_paths)):
+                                if cont_input_paths[j].endswith('/' + str(i+1)):
+                                    path = input_paths[j]
                                     break
             path = Path(settings.DATA_PATH) / path
             jobs = list_dirs(path)
