@@ -367,9 +367,12 @@ class Job(models.Model):
         try:
             self.run_job_()
         except Exception as e:
+            import traceback
+
             if self.workflow and self.workflow.user:
                 u = self.workflow.user
-                Notification.send(u, "Scheduling Failed", str(e), 15)
+                e = str(e) + "\n" + traceback.format_exc()
+                Notification.send(u, "Scheduling Failed", e, 15)
             else:
                 raise e
 
