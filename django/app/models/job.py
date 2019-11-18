@@ -165,7 +165,7 @@ class Job(models.Model):
                     "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
                 )
             elif not inp_job.is_single_output:
-                inp_path += "/" + connection["output"][2:]
+                inp_path += "/" + str(connection["output"])
             input_paths.append(inp_path)
         if len(conf["inputs"].items()) == 1:
             cont_input_paths = ["/input"]
@@ -340,7 +340,7 @@ class Job(models.Model):
                     "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
                 )
             elif not inp_job.is_single_output:
-                inp_path += "/" + connection["output"][2:]
+                inp_path += "/" + str(connection["output"])
 
         copy_folder(inp_path, out_path)
 
