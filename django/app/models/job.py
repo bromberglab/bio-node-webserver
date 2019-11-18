@@ -132,6 +132,32 @@ class Job(models.Model):
 
         return body
 
+    def find_inputs(self):
+        conf = self.json
+        input_paths = []
+        cont_input_paths = []
+        for i, inp in enumerate(conf["inputs"].items()):
+            inp = inp[1]  # ignore key, take value
+            if len(inp["connections"]) == 0:
+                continue
+            # There should only be 1 input connection.
+            connection = inp["connections"][0]
+            cont_input_paths.append("/input/" + str(i + 1))
+            inp_id = connection["node"]
+            inp_job = Job.objects.get(pk=inp_id)
+            inp_path = "data/job_outputs/" + inp_id
+            if inp_job.is_data_input:
+                inp_path = (
+                    "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
+                )
+            elif not inp_job.is_single_output:
+                inp_path += "/" + connection["output"][2:]
+            input_paths.append(inp_path)
+        if len(conf["inputs"].items()) == 1:
+            cont_input_paths = ["/input"]
+
+        return input_paths, cont_input_paths
+
     def prepare_job(self):
         if self.body:
             return
@@ -149,26 +175,7 @@ class Job(models.Model):
         out_path = "data/job_outputs/" + id
 
         i = 0
-        input_paths = []
-        cont_input_paths = []
-        for i, inp in enumerate(conf["inputs"].items()):
-            inp = inp[1]  # ignore key, take value
-            if len(inp["connections"]) == 0:
-                continue
-            connection = inp["connections"][0]  # TODO: multiple?
-            cont_input_paths.append("/input/" + str(i + 1))
-            inp_id = connection["node"]  # TODO: multiple
-            inp_job = Job.objects.get(pk=inp_id)
-            inp_path = "data/job_outputs/" + inp_id
-            if inp_job.is_data_input:
-                inp_path = (
-                    "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
-                )
-            elif not inp_job.is_single_output:
-                inp_path += "/" + connection["output"][2:]
-            input_paths.append(inp_path)
-        if len(conf["inputs"].items()) == 1:
-            cont_input_paths = ["/input"]
+        input_paths, cont_input_paths = self.find_inputs()
 
         if self.is_single_output:
             output_paths = [out_path]
@@ -322,27 +329,12 @@ class Job(models.Model):
         data_id = str(self.data_id)
         out_path = "data/" + data_output_type + "/" + data_id
 
-        if len(conf["inputs"].items()) != 1:
+        input_paths, cont_input_paths = self.find_inputs()
+
+        if len(input_paths) != 1:
             return  # misconfigured, ignore.
 
-        # TODO: Refactor duplicate code
-        for i, inp in enumerate(conf["inputs"].items()):
-            inp = inp[1]  # ignore key, take value
-            if len(inp["connections"]) == 0:
-                return  # misconfigured, ignore.
-            connection = inp["connections"][0]  # TODO: multiple?
-
-            inp_id = connection["node"]  # TODO: multiple
-            inp_job = Job.objects.get(pk=inp_id)
-            inp_path = "data/job_outputs/" + inp_id
-            if inp_job.is_data_input:
-                inp_path = (
-                    "data/" + inp_job.data_input_type + "/" + str(inp_job.data_id)
-                )
-            elif not inp_job.is_single_output:
-                inp_path += "/" + connection["output"][2:]
-
-        copy_folder(inp_path, out_path)
+        copy_folder(input_paths[0], out_path)
 
     def launch_job(self):
         dep = json.loads(self.body)
