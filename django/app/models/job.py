@@ -187,7 +187,7 @@ class Job(models.Model):
                 inputs = image["inputs_meta"]
                 path = None
                 for t in ["required", "optional", "static"]:
-                    for i in len(inputs):
+                    for i in range(len(inputs)):
                         if path is not None:
                             break
                         if inputs[i][2] == t:
