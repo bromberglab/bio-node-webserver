@@ -8,6 +8,7 @@ from shutil import move as stupid_broken_move
 import random
 import string
 from .images import update_file_types
+from .models import Globals
 import subprocess
 import json
 
@@ -15,8 +16,6 @@ base_path = Path(settings.DATA_PATH)
 base_path /= "data"
 chunk_suffix = ".partial_chunk"
 chunk_suffix_done = chunk_suffix + "_done"
-
-rnd = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
 # valid delimiters to separate job-name from file-name.
 # i.e. job1-file.txt, job1_file.txt, etc.
@@ -51,7 +50,7 @@ def handle_uploaded_file(request):
     file_type = "file"
 
     relativePath = Path(relativePath)
-    # TODO make better ...
+    rnd = Globals().instance.random
     relativePath = relativePath.parent / (rnd + "_" + relativePath.name)
 
     save_file(
