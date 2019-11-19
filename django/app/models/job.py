@@ -199,20 +199,32 @@ class Job(models.Model):
                             break
                         if inputs[i][2] == t:
                             for j in range(len(input_paths)):
-                                if cont_input_paths[j].endswith('/' + str(i+1)):
+                                if cont_input_paths[j].endswith("/" + str(i + 1)):
                                     path = input_paths[j]
                                     break
-            path = Path(settings.DATA_PATH) / path
-            jobs = list_dirs(path)
 
-            n = len(jobs)
-            k = n * parallelism
-            k = int(k)
-            if k < 1:
-                k = 1
-            self.parallel_runs = k
-            self.save()
-            k = int((n // (k + 0.0001)) + 1)
+            if path is None:
+                k = -1
+                u = self.workflow.user
+                n = conf["displayName"]
+                Notification.send(
+                    u,
+                    "Warning: No parallelism for %s" % n,
+                    "Your job is not running in parallel. This might be caused by a job without inputs.",
+                    10,
+                )
+            else:
+                path = Path(settings.DATA_PATH) / path
+                jobs = list_dirs(path)
+
+                n = len(jobs)
+                k = n * parallelism
+                k = int(k)
+                if k < 1:
+                    k = 1
+                self.parallel_runs = k
+                self.save()
+                k = int((n // (k + 0.0001)) + 1)
         else:
             k = -1
 
