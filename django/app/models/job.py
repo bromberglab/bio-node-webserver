@@ -206,7 +206,7 @@ class Job(models.Model):
             if path is None:
                 k = -1
                 u = self.workflow.user
-                n = conf["displayName"]
+                n = conf["data"]["displayName"]
                 Notification.send(
                     u,
                     "Warning: No parallelism for %s" % n,
