@@ -37,6 +37,10 @@ data:
                 alias   /volume/dist/client;
                 index  index.html index.htm;
             }
+            location /docs {
+                alias   /volume/dist/docs;
+                index  index.html index.htm;
+            }
 
             location /static/downloads {
                 disable_symlinks off;
