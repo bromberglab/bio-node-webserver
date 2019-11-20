@@ -34,7 +34,7 @@ data:
             }
 
             location /app {
-                alias   /var/www/dist;
+                alias   /volume/dist/client;
                 index  index.html index.htm;
             }
 
@@ -92,7 +92,7 @@ spec:
         - name: nginx-proxy-config
           configMap:
             name: proxy-nginx-conf
-        - name: ceph
+        - name: nfs
           persistentVolumeClaim:
             claimName: default-pvc
             readOnly: false
@@ -113,7 +113,7 @@ spec:
           volumeMounts:
             - name: docker-volume
               mountPath: /var/run/docker.sock
-            - name: ceph
+            - name: nfs
               mountPath: /volume
             - name: html
               mountPath: /var/www
@@ -127,20 +127,8 @@ spec:
               subPath: nginx.conf
             - name: html
               mountPath: /var/www
-            - name: ceph
+            - name: nfs
               mountPath: /volume
-        - name: vue
-          image: gcr.io/poised-cortex-254814/webservice-client:latest
-          imagePullPolicy: "Always"
-          command: ["sh"]
-          args:
-            [
-              "-c",
-              "cp -r /app/dist /var/www/dist; while true; do sleep 10; done",
-            ]
-          volumeMounts:
-            - name: html
-              mountPath: /var/www
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
