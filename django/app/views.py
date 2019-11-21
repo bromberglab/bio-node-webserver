@@ -38,12 +38,12 @@ class IndexView(APIView):
         if request.headers.get("User-Agent", "").startswith("GoogleHC"):
             return Response(status=200)
         if settings.DEBUG:
-            return redirect("/admin")
+            return redirect("/api/admin")
 
         if not request.user.is_authenticated:
             return login_index_view(request)
 
-        return redirect("/app")
+        return redirect("/")
 
 
 class AdminCreationView(APIView):
