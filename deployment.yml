@@ -33,15 +33,10 @@ data:
                 return 301 https://$host$request_uri;
             }
 
-            location /app {
-                alias   /volume/dist/client;
-                index  index.html index.htm;
-            }
             location /docs {
                 alias   /volume/dist/docs;
                 index  index.html index.htm;
             }
-
             location /static/downloads {
                 disable_symlinks off;
                 alias   /var/www/static/downloads;
@@ -51,7 +46,7 @@ data:
             location /static {
                 alias   /var/www/static;
             }
-            location / {
+            location /api {
                 proxy_set_header       X-Forwarded-Proto $http_x_forwarded_proto;
                 proxy_set_header       Host $host;
                 proxy_set_header       X-Real-IP $http_x_forwarded_for;
@@ -59,6 +54,10 @@ data:
 
                 proxy_pass         http://django;
                 proxy_redirect     off;
+            }
+            location / {
+                alias   /volume/dist/client;
+                index  index.html index.htm;
             }
         }
     }

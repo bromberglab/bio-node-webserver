@@ -90,7 +90,9 @@ class Job(models.Model):
                 {"name": e.split("=")[0], "value": "=".join(e.split("=")[1:])}
             )
 
-        bio_node_entrypoint = image.get("bio-node_entrypoint", "/bio-node/entry.sh")
+        bio_node_entrypoint = image["labels"].get(
+            "bio-node_entrypoint", "/bio-node/entry.sh"
+        )
         if bio_node_entrypoint:
             c["command"] = bio_node_entrypoint.split(" ")
             c["args"] = []

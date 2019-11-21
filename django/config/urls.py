@@ -44,10 +44,10 @@ api = [
 ]
 
 urlpatterns = [
-    path("api/", include((api, "app"), namespace="api")),
+    path("v1/", include((api, "app"), namespace="api")),
     path(".commit/", CommitView.as_view()),
     path("cron/", CronView.as_view()),
-    path("admin/login/", RedirectView.as_view(url="/accounts/login")),
+    path("admin/login/", RedirectView.as_view(url="/api/accounts/login")),
     path("admin/", admin.site.urls),
     path("createadmin/", AdminCreationView.as_view()),
     path("webhooks/gs_update/", GoogleStorageWebhook.as_view()),

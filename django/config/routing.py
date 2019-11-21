@@ -9,7 +9,7 @@ application = ProtocolTypeRouter(
         "http": URLRouter(
             [
                 url(
-                    r"^api/events/",
+                    r"^v1/events/",
                     AuthMiddlewareStack(
                         URLRouter(django_eventstream.routing.urlpatterns)
                     ),
