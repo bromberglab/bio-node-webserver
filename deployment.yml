@@ -35,6 +35,8 @@ data:
                 return 301 https://$host$request_uri;
             }
 
+            rewrite ^/(webhooks)(.*)$ /api/$1$2 last;
+
             location /docs {
                 alias   /volume/dist/docs;
             }

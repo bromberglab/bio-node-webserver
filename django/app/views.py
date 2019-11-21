@@ -227,7 +227,7 @@ class CreateDownload(APIView):
         f_type = request.data.get("type", "")
         folder = Upload.for_name(name, f_type).make_download_link()
 
-        url = reverse("app:download", kwargs={"name": folder, "filename": name})
+        url = reverse("download", kwargs={"name": folder, "filename": name})
         url = request.build_absolute_uri(url)
         return Response({"url": url})
 

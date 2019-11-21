@@ -44,7 +44,7 @@ api = [
 ]
 
 main = [
-    path("v1/", include((api, "app"), namespace="api")),
+    path("v1/", include(api)),
     path(".commit/", CommitView.as_view()),
     path("cron/", CronView.as_view()),
     path("admin/login/", RedirectView.as_view(url="/api/accounts/login")),
@@ -57,5 +57,5 @@ main = [
 ]
 
 urlpatterns = [
-    path("api/", include((main, "app"), namespace="main")),
+    path("api/", include(main)),
 ]
