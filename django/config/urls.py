@@ -43,7 +43,7 @@ api = [
     path("notifications/", NotificationsList.as_view()),
 ]
 
-urlpatterns = [
+main = [
     path("v1/", include((api, "app"), namespace="api")),
     path(".commit/", CommitView.as_view()),
     path("cron/", CronView.as_view()),
@@ -54,4 +54,8 @@ urlpatterns = [
     path("", IndexView.as_view(), name="index"),
     path("accounts/profile/", RedirectView.as_view(url="/")),
     path("accounts/", include("django.contrib.auth.urls")),
+]
+
+urlpatterns = [
+    path("api/", include((main, "app"), namespace="main")),
 ]
