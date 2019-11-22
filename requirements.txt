@@ -15,6 +15,7 @@ django-cors-headers==3.1.1
 django-eventstream==2.6.0
 django-grip==2.0.2
 djangorestframework==3.10.3
+docker==4.1.0
 google-auth==1.6.3
 gripcontrol==3.3.1
 hyperlink==19.0.0

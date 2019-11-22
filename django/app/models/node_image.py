@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import json
 
 
@@ -12,6 +13,12 @@ class NodeImage(models.Model):
     cmd_string = models.TextField(default="[]")
     entrypoint_string = models.TextField(default="[]")
     env_string = models.TextField(default="[]")
+
+    imported = models.BooleanField(default=False)
+    imported_tag = models.CharField(max_length=128, default="", blank=True)
+    imported_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, blank=True, null=True
+    )
 
     @property
     def tags(self):
