@@ -6,3 +6,4 @@ from .node_image import FileType, NodeImage, NodeImageTag
 from .upload import Upload
 from .workflow import Workflow
 from .notification import Notification
+from .permissions import Permissions
