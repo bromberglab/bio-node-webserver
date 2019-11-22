@@ -182,9 +182,7 @@ class FileUploadView(APIView):
 class CheckAuthView(APIView):
     def get(self, request, format=None):
         u = request.user
-        return Response(
-            {"user": u.pk, "logged_in": u.is_authenticated or settings.DEBUG}
-        )
+        return Response(Permissions.from_user(u))
 
 
 class MyUploadView(viewsets.ViewSet):
