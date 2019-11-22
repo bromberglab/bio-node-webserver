@@ -24,6 +24,7 @@ api = [
     path("file_types/", FileTypeListView.as_view()),
     path("list/", ListImagesView.as_view()),
     path("list/<path:name>/", InspectImageView.as_view()),
+    path("import_image/", ImportImageView.as_view()),
     path("upload/<str:name>/", FileUploadView.as_view(), name="upload"),
     path("upload/", FileUploadView.as_view()),
     path("my_upload/", MyUploadView.as_view({"get": "retrieve", "post": "update"})),

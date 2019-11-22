@@ -100,16 +100,6 @@ class WorkflowRunView(APIView):
         return Response()
 
 
-class OldListImagesView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, format=None):
-        images = NodeImage.objects.all()
-        images = [{"name": i.name, "labels": i.labels} for i in images]
-
-        return Response(images)
-
-
 class ListImagesView(ListAPIView):
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer
@@ -135,6 +125,21 @@ class InspectImageView(APIView):
                 "tags": tags,
             }
         )
+
+
+class ImportImageView(APIView):
+    def post(self, request, format=None):
+        from .images import import_image
+
+        name = request.data.get("name", "")
+        tag = request.data.get("tag", "")
+
+        if tag:
+            import_image(name, tag, user=request.user)
+        else:
+            import_image(name, user=request.user)
+
+        return Response()
 
 
 class CommitView(APIView):
