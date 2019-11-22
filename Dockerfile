@@ -13,9 +13,8 @@ RUN mkdir $APP_DIR && \
 WORKDIR $APP_DIR
 
 
-ADD django webservice-key.json.enc setup.sh inspect.sh requirements.txt .commit $APP_DIR/
+ADD django webservice-key.json.enc setup.sh requirements.txt .commit $APP_DIR/
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
-    chmod +x inspect.sh && \
     apk del .build-deps
