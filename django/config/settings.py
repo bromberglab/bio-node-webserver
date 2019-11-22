@@ -30,6 +30,8 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
     BASE_BASE_DIR if DEBUG else BASE_DIR, "webservice-key.json"
 )
 
+LOGIN_URL=LOGIN_REDIRECT_URL='/api/accounts/login/'
+
 ALLOWED_HOSTS = ["*"]
 
 # Mail

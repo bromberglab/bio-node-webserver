@@ -28,7 +28,7 @@ def import_image(name, tag=None, user=None):
         env_string=json.dumps(env),
         imported=True,
         imported_tag=tag,
-        imported_by=user,
+        imported_by=user if user.is_authenticated else None,
     )
 
     image.save()
