@@ -312,6 +312,25 @@ def finish_upload_(request, upload):
     dirs = list_dirs(path)
     files = list_files(path)
 
+    if len(dirs) == 0:
+        all_tar = None
+        for f in files:
+            if all_tar != False and f.endswith('.tar.gz'):
+                all_tar = True
+            else:
+                all_tar = False
+    if all_tar:
+        extract = request.data.get('extract', None)
+        if extract is None:
+            return error("extract")
+        if extract:
+            if len(files) == 1:
+                un_tar(path / files[0], make_folder=False)
+            else:
+                for f in files:
+                    un_tar(path / f, make_folder=True)
+            return finish_upload_(request, upload)
+
     if len(files) + len(dirs) == 0:
         return error("Nothing uploaded.")
 
@@ -593,6 +612,21 @@ def copy_folder(inp_path, out_path):
     shutil.rmtree(out_path)
 
     shutil.copytree(inp_path, out_path)
+
+
+def un_tar(file, make_folder=False, remove=True):
+    file = Path(file)
+
+    if make_folder:
+        name = file.name[: -len('.tar.gz')]
+        os.makedirs(file.parent / name, exist_ok=True)
+        move(file, file.parent / name / file.name)
+        file = file.parent / name / file.name
+
+    subprocess.run(["tar", "-xzf", str(file), "-C", str(file.parent)])
+
+    if remove:
+        os.remove(file)
 
 
 def make_download_link(rel_path, name="download"):
