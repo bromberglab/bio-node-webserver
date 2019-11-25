@@ -19,6 +19,8 @@ class NodeImage(models.Model):
     imported_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, blank=True, null=True
     )
+    added_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def tags(self):

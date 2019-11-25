@@ -46,6 +46,9 @@ class NodeImageSerializer(serializers.ModelSerializer):
             "outputs",
             "outputs_meta",
             "tags",
+            "added_at",
+            "updated_at",
+            "imported_tag",
         ]
 
 
