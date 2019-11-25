@@ -6,6 +6,7 @@ from django.conf import settings
 from django.urls import reverse
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -36,7 +37,7 @@ def login_index_view(request):
 class IndexView(APIView):
     def get(self, request, format=None):
         if request.headers.get("User-Agent", "").startswith("GoogleHC"):
-            return Response(status=200)
+            return Response(status=HTTP_200_OK)
         if settings.DEBUG:
             return redirect("/api/admin")
 
@@ -113,7 +114,7 @@ class InspectImageView(APIView):
         try:
             image = NodeImage.objects.get(name=name)
         except:
-            return Response(status=404)
+            return Response(status=HTTP_404_NOT_FOUND)
         tags = image.tag_refs.all()
         tags = [{"name": i.name, "sha": i.sha} for i in tags]
         return Response(
@@ -128,6 +129,8 @@ class InspectImageView(APIView):
 
 
 class ImportImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
         from .images import import_image
 
@@ -138,6 +141,25 @@ class ImportImageView(APIView):
             import_image(name, tag, user=request.user)
         else:
             import_image(name, user=request.user)
+
+        return Response()
+
+
+class DeleteImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, format=None):
+        from .images import import_image
+
+        name = request.data.get("name", "")
+        image = NodeImage.objects.get(name=name)
+        if image.imported_by == request.user or request.user.is_superuser:
+            image.delete()
+        else:
+            Notification.send(
+                request.user, "Permissions", "You have insufficient permissions.", 10,
+            )
+            return Response(status=HTTP_403_FORBIDDEN)
 
         return Response()
 
@@ -153,7 +175,7 @@ class CronView(APIView):
         from app.management.commands.cron import cron
 
         cron()
-        return Response(status=200)
+        return Response(status=HTTP_200_OK)
 
 
 class GoogleStorageWebhook(APIView):
@@ -166,7 +188,7 @@ class GoogleStorageWebhook(APIView):
             glob.gs_webhook_working = True
             glob.save()
 
-        return Response(status=200)
+        return Response(status=HTTP_200_OK)
 
 
 class FileUploadView(APIView):
@@ -176,7 +198,7 @@ class FileUploadView(APIView):
     def put(self, request, name=None, format=None):
         handle_uploaded_file(request)
 
-        return Response(status=200)
+        return Response(status=HTTP_200_OK)
 
 
 class CheckAuthView(APIView):
