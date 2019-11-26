@@ -27,6 +27,7 @@ from .files import (
     finalize_upload,
 )
 from .serializers import *
+from .events import send_event
 
 
 @login_required
@@ -141,6 +142,8 @@ class ImportImageView(APIView):
             import_image(name, tag, user=request.user)
         else:
             import_image(name, user=request.user)
+
+        send_event("image-imported", name)
 
         return Response()
 
