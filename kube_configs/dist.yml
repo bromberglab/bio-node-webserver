@@ -1,0 +1,42 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: client-copy
+spec:
+  ttlSecondsAfterFinished: 5
+  template:
+    spec:
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: default-pvc
+            readOnly: false
+      containers:
+        - name: container
+          image: gcr.io/poised-cortex-254814/webservice-client
+          volumeMounts:
+            - name: nfs
+              mountPath: /volume
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: docs-copy
+spec:
+  ttlSecondsAfterFinished: 5
+  template:
+    spec:
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: default-pvc
+            readOnly: false
+      containers:
+        - name: container
+          image: gcr.io/poised-cortex-254814/webservice-docs
+          volumeMounts:
+            - name: nfs
+              mountPath: /volume
+      restartPolicy: Never
