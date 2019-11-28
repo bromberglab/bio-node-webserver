@@ -52,6 +52,20 @@ def change_image(name, user=None, data=None):
         return
 
     image = NodeImage.objects.get(name=name)
+
+    image.override_string = "{}"
+
+    for k in image.labels:
+        try:
+            data["labels"][k]
+        except:
+            data["labels"][k] = None
+    for k in image.env:
+        try:
+            data["env"][k]
+        except:
+            data["env"][k] = None
+
     image.override = data
     image.save()
 
