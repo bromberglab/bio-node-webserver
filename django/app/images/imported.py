@@ -45,6 +45,19 @@ def latest_hash(name, tag="latest"):
     return r["Descriptor"]["digest"].split(":")[-1]
 
 
+def change_image(name, user=None, data=None):
+    from ..models import NodeImage, NodeImageTag
+
+    if data is None:
+        return
+
+    image = NodeImage.objects.get(name=name)
+    image.override = data
+    image.save()
+
+    return image
+
+
 def update_image(name=None, user=None, image=None):
     from ..models import NodeImage, NodeImageTag
 
