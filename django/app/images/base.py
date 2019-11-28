@@ -36,7 +36,10 @@ def get_image_meta(name, tag=None, delete=False):
     env = [] if env is None else env
 
     if delete:
-        client.images.remove(name)
+        try:
+            client.images.remove(name)
+        except:
+            pass # wont force
 
     return labels, entrypoint, cmd, env
 

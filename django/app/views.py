@@ -147,6 +147,20 @@ class ImportImageView(APIView):
 
         return Response()
 
+class UpdateImageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        from .images import update_image
+
+        name = request.data.get("name", "")
+
+        update_image(name, user=request.user)
+
+        send_event("image-imported", name)
+
+        return Response()
+
 
 class DeleteImageView(APIView):
     permission_classes = [IsAuthenticated]

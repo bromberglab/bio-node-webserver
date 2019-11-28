@@ -1,4 +1,4 @@
 from .base import *
 from .gcr import *
-from .imported import import_image
+from .imported import import_image, update_image
 
