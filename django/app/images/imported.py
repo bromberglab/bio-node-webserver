@@ -16,7 +16,7 @@ def import_image(name, tag=None, user=None):
     img = client.images.pull(name, tag)
     labels, entrypoint, cmd, env = get_image_meta(name, tag, delete=True)
 
-    id = img.short_id
+    id = img.attrs["RepoDigests"][0].split("@")[-1]
     if id.startswith("sha256:"):
         id = id[len("sha256:") :]
 
@@ -33,6 +33,57 @@ def import_image(name, tag=None, user=None):
 
     image.save()
     NodeImageTag(image=image, sha=id, name=tag).save()
+
+    update_file_types()
+
+    return image
+
+
+def latest_hash(name, tag="latest"):
+    r = client.api.inspect_distribution(name + ":" + tag)
+
+    return r["Descriptor"]["digest"].split(":")[-1]
+
+
+def update_image(name, user=None):
+    from ..models import NodeImage, NodeImageTag
+
+    image = NodeImage.objects.get(name=name)
+    assert user.is_superuser or image.imported_by == user, "Insufficient permissions."
+    tag = image.imported_tag
+    tag = tag if len(tag) else "latest"
+
+    latest = latest_hash(name, tag)
+    try:
+        nodetag = image.tags.get(name=tag)
+        if nodetag.sha == latest:
+            return image
+    except:
+        pass
+
+    img = client.images.pull(name, tag)
+    labels, entrypoint, cmd, env = get_image_meta(name, tag, delete=True)
+
+    id = img.attrs["RepoDigests"][0].split("@")[-1]
+    if id.startswith("sha256:"):
+        id = id[len("sha256:") :]
+
+    image.labels_string = json.dumps(labels)
+    image.entrypoint_string = json.dumps(entrypoint)
+    image.cmd_string = json.dumps(cmd)
+    image.env_string = json.dumps(env)
+    image.imported_by = user if user.is_authenticated else None
+
+    image.save()
+
+    try:
+        nodetag = image.tags.get(name=tag)
+        if nodetag.sha != id:
+            nodetag.name = ""
+            nodetag.save()
+            NodeImageTag(image=image, sha=id, name=tag).save()
+    except:
+        NodeImageTag(image=image, sha=id, name=tag).save()
 
     update_file_types()
 
