@@ -41,6 +41,13 @@ def get_image_meta(name, tag=None, delete=False):
         except:
             pass  # wont force
 
+    env_ = {}
+    for e in env:
+        k = e.split("=")[0]
+        v = "=".join(e.split("=")[1:])
+        env_[k] = v
+    env = env_
+
     return labels, entrypoint, cmd, env
 
 

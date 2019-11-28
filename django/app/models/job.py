@@ -85,10 +85,8 @@ class Job(models.Model):
 
         env = image["env"]
         c["env"] = []
-        for e in env:
-            c["env"].append(
-                {"name": e.split("=")[0], "value": "=".join(e.split("=")[1:])}
-            )
+        for k, v in env.items:
+            c["env"].append({"name": k, "value": v})
 
         bio_node_entrypoint = image["labels"].get(
             "bio-node_entrypoint", "/bio-node/entry.sh"
@@ -130,7 +128,7 @@ class Job(models.Model):
         c["env"].append({"name": "INPUTS_META", "value": inputs})
         c["env"].append({"name": "OUTPUTS_META", "value": outputs})
         c["env"].append({"name": "K", "value": str(k)})
-        c["env"].append({"name": "I", "value": "0"})
+        c["env"].append({"name": "I", "value": "0"})  # I has to stay the last entry.
 
         return body
 
