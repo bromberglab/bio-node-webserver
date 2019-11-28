@@ -40,7 +40,12 @@ def import_image(name, tag=None, user=None):
 
 
 def latest_hash(name, tag="latest"):
-    r = client.api.inspect_distribution(name + ":" + tag)
+    try:
+        r = client.api.inspect_distribution(name + ":" + tag)
+    except:
+        r = client.api.inspect_distribution(
+            "registry.hub.docker.com/" + name + ":" + tag
+        )
 
     return r["Descriptor"]["digest"].split(":")[-1]
 
