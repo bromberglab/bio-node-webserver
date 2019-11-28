@@ -7,12 +7,22 @@ class FileType(models.Model):
     name = models.CharField(max_length=64, primary_key=True)
 
 
+def update_dict(base, changes):
+    for k, v in changes.items():
+        base[k] = v
+        if v is None:
+            del base[k]
+
+    return base
+
+
 class NodeImage(models.Model):
     name = models.CharField(max_length=128, primary_key=True)
     labels_string = models.TextField(default="{}")
     cmd_string = models.TextField(default="[]")
     entrypoint_string = models.TextField(default="[]")
-    env_string = models.TextField(default="[]")
+    env_string = models.TextField(default="{}")
+    override_string = models.TextField(default="{}")
 
     imported = models.BooleanField(default=False)
     imported_tag = models.CharField(max_length=128, default="", blank=True)
@@ -27,7 +37,45 @@ class NodeImage(models.Model):
         return self.tag_refs
 
     @property
+    def override(self):
+        return json.loads(self.override_string)
+
+    @override.setter
+    def override(self, override):
+        labels = self.labels
+        for k, v in override.get("labels", {}):
+            try:
+                assert labels[k] == v
+                del override["labels"][k]
+            except:
+                pass
+        env = self.env
+        for k, v in override.get("env", {}):
+            try:
+                assert env[k] == v
+                del override["env"][k]
+            except:
+                pass
+
+        try:
+            assert env["cmd"] == self.cmd
+            del override["cmd"]
+        except:
+            pass
+        try:
+            assert env["entrypoint"] == self.entrypoint
+            del override["entrypoint"]
+        except:
+            pass
+
+        self.override_string = json.dumps(override)
+
+    @property
     def labels(self):
+        override = json.loads(self.override_string)
+        if override.get("labels", None) is not None:
+            return update_dict(json.loads(self.labels_string), override["labels"])
+
         return json.loads(self.labels_string)
 
     @labels.setter
@@ -36,6 +84,10 @@ class NodeImage(models.Model):
 
     @property
     def cmd(self):
+        override = json.loads(self.override_string)
+        if override.get("cmd", None) is not None:
+            return override["cmd"]
+
         return json.loads(self.cmd_string)
 
     @cmd.setter
@@ -44,6 +96,10 @@ class NodeImage(models.Model):
 
     @property
     def entrypoint(self):
+        override = json.loads(self.override_string)
+        if override.get("entrypoint", None) is not None:
+            return override["entrypoint"]
+
         return json.loads(self.entrypoint_string)
 
     @entrypoint.setter
@@ -52,6 +108,10 @@ class NodeImage(models.Model):
 
     @property
     def env(self):
+        override = json.loads(self.override_string)
+        if override.get("env", None) is not None:
+            return update_dict(json.loads(self.env_string), override["env"])
+
         return json.loads(self.env_string)
 
     @env.setter
