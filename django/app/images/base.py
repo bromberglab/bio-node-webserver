@@ -39,7 +39,7 @@ def get_image_meta(name, tag=None, delete=False):
         try:
             client.images.remove(name)
         except:
-            pass # wont force
+            pass  # wont force
 
     return labels, entrypoint, cmd, env
 
@@ -78,7 +78,7 @@ def update_file_types():
             FileType(name=i).save()
 
 
-def cron():
+def cron_old():
     from ..models import Globals, NodeImage, NodeImageTag
     from .gcr import get_images, get_image_tags
 

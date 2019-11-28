@@ -45,11 +45,18 @@ def latest_hash(name, tag="latest"):
     return r["Descriptor"]["digest"].split(":")[-1]
 
 
-def update_image(name, user=None):
+def update_image(name=None, user=None, image=None):
     from ..models import NodeImage, NodeImageTag
 
-    image = NodeImage.objects.get(name=name)
-    assert user.is_superuser or image.imported_by == user, "Insufficient permissions."
+    if image is None:
+        image = NodeImage.objects.get(name=name)
+    else:
+        name = image.name
+
+    if user:
+        assert (
+            user.is_superuser or image.imported_by == user
+        ), "Insufficient permissions."
     tag = image.imported_tag
     tag = tag if len(tag) else "latest"
 
@@ -72,7 +79,6 @@ def update_image(name, user=None):
     image.entrypoint_string = json.dumps(entrypoint)
     image.cmd_string = json.dumps(cmd)
     image.env_string = json.dumps(env)
-    image.imported_by = user if user.is_authenticated else None
 
     image.save()
 
@@ -88,3 +94,10 @@ def update_image(name, user=None):
     update_file_types()
 
     return image
+
+
+def cron():
+    from ..models import NodeImage
+
+    for image in NodeImage.objects.all():
+        update_image(image=image)
