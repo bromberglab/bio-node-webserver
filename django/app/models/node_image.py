@@ -43,14 +43,14 @@ class NodeImage(models.Model):
     @override.setter
     def override(self, override):
         labels = self.labels
-        for k, v in override.get("labels", {}):
+        for k, v in override.get("labels", {}).items():
             try:
                 assert labels[k] == v
                 del override["labels"][k]
             except:
                 pass
         env = self.env
-        for k, v in override.get("env", {}):
+        for k, v in override.get("env", {}).items():
             try:
                 assert env[k] == v
                 del override["env"][k]
