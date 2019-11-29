@@ -85,8 +85,8 @@ class Job(models.Model):
 
         env = image["env"]
         c["env"] = []
-        for k, v in env.items():
-            c["env"].append({"name": k, "value": v})
+        for key, v in env.items():
+            c["env"].append({"name": key, "value": v})
 
         bio_node_entrypoint = image["labels"].get(
             "bio-node_entrypoint", "/bio-node/entry.sh"
