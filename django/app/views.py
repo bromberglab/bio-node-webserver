@@ -91,6 +91,18 @@ class WorkflowStorageView(APIView):
         return Response()
 
 
+class JobView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        name = request.GET.get("name", "")
+        job = Job.objects.get(uuid=name)
+
+        job = JobSerializer(job)
+
+        return Response(job.data)
+
+
 class WorkflowRunView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -99,7 +111,7 @@ class WorkflowRunView(APIView):
         flow.json = request.data.get("data", dict())
         flow.save()
 
-        return Response()
+        return Response(flow.name)
 
 
 class ListImagesView(ListAPIView):
