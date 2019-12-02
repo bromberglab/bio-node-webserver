@@ -152,12 +152,17 @@ class NodeImage(models.Model):
 
             if len(input) >= 2 and input[1] == "stdin":
                 defaults[3] = "content"
+            if len(input) > 4:
+                defaults[4] = input[4]
 
             for i in range(len(defaults)):
                 try:
                     assert input[i] != ""
                 except:
-                    input.append(defaults[i])
+                    if len(input) > i:
+                        input[i] = defaults[i]
+                    else:
+                        input.append(defaults[i])
             result.append(input)
 
         return result
@@ -207,7 +212,10 @@ class NodeImage(models.Model):
                 try:
                     assert output[i] != ""
                 except:
-                    output.append(defaults[i])
+                    if len(output) > i:
+                        output[i] = defaults[i]
+                    else:
+                        output.append(defaults[i])
             result.append(output)
 
         return result
