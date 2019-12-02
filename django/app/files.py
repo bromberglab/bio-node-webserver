@@ -312,8 +312,8 @@ def finish_upload_(request, upload):
     dirs = list_dirs(path)
     files = list_files(path)
 
+    all_tar = None
     if len(dirs) == 0:
-        all_tar = None
         for f in files:
             if all_tar != False and f.endswith('.tar.gz'):
                 all_tar = True

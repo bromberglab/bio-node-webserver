@@ -99,7 +99,6 @@ class Workflow(models.Model):
         if self.status != rnd:
             return
 
-        self.prepare_workflow()
         self.launch_workflow()
         self.status = "running"
 
