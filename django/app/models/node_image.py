@@ -148,7 +148,7 @@ class NodeImage(models.Model):
         result = []
         for i in inputs:
             input = i.split(",")
-            defaults = ["file", "", "required", "filename", ""]
+            defaults = ["file", "", "required", "filename", "*"]
 
             if len(input) >= 2 and input[1] == "stdin":
                 defaults[3] = "content"
