@@ -401,18 +401,22 @@ class Job(models.Model):
             status, pod = job.get_status()
 
             if job.parallel_runs < 0:
+                # else all jobs are already deleted.
                 job.delete_job(pod)
         elif job.is_data_output:
             job.create_output()
 
         job.status = status
+        did_fail = status != "succeeded"
 
         with transaction.atomic():
             job.finish()
 
             w = job.workflow
-            if w and w.job_set.filter(finished=False).count() == 0:
+            if w and (did_fail or w.job_set.filter(finished=False).count() == 0):
                 w.finish()
+            if did_fail:
+                return
 
         job = Job.objects.get(pk=job.pk)
         for dependent in job.dependents.all():
