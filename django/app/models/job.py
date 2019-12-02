@@ -407,7 +407,7 @@ class Job(models.Model):
             job.create_output()
 
         job.status = status
-        did_fail = status != "succeeded"
+        did_fail = job.is_node and status != "succeeded"
 
         with transaction.atomic():
             job.finish()
