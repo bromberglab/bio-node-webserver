@@ -117,6 +117,6 @@ class Workflow(models.Model):
         nodes = self.json["nodes"]
         for k, v in nodes.items():
             job = Job.objects.get(uuid=k)
-            if job.finished and job.status != "succeeded":
+            if job.is_node and job.status != "succeeded":
                 return True
         return False
