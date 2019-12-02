@@ -163,7 +163,10 @@ def save_file(upload, file, path: Path, totalChunks=0, filename="file"):
 def reassemble(upload, path, filename, totalChunks):
     from threading import Thread
 
-    Thread(reassemble_threaded, args=(upload, path, filename, totalChunks)).start()
+    Thread(
+        target=reassemble_threaded, args=(upload, path, filename, totalChunks)
+    ).start()
+
 
 def reassemble_threaded(upload, path, filename, totalChunks):
     upload.reassembling = True
