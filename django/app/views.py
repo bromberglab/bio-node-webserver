@@ -91,6 +91,19 @@ class WorkflowStorageView(APIView):
         return Response()
 
 
+class WorkflowsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        if request.user.is_superuser:
+            flows = Workflow.objects.all()
+        else:
+            flows = Workflow.objects.filter(user=request.user)
+        serializer = WorkflowSerializer(flows, many=True)
+
+        return Response(serializer.data)
+
+
 class JobView(APIView):
     permission_classes = [IsAuthenticated]
 

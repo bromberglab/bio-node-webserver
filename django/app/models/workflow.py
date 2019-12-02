@@ -105,3 +105,18 @@ class Workflow(models.Model):
 
         self.save()
 
+    @property
+    def some_failed(self):
+        from .job import Job
+
+        if not self.should_run:
+            return False
+        if not self.finished:
+            return False
+
+        nodes = self.json["nodes"]
+        for k, v in nodes.items():
+            job = Job.objects.get(uuid=k)
+            if job.finished and job.status != "succeeded":
+                return True
+        return False

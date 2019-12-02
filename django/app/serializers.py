@@ -81,3 +81,17 @@ class NotificationSerializer(serializers.ModelSerializer):
             "user",
             "created_at",
         ]
+
+
+class WorkflowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Workflow
+        read_only_fields = fields = [
+            "name",
+            "user",
+            "should_run",
+            "scheduled",
+            "finished",
+            "status",
+            "some_failed",
+        ]
