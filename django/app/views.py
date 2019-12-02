@@ -122,7 +122,7 @@ class WorkflowRunView(APIView):
     def post(self, request, format=None):
         flow = Workflow(should_run=True, user=request.user)
         flow.json = request.data.get("data", dict())
-        flow.save()
+        flow.prepare_workflow()
 
         return Response(flow.name)
 
