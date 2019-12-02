@@ -11,6 +11,7 @@ from .images import update_file_types
 from .models import Globals
 import subprocess
 import json
+from app.events import send_event
 
 base_path = Path(settings.DATA_PATH)
 base_path /= "data"
@@ -54,6 +55,7 @@ def handle_uploaded_file(request):
     relativePath = relativePath.parent / (rnd + "_" + relativePath.name)
 
     save_file(
+        upload,
         file,
         base_path / file_type / uuid / relativePath / chunkNumber,
         totalChunks,
@@ -141,7 +143,7 @@ def file_tree(type, id):
     return to_file_tree(files)
 
 
-def save_file(file, path: Path, totalChunks=0, filename="file"):
+def save_file(upload, file, path: Path, totalChunks=0, filename="file"):
     """ handles a single chunk after upload, and re-assambles finished uploads """
     path = path.with_suffix(chunk_suffix)
     done_path = path.with_suffix(chunk_suffix_done)
@@ -155,17 +157,32 @@ def save_file(file, path: Path, totalChunks=0, filename="file"):
 
     # x2 because every chunk should have a partial file and a completion flag
     if num_files == totalChunks * 2:
-        with open(path.parent.parent / filename, "wb+") as wfd:
-            for i in range(totalChunks):
-                partial_path = path.parent / str(i + 1)  # chunk numbering starts with 1
-                partial_path = partial_path.with_suffix(chunk_suffix)
-                partial_path_done = partial_path.with_suffix(chunk_suffix_done)
+        reassemble(upload, path, filename, totalChunks)
 
-                with open(partial_path, "rb+") as fd:
-                    shutil.copyfileobj(fd, wfd)
-                os.remove(partial_path)
-                os.remove(partial_path_done)
-            os.rmdir(path.parent)
+
+def reassemble(upload, path, filename, totalChunks):
+    from threading import Thread
+
+    Thread(reassemble_threaded, args=(upload, path, filename, totalChunks)).start()
+
+def reassemble_threaded(upload, path, filename, totalChunks):
+    upload.reassembling = True
+    upload.save()
+    with open(path.parent.parent / filename, "wb+") as wfd:
+        for i in range(totalChunks):
+            partial_path = path.parent / str(i + 1)  # chunk numbering starts with 1
+            partial_path = partial_path.with_suffix(chunk_suffix)
+            partial_path_done = partial_path.with_suffix(chunk_suffix_done)
+
+            with open(partial_path, "rb+") as fd:
+                shutil.copyfileobj(fd, wfd)
+            os.remove(partial_path)
+            os.remove(partial_path_done)
+        os.rmdir(path.parent)
+
+    upload.reassembling = False
+    upload.save()
+    send_event("reassembled", {"uuid": upload.uuid})
 
 
 def get_upload(request):
@@ -315,12 +332,12 @@ def finish_upload_(request, upload):
     all_tar = None
     if len(dirs) == 0:
         for f in files:
-            if all_tar != False and f.endswith('.tar.gz'):
+            if all_tar != False and f.endswith(".tar.gz"):
                 all_tar = True
             else:
                 all_tar = False
     if all_tar:
-        extract = request.data.get('extract', None)
+        extract = request.data.get("extract", None)
         if extract is None:
             return error("extract")
         if extract:
@@ -432,7 +449,15 @@ sub_uploads = {}
 
 
 def move_file(
-    path, upload_id, file, type, job, type_id=0, copy=False, remove_prefix=False, duplicates=None
+    path,
+    upload_id,
+    file,
+    type,
+    job,
+    type_id=0,
+    copy=False,
+    remove_prefix=False,
+    duplicates=None,
 ):
     """
     For a file from an uploaded structure,
@@ -618,7 +643,7 @@ def un_tar(file, make_folder=False, remove=True):
     file = Path(file)
 
     if make_folder:
-        name = file.name[: -len('.tar.gz')]
+        name = file.name[: -len(".tar.gz")]
         os.makedirs(file.parent / name, exist_ok=True)
         move(file, file.parent / name / file.name)
         file = file.parent / name / file.name

@@ -13,6 +13,7 @@ class UploadSerializer(serializers.ModelSerializer):
             "is_finished",
             "name",
             "display_name",
+            "reassembling",
         ]
         read_only_fields = ["uuid", "display_name", "is_finished"]
 

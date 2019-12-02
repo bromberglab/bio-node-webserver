@@ -10,6 +10,7 @@ class Upload(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     file_type = models.CharField(max_length=64, default="file")
     started_at = models.DateTimeField(auto_now_add=True)
+    reassembling = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
     is_newest = models.BooleanField(default=True)
     job_count = models.CharField(
