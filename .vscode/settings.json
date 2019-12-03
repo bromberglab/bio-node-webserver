@@ -1,6 +1,11 @@
 {
   "python.pythonPath": ".pyenv/bin/python",
-  "cSpell.words": ["kubernetes", "shutil", "kube"],
+  "cSpell.words": [
+    "kube",
+    "kubernetes",
+    "shutil",
+    "untar"
+  ],
   "python.formatting.provider": "black",
 
   "[python]": {
