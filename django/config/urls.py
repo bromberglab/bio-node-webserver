@@ -30,7 +30,10 @@ api = [
     path("delete_image/", DeleteImageView.as_view()),
     path("upload/<str:name>/", FileUploadView.as_view(), name="upload"),
     path("upload/", FileUploadView.as_view()),
-    path("my_upload/", MyUploadView.as_view({"get": "retrieve", "post": "update"})),
+    path(
+        "my_upload/",
+        MyUploadView.as_view({"get": "retrieve", "post": "update", "delete": "remove"}),
+    ),
     path("upload_tree/", UploadTreeView.as_view()),
     path("finish_upload/", FinishUploadView.as_view()),
     path("finalize_upload/", FinalizeUploadView.as_view()),

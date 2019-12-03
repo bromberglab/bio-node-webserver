@@ -25,6 +25,7 @@ from .files import (
     file_tree,
     finish_upload,
     finalize_upload,
+    clear_upload,
 )
 from .serializers import *
 from .events import send_event
@@ -291,6 +292,10 @@ class MyUploadView(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    def remove(self, request):
+        clear_upload(request)
+        return Response()
 
 
 class FinishUploadView(APIView):

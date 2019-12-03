@@ -696,3 +696,12 @@ def make_download_link(rel_path, name="download"):
 
     return folder
 
+def clear_upload(request):
+    upload = get_upload(request)
+    uuid = str(upload.uuid)
+    path = base_path / "file" / uuid
+
+    try:
+        shutil.rmtree(path)
+    except:
+        pass
