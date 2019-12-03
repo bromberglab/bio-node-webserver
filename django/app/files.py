@@ -362,6 +362,8 @@ def finish_upload_(request, upload):
             upload.save()
             untar_upload(upload, path, files)
             return error("extracting")
+    if request.data.get("extract_only", False):
+        return error("no extract")
 
     if len(files) + len(dirs) == 0:
         return error("Nothing uploaded.")
@@ -488,6 +490,7 @@ def move_file(
     global sub_uploads
     assert isinstance(file, str)
     assert not ".." in file, "Illegal sequence: .."
+    assert not ".." in job, "Illegal sequence: .."
     assert not ".." in type, "Illegal sequence: .."
 
     duplicate = False
