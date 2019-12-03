@@ -540,6 +540,7 @@ def finalize_upload(request, upload):
 
     data = request.data
     manual_format = data.get("manual_format", False)
+    wrap_files = data.get("wrap_files", False)
     checkboxes = data.get("checkboxes", [])
     types = data.get("types", [])
     for t in types:
@@ -622,6 +623,8 @@ def finalize_upload(request, upload):
         to_path = base_path
         to_path /= upload.file_type
         to_path /= str(upload.uuid)
+        if wrap_files:
+            to_path /= 'static'
         if path != to_path:
             os.makedirs(to_path.parent, exist_ok=True)
             move(path, to_path)
