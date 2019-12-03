@@ -557,7 +557,8 @@ def finalize_upload(request, upload):
     # avoid name duplicate if 'file' is part of the types
     path = base_path / "file" / (uuid + "_")
     move(base_path / "file" / uuid, path)
-    path = unwrap_path(path)
+    if not manual_format:
+        path = unwrap_path(path)
 
     if not manual_format:
         types_ = []
