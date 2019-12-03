@@ -91,6 +91,19 @@ class WorkflowStorageView(APIView):
         return Response()
 
 
+class WorkflowView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, name, format=None):
+        flow = Workflow.objects.get(name=name)
+        if flow.user != request.user and not request.user.is_superuser:
+            return Response(status=HTTP_403_FORBIDDEN)
+
+        serializer = WorkflowSerializer(flow)
+
+        return Response(serializer.data)
+
+
 class WorkflowsView(APIView):
     permission_classes = [IsAuthenticated]
 

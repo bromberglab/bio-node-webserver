@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 import time
 import random
 import string
+from app.events import send_event
 
 
 class Workflow(models.Model):
@@ -27,6 +28,8 @@ class Workflow(models.Model):
     def finish(self):
         self.finished = True
         self.status = "finished"
+        send_event("workflow-finished", {"name": self.name})
+
         self.save()
 
     @classmethod
