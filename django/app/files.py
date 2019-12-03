@@ -305,6 +305,20 @@ def unwrap_path(path):
     return path
 
 
+def untar_upload(upload, path, files):
+    from threading import Thread
+    Thread(target=threaded_untar_upload, args=(upload, path, files)).start()
+
+def threaded_untar_upload(upload, path, files):
+    if len(files) == 1:
+        un_tar(path / files[0], make_folder=False)
+    else:
+        for f in files:
+            un_tar(path / f, make_folder=True)
+    upload.extracting = False
+    upload.save()
+    send_event("extracted", {"uuid": upload.uuid})
+
 def finish_upload_(request, upload):
     """
     Returns the format structure of an upload after it is finished.
@@ -344,12 +358,10 @@ def finish_upload_(request, upload):
         if extract is None:
             return error("extract")
         if extract:
-            if len(files) == 1:
-                un_tar(path / files[0], make_folder=False)
-            else:
-                for f in files:
-                    un_tar(path / f, make_folder=True)
-            return finish_upload_(request, upload)
+            upload.extracting = True
+            upload.save()
+            untar_upload(upload, path, files)
+            return error("extracting")
 
     if len(files) + len(dirs) == 0:
         return error("Nothing uploaded.")
