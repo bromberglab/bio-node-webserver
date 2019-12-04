@@ -16,6 +16,7 @@ class Workflow(models.Model):
     scheduled = models.BooleanField(default=False)
     finished = models.BooleanField(default=False)
     status = models.CharField(max_length=32, blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def json(self):
