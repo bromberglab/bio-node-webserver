@@ -1,7 +1,7 @@
 import os
 from django.shortcuts import render, redirect
 from django.views import View as RegView
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.conf import settings
 from django.urls import reverse
 from rest_framework import viewsets
@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from django.utils.decorators import method_decorator
 from django_zip_stream.responses import FolderZipResponse
 
@@ -412,3 +413,11 @@ class NotificationsList(ListAPIView):
         for n in ns:
             n.delete()
         return Response()
+
+
+class LoginOverride(LoginView):
+    def get(self, request, *args, **kwargs):
+        if request.GET.get("next", None) is None:
+            return HttpResponseRedirect(request.path_info + "?next=/")
+
+        return super().get(request, *args, **kwargs)

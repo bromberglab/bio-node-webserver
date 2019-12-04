@@ -63,6 +63,7 @@ main = [
     path("webhooks/gs_update/", GoogleStorageWebhook.as_view()),
     path("", IndexView.as_view(), name="index"),
     path("accounts/profile/", RedirectView.as_view(url="/")),
+    path("accounts/login/", LoginOverride.as_view()),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 
