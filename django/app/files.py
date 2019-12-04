@@ -389,7 +389,7 @@ def finish_upload_(request, upload):
 
     if len(dirs) > 0:
         # process directories
-        found = 0, None
+        found = -1, None
         for d in dirs:
             dir_files = list_all_files(path / d)
             if len(dir_files) > found[0]:
