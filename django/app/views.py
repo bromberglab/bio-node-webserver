@@ -142,6 +142,21 @@ class WorkflowRunView(APIView):
         return Response(flow.name)
 
 
+class WorkflowNameView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        old = request.data.get("old", "")
+        new = request.data.get("new", "")
+
+        flow = Workflow.objects.get(name=old)
+        if request.user.is_superuser or flow.user == request.user:
+            flow.name = new
+            flow.save()
+
+        return Response()
+
+
 class ListImagesView(ListAPIView):
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer

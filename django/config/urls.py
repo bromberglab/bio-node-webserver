@@ -40,6 +40,7 @@ api = [
     path("check_auth/", CheckAuthView.as_view()),
     path("workflow_storage/", WorkflowStorageView.as_view()),
     path("workflow_run/", WorkflowRunView.as_view()),
+    path("workflow_name/", WorkflowNameView.as_view()),
     path("workflows/<path:name>/", WorkflowView.as_view()),
     path("workflows/", WorkflowsView.as_view()),
     path("job/", JobView.as_view()),
