@@ -96,4 +96,5 @@ class WorkflowSerializer(serializers.ModelSerializer):
             "finished",
             "status",
             "some_failed",
+            "updated_at",
         ]
