@@ -705,3 +705,12 @@ def clear_upload(request):
         shutil.rmtree(path)
     except:
         pass
+
+def clean_job(job):
+    id = str(job.pk)
+    path = base_path / "job_outputs" / id
+
+    try:
+        shutil.rmtree(path)
+    except:
+        pass

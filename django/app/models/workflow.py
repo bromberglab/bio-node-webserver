@@ -32,6 +32,11 @@ class Workflow(models.Model):
         send_event("workflow-finished", {"name": self.name})
 
         self.save()
+        self.clean_up()
+
+    def clean_up(self):
+        for job in self.job_set.all():
+            job.clean_up()
 
     @classmethod
     def id_for(cls, key, workflow_ids):
