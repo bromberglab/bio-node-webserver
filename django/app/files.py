@@ -351,6 +351,12 @@ def finish_upload_(request, upload):
 
     for f in list_cleanup_files("file", str(upload.uuid), relative=False):
         os.remove(f)
+        try:
+            os.rmdir(f.parent)
+            # is_empty = True
+        except OSError:
+            pass
+            # is_empty = False
 
     path = unwrap_path(path)
     dirs = list_dirs(path)
