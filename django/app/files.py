@@ -92,11 +92,11 @@ def list_all_files(path, type=None, id=None, relative=True, only_full_uploads=Tr
     return files
 
 
-def matches_any_suffix(f: Path, suffixes):
+def path_matches_any(f: Path, suffixes):
     """ true, if any of the suffixes match the path f """
 
     for s in suffixes:
-        if f.match("*" + s):
+        if f.match(s):
             return True
 
     return False
@@ -108,11 +108,12 @@ def list_cleanup_files(type, id, relative=True):
     files = list_all_files(None, type, id, relative=relative, only_full_uploads=False)
 
     suffixes = [
-        chunk_suffix,
-        chunk_suffix_done,
-        ".DS_Store",
+        "*" + chunk_suffix,
+        "*" + chunk_suffix_done,
+        "*.DS_Store",
+        "**/__MACOSX/**",
     ]
-    files = [f for f in files if matches_any_suffix(f, suffixes)]
+    files = [f for f in files if path_matches_any(f, suffixes)]
 
     return files
 
