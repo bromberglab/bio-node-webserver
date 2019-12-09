@@ -5,14 +5,15 @@ def get_status(name):
     api = client.CoreV1Api()
     # setup watch
     w = watch.Watch()
-    status = "failed"
+    status = "running"
     pod = None
-    for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
-        if event["object"].metadata.labels.get("job-name", None) == str(name):
-            pod = event["object"].metadata.name
-            status = event["object"].status.phase.lower()
-            if status in ["succeeded", "failed"]:
-                break
+    while status not in ["succeeded", "failed"]:
+        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
+            if event["object"].metadata.labels.get("job-name", None) == str(name):
+                pod = event["object"].metadata.name
+                status = event["object"].status.phase.lower()
+                if status in ["succeeded", "failed"]:
+                    break
     w.stop()
 
     logs = api.read_namespaced_pod_log(name=pod, namespace="default")
