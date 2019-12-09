@@ -4,6 +4,8 @@ input/
 output/
 travis-key.json
 .env
+**/The_Oxford_3000.txt
+**/make_wordlist.py
 
 # ^ ADD CUSTOM HERE ^ #
 
