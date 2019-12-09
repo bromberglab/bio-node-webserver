@@ -41,6 +41,7 @@ class Notification(models.Model):
             short_text = "Your job %s failed!" % job.display_name
             importance = 15
 
+        logs = "%s:\n%s" % (status, logs)
         cls.send(user, short_text, logs, importance)
 
     @classmethod
