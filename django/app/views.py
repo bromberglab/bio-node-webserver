@@ -445,3 +445,9 @@ class LoginOverride(LoginView):
             return HttpResponseRedirect(request.path_info + "?next=/")
 
         return super().get(request, *args, **kwargs)
+
+class RandomNameView(APIView):
+    def get(self, request, format=None):
+        from .util import default_name
+
+        return Response(default_name())
