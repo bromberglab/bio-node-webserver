@@ -1,4 +1,4 @@
-FROM gcr.io/poised-cortex-254814/cloudsdk
+FROM yspreen/gcloudsdk-plus
 
 ENV APP_DIR=/app
 
