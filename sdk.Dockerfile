@@ -10,7 +10,6 @@ RUN apk --no-cache add \
     curl \
     python \
     py-crcmod \
-    bash \
     libc6-compat \
     openssh-client \
     git \

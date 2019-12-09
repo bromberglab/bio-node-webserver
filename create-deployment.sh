@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 gcloud container clusters get-credentials standard-cluster-1 --zone us-east4-a --project poised-cortex-254814
 
