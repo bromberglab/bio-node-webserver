@@ -141,6 +141,8 @@ metadata:
   name: server-cron
 spec:
   schedule: "*/1 * * * *"
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 0
   jobTemplate:
     spec:
       template:
