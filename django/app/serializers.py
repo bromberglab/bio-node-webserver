@@ -89,6 +89,7 @@ class WorkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workflow
         read_only_fields = fields = [
+            "pk",
             "name",
             "user",
             "should_run",
