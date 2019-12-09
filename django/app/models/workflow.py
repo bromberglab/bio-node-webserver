@@ -29,7 +29,7 @@ class Workflow(models.Model):
     def finish(self):
         self.finished = True
         self.status = "finished"
-        send_event("workflow-finished", {"name": self.name})
+        send_event("workflow-finished", {"pk": self.pk})
 
         self.save()
         self.clean_up()

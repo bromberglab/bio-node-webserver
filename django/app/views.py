@@ -76,14 +76,18 @@ class WorkflowStorageView(APIView):
 
     def get(self, request, format=None):
         name = request.GET.get("name", "")
-        flow = Workflow.objects.get(name=name)
+        pk = request.GET.get("pk", "")
+        if pk:
+            flow = Workflow.objects.get(pk=pk)
+        else:
+            flow = Workflow.objects.get(should_run=False, name=name)
 
         return Response(flow.json)
 
     def post(self, request, format=None):
         name = request.data.get("name", "")
         try:
-            flow = Workflow.objects.get(name=name)
+            flow = Workflow.objects.get(should_run=False, name=name)
         except:
             flow = Workflow(name=name)
         flow.json = request.data.get("data", dict())
@@ -97,7 +101,7 @@ class WorkflowView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, name, format=None):
-        flow = Workflow.objects.get(name=name)
+        flow = Workflow.objects.get(pk=name)
         if flow.user != request.user and not request.user.is_superuser:
             return Response(status=HTTP_403_FORBIDDEN)
 
@@ -139,17 +143,17 @@ class WorkflowRunView(APIView):
         flow.json = request.data.get("data", dict())
         flow.prepare_workflow()
 
-        return Response(flow.name)
+        return Response(flow.pk)
 
 
 class WorkflowNameView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        old = request.data.get("old", "")
-        new = request.data.get("new", "")
+        old = request.data.get("pk", "")
+        new = request.data.get("name", "")
 
-        flow = Workflow.objects.get(name=old)
+        flow = Workflow.objects.get(pk=old)
         if request.user.is_superuser or flow.user == request.user:
             flow.name = new
             flow.save()
