@@ -307,17 +307,26 @@ def unwrap_path(path):
 
 def untar_upload(upload, path, files):
     from threading import Thread
-    Thread(target=threaded_untar_upload, args=(upload, path, files)).start()
 
-def threaded_untar_upload(upload, path, files):
+    Thread(target=threaded_extract_upload, args=(un_tar, upload, path, files)).start()
+
+
+def unzip_upload(upload, path, files):
+    from threading import Thread
+
+    Thread(target=threaded_extract_upload, args=(un_zip, upload, path, files)).start()
+
+
+def threaded_extract_upload(fun, upload, path, files):
     if len(files) == 1:
-        un_tar(path / files[0], make_folder=False)
+        fun(path / files[0], make_folder=False)
     else:
         for f in files:
-            un_tar(path / f, make_folder=True)
+            fun(path / f, make_folder=True)
     upload.extracting = False
     upload.save()
     send_event("extracted", {"uuid": upload.uuid})
+
 
 def finish_upload_(request, upload):
     """
@@ -361,6 +370,22 @@ def finish_upload_(request, upload):
             upload.extracting = True
             upload.save()
             untar_upload(upload, path, files)
+            return error("extracting")
+    all_zip = None
+    if len(dirs) == 0:
+        for f in files:
+            if all_zip != False and f.endswith(".zip"):
+                all_zip = True
+            else:
+                all_zip = False
+    if all_zip:
+        extract = request.data.get("extract", None)
+        if extract is None:
+            return error("extract")
+        if extract:
+            upload.extracting = True
+            upload.save()
+            unzip_upload(upload, path, files)
             return error("extracting")
     if request.data.get("extract_only", False):
         return error("no extract")
@@ -628,7 +653,7 @@ def finalize_upload(request, upload):
         to_path /= upload.file_type
         to_path /= str(upload.uuid)
         if wrap_files:
-            to_path /= 'static'
+            to_path /= "static"
         if path != to_path:
             os.makedirs(to_path.parent, exist_ok=True)
             move(path, to_path)
@@ -676,6 +701,21 @@ def un_tar(file, make_folder=False, remove=True):
         os.remove(file)
 
 
+def un_zip(file, make_folder=False, remove=True):
+    file = Path(file)
+
+    if make_folder:
+        name = file.name[: -len(".zip")]
+        os.makedirs(file.parent / name, exist_ok=True)
+        move(file, file.parent / name / file.name)
+        file = file.parent / name / file.name
+
+    subprocess.run(["unzip", "-n", str(file), "-d", str(file.parent)])
+
+    if remove:
+        os.remove(file)
+
+
 def make_download_link(rel_path, name="download"):
     import random
     import string
@@ -696,6 +736,7 @@ def make_download_link(rel_path, name="download"):
 
     return folder
 
+
 def clear_upload(request):
     upload = get_upload(request)
     uuid = str(upload.uuid)
@@ -705,6 +746,7 @@ def clear_upload(request):
         shutil.rmtree(path)
     except:
         pass
+
 
 def clean_job(job):
     id = str(job.pk)
