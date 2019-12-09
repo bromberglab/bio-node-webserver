@@ -14,3 +14,7 @@ def random_word():
 
 def random_words(k=3):
     return random.choices(word_list, k=k)
+
+
+def default_name(*a, **kw):
+    return " ".join(random_words())

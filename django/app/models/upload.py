@@ -2,11 +2,12 @@ import uuid as uu
 from django.db import models
 from django.contrib.auth.models import User
 from typing import Union
+from app.util import default_name
 
 
 class Upload(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
-    name = models.CharField(max_length=64, blank=True, default="")
+    name = models.CharField(max_length=64, blank=True, default=default_name)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     file_type = models.CharField(max_length=64, default="file")
     started_at = models.DateTimeField(auto_now_add=True)
