@@ -20,6 +20,12 @@ content = list(filtered)
 filtered = filter(lambda line: "'" not in line, content)
 content = list(filtered)
 
+filtered = filter(lambda line: "’" not in line, content)
+content = list(filtered)
+
+filtered = filter(lambda line: "sex" not in line, content)
+content = list(filtered)
+
 filtered = set([l.lower() for l in content])
 content = list(filtered)
 
