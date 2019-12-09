@@ -79,6 +79,7 @@ class WorkflowStorageView(APIView):
         pk = request.GET.get("pk", "")
         if pk:
             flow = Workflow.objects.get(pk=pk)
+            assert request.user.is_superuser or flow.user == request.user
         else:
             flow = Workflow.objects.get(should_run=False, name=name)
 
@@ -114,10 +115,14 @@ class WorkflowsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, format=None):
+        from django.db.models import Q
+
         if request.user.is_superuser:
             flows = Workflow.objects.all()
         else:
-            flows = Workflow.objects.filter(user=request.user)
+            flows = Workflow.objects.filter(
+                Q(user=request.user) | Q(should_run=False)
+            )
         serializer = WorkflowSerializer(flows, many=True)
 
         return Response(serializer.data)
