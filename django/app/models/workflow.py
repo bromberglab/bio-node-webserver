@@ -6,10 +6,11 @@ import time
 import random
 import string
 from app.events import send_event
+from app.util import default_name
 
 
 class Workflow(models.Model):
-    name = models.CharField(max_length=64, default=uu.uuid4)
+    name = models.CharField(max_length=64, default=default_name)
     json_string = models.TextField(default="{}")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     should_run = models.BooleanField(default=False)
