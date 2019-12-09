@@ -8,7 +8,7 @@ import random
 import string
 from kubernetes import client, watch
 from django.db import transaction
-from ..files import copy_folder, list_dirs
+from ..files import copy_folder, list_dirs, clean_job
 from .workflow import Workflow
 from .upload import Upload
 from .node_image import NodeImage
@@ -425,3 +425,7 @@ class Job(models.Model):
                 if dependent.dependencies.count() == 0:
                     dependent.dependencies_met = True
                 dependent.save()
+
+    def clean_up(self):
+        if self.is_node:
+            clean_job(self)
