@@ -66,6 +66,7 @@ class JobSerializer(serializers.ModelSerializer):
             "started_at",
             "parallel_runs",
             "finished_at",
+            "runtime",
         ]
 
 
