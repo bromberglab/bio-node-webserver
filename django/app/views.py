@@ -139,8 +139,6 @@ class JobView(APIView):
 
 
 class JobLogsView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         as_json = request.GET.get("json", False)
@@ -151,7 +149,9 @@ class JobLogsView(APIView):
         if as_json:
             return Response(logs)
         else:
-            return HttpResponse(logs)
+            response = HttpResponse(logs, content_type='text/plain')
+            response['Content-Disposition'] = "attachment; filename=%s.log" % name
+            return response
 
 
 class WorkflowRunView(APIView):
