@@ -67,6 +67,8 @@ class JobSerializer(serializers.ModelSerializer):
             "parallel_runs",
             "finished_at",
             "runtime",
+            "max_cpu",
+            "max_memory",
         ]
 
 

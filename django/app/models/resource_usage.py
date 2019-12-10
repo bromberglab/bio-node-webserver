@@ -6,8 +6,8 @@ class ResourceUsage(models.Model):
     num = models.CharField(max_length=8, blank=True, default="")
     pod = models.CharField(max_length=5, blank=True, default="")
 
-    cpu = models.FloatField(default=-1.0)
-    memory = models.FloatField(default=-1.0)
+    max_cpu = models.FloatField(default=-1.0)
+    max_memory = models.FloatField(default=-1.0)
 
     @classmethod
     def update(cls, combined_name, cpu, memory):
@@ -25,8 +25,8 @@ class ResourceUsage(models.Model):
             except:
                 res = cls(name=name, num=num, pod=pod)
 
-            if res.cpu < cpu:
-                res.cpu = cpu
-            if res.memory < memory:
-                res.memory = memory
+            if res.max_cpu < cpu:
+                res.max_cpu = cpu
+            if res.max_memory < memory:
+                res.max_memory = memory
             res.save()
