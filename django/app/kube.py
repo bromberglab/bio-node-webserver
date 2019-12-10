@@ -32,26 +32,44 @@ def launch_delete_job(body):
     resp = api.delete_namespaced_pod(str(pod), namespace="default")
 
 
-def get_resources(pod):
-    """ returns cpu[m], memory[Ki] """
-
-    api = client.CustomObjectsApi()
-    response = api.get_namespaced_custom_object(
-        "metrics.k8s.io", "v1beta1", "default", "pods", pod
-    )
-
+def _sum_containers(containers):
     totals_cpu = 0
     totals_memory = 0
 
-    for container in response["containers"]:
+    for container in containers:
         cpu = container["usage"]["cpu"]
         cpu = SIConverter.to_number(cpu)
         totals_cpu += 1000 * cpu
         memory = container["usage"]["memory"]
         memory = SIConverter.to_int(memory)
-        totals_memory += memory / 1024
+        totals_memory += memory / 1024 / 1024
 
-    return int(totals_cpu), int(totals_memory)
+    return totals_cpu, totals_memory
+
+
+def get_resources(pod=None):
+    """ returns cpu[m], memory[Mi] """
+
+    api = client.CustomObjectsApi()
+    if pod is not None:
+        response = api.get_namespaced_custom_object(
+            "metrics.k8s.io", "v1beta1", "default", "pods", pod
+        )
+
+        return _sum_containers(response["containers"])
+    else:
+        response = api.list_namespaced_custom_object(
+            "metrics.k8s.io", "v1beta1", "default", "pods"
+        )
+
+        result = {}
+
+        for item in response["items"]:
+            name = item["metadata"]["name"]
+            resources = _sum_containers(item["containers"])
+            result[name] = resources
+
+        return result
 
 
 class SIConverter:
