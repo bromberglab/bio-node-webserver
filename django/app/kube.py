@@ -78,9 +78,7 @@ def get_resources(pod=None):
 
         return _sum_containers(response["containers"])
     else:
-        response = api.list_namespaced_custom_object(
-            "metrics.k8s.io", "v1beta1", "default", "pods"
-        )
+        response = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "pods")
 
         result = {}
 
