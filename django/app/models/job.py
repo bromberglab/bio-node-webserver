@@ -306,28 +306,21 @@ class Job(models.Model):
 
     def get_status(self):
         status = None
-        logs = ""
         if self.parallel_runs < 0:
-            status, pod, logs = kube_status(str(self.pk))
+            status, pod = kube_status(str(self.pk))
         else:
             k8s_v1 = client.CoreV1Api()
             k8s_batch_v1 = client.BatchV1Api()
             for i in range(self.parallel_runs):
                 name = str(self.pk) + "-" + str(i)
-                job_status, pod, job_logs = kube_status(name)
+                job_status, pod = kube_status(name)
                 if status is None or job_status == "failed":
                     status = job_status
-                    logs += job_logs
 
                 resp = k8s_batch_v1.delete_namespaced_job(name, namespace="default")
                 resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
-        length = Globals().instance.log_chars_kept
 
-        if len(logs) > length:
-            length = length // 2 - 5
-            logs = logs[:length] + "\n...\n" + logs[-length:]
-
-        Notification.job_finished(self, status, pod, logs)
+        Notification.job_finished(self, status, pod)
 
         return status, pod
 

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import pytz
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +31,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
     BASE_BASE_DIR if DEBUG else BASE_DIR, "webservice-key.json"
 )
 
-LOGIN_URL=LOGIN_REDIRECT_URL='/api/accounts/login/'
+LOGIN_URL = LOGIN_REDIRECT_URL = "/api/accounts/login/"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -160,6 +161,9 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+TZ_NAME = "America/New_York"
+TZ = pytz.timezone(TZ_NAME)
 
 
 # Static files (CSS, JavaScript, Images)
