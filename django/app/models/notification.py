@@ -22,7 +22,7 @@ class Notification(models.Model):
     """
 
     @classmethod
-    def job_finished(cls, job, status, pod_name, logs):
+    def job_finished(cls, job, status, pod_name):
         from .job import Job
         from .workflow import Workflow
 
@@ -41,7 +41,9 @@ class Notification(models.Model):
             short_text = "Your job %s failed!" % job.display_name
             importance = 15
 
-        cls.send(user, short_text, logs, importance)
+        long_text = "Status: %s\nSee workflow page for logs." % status
+
+        cls.send(user, short_text, long_text, importance)
 
     @classmethod
     def send(cls, user, short_text, long_text="", importance=5):
