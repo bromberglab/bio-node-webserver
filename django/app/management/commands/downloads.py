@@ -1,3 +1,4 @@
+from django.core.management.base import BaseCommand
 import shutil
 from django.utils import timezone
 from pathlib import Path
@@ -9,5 +10,15 @@ def cron():
     limit = timezone.now()
     limit -= timezone.timedelta(hours=2)
     for d in Download.objects.filter(created_at__lte=limit):
-        os.remove(Path(d.path))
+        try:
+            os.remove(Path(d.path))
+        except:
+            pass
         d.delete()
+
+
+class Command(BaseCommand):
+    help = "Cleans downloads."
+
+    def handle(self, *_, **__):
+        cron()
