@@ -763,3 +763,24 @@ def clean_job(job):
         shutil.rmtree(path)
     except:
         pass
+
+
+def logs_for(name):
+    path = Path(settings.DATA_PATH) / "logs"
+    for p in name.split("-"):
+        path /= p
+
+    result = ""
+
+    files = list_all_files(path, only_full_uploads=False)
+    for f in files:
+        with open(path / f, "r") as handle:
+            text = handle.read()
+        dir_name = str(f.parent.parent).replace("/", "-")
+        file_name = f.name
+        file_name = file_name.split('.')[0]
+        name = "%s [%s]:" % (dir_name, file_name)
+
+        result += '%s\n%s\n' % (name, text)
+
+    return result
