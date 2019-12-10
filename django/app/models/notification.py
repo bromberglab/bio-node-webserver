@@ -41,7 +41,7 @@ class Notification(models.Model):
             short_text = "Your job %s failed!" % job.display_name
             importance = 15
 
-        long_text = "Status: %s\nSee workflow page for logs." % status
+        long_text = "Status: %s.\nSee workflow page for logs." % status
 
         cls.send(user, short_text, long_text, importance)
 
