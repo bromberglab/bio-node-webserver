@@ -767,7 +767,7 @@ def clean_job(job):
 
 def logs_for(name):
     path = Path(settings.DATA_PATH) / "logs"
-    for p in name.split("-"):
+    for p in str(name).split("-"):
         path /= p
 
     result = ""
