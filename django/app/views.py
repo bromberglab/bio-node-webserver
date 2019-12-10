@@ -120,9 +120,7 @@ class WorkflowsView(APIView):
         if request.user.is_superuser:
             flows = Workflow.objects.all()
         else:
-            flows = Workflow.objects.filter(
-                Q(user=request.user) | Q(should_run=False)
-            )
+            flows = Workflow.objects.filter(Q(user=request.user) | Q(should_run=False))
         serializer = WorkflowSerializer(flows, many=True)
 
         return Response(serializer.data)
@@ -138,6 +136,22 @@ class JobView(APIView):
         job = JobSerializer(job)
 
         return Response(job.data)
+
+
+class JobLogsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        name = request.GET.get("name", "")
+        as_json = request.GET.get("json", False)
+
+        job = Job.objects.get(uuid=name)
+        logs = job.logs
+
+        if as_json:
+            return Response(logs)
+        else:
+            return HttpResponse(logs)
 
 
 class WorkflowRunView(APIView):
@@ -445,6 +459,7 @@ class LoginOverride(LoginView):
             return HttpResponseRedirect(request.path_info + "?next=/")
 
         return super().get(request, *args, **kwargs)
+
 
 class RandomNameView(APIView):
     def get(self, request, format=None):
