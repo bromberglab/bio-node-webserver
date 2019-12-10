@@ -63,7 +63,6 @@ class JobSerializer(serializers.ModelSerializer):
             "finished",
             "status",
             "dependencies_met",
-            "old_id",
         ]
 
 

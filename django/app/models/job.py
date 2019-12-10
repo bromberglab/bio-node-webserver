@@ -276,10 +276,6 @@ class Job(models.Model):
         return upload.uuid
 
     @property
-    def old_id(self):
-        return self.json["old_id"]
-
-    @property
     def is_single_input(self):
         if not self.is_node:
             return True

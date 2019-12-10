@@ -54,7 +54,6 @@ class Workflow(models.Model):
         for key, value in body["nodes"].items():
             i = Workflow.id_for(key, workflow_ids)
             value["id"] = i
-            value["old_id"] = key
             for _, v in value["inputs"].items():
                 v = v["connections"]
                 for c in v:
