@@ -1,5 +1,6 @@
 import os
 import random
+from django.utils import timezone
 from django.conf import settings
 
 list_path = os.path.join(settings.BASE_DIR, "assets", "The_Oxford_3000.list")
@@ -18,3 +19,7 @@ def random_words(k=3):
 
 def default_name(*a, **kw):
     return " ".join(random_words())
+
+
+def now():
+    return timezone.now().astimezone(tz=settings.TZ)

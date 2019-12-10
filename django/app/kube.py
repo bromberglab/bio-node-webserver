@@ -1,7 +1,7 @@
 from kubernetes import client, watch
-from django.utils import timezone
 from django.conf import settings
 from pathlib import Path
+from app.util import now
 import string
 import os
 
@@ -10,9 +10,9 @@ def create_logfile(pod, logs):
     if pod is None:
         return
 
-    now = timezone.now().astimezone(tz=settings.TZ)
+    t = now()
 
-    file = now.strftime("%Y-%m-%d %H:%M:%S.log")
+    file = t.strftime("%Y-%m-%d %H:%M:%S.log")
 
     path = Path(settings.DATA_PATH) / "logs" / "/".join(pod.split("-")) / file
     os.makedirs(path.parent, exist_ok=True)

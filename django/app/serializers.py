@@ -63,6 +63,9 @@ class JobSerializer(serializers.ModelSerializer):
             "finished",
             "status",
             "dependencies_met",
+            "started_at",
+            "parallel_runs",
+            "finished_at",
         ]
 
 
