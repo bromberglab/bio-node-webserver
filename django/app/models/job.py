@@ -16,6 +16,7 @@ from .globals import Globals
 from .notification import Notification
 from ..kube import get_status as kube_status
 from pathlib import Path
+from app.util import now
 
 
 class Job(models.Model):
@@ -34,6 +35,15 @@ class Job(models.Model):
     dependencies = models.ManyToManyField(
         "app.Job", related_name="dependents", blank=True
     )
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def runtime(self):
+        if not self.started_at or not self.finished_at:
+            return 0
+
+        return (self.finished_at - self.started_at).total_seconds()
 
     @property
     def json(self):
@@ -293,6 +303,7 @@ class Job(models.Model):
 
     def finish(self):
         self.finished = True
+        self.finished_at = now()
         self.save()
 
         self.status_change()
@@ -338,6 +349,8 @@ class Job(models.Model):
         copy_folder(input_paths[0], out_path)
 
     def launch_job(self):
+        self.started_at = now()
+        self.save()
         dep = json.loads(self.body)
 
         k8s_batch_v1 = client.BatchV1Api()
