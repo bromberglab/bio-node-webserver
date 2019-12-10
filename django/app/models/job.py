@@ -14,6 +14,7 @@ from .upload import Upload
 from .node_image import NodeImage
 from .globals import Globals
 from .notification import Notification
+from .resource_usage import ResourceUsage
 from ..kube import get_status as kube_status
 from pathlib import Path
 from app.util import now
@@ -435,3 +436,25 @@ class Job(models.Model):
     @property
     def logs(self):
         return logs_for(self.uuid)
+
+    @property
+    def max_cpu(self):
+        measures = ResourceUsage.objects.filter(name=str(self.uuid))
+
+        max_cpu = -1.0
+        for measure in measures:
+            if measure.max_cpu > max_cpu:
+                max_cpu = measure.max_cpu
+        
+        return max_cpu
+
+    @property
+    def max_memory(self):
+        measures = ResourceUsage.objects.filter(name=str(self.uuid))
+
+        max_memory = -1.0
+        for measure in measures:
+            if measure.max_memory > max_memory:
+                max_memory = measure.max_memory
+        
+        return max_memory
