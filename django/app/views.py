@@ -72,14 +72,12 @@ class AdminCreationView(APIView):
 
 
 class WorkflowStorageView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         pk = request.GET.get("pk", "")
         if pk:
             flow = Workflow.objects.get(pk=pk)
-            assert request.user.is_superuser or flow.user == request.user
+            assert flow.is_shared or request.user.is_superuser or flow.user == request.user
         else:
             flow = Workflow.objects.get(should_run=False, name=name)
 
@@ -99,16 +97,29 @@ class WorkflowStorageView(APIView):
 
 
 class WorkflowView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, name, format=None):
         flow = Workflow.objects.get(pk=name)
-        if flow.user != request.user and not request.user.is_superuser:
+        if not flow.is_shared and flow.user != request.user and not request.user.is_superuser:
             return Response(status=HTTP_403_FORBIDDEN)
 
         serializer = WorkflowSerializer(flow)
 
         return Response(serializer.data)
+
+
+class WorkflowShareView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        pk = request.data.get("pk" "")
+        flow = Workflow.objects.get(pk=pk)
+        if flow.user != request.user and not request.user.is_superuser:
+            return Response(status=HTTP_403_FORBIDDEN)
+
+        flow.is_shared = True
+        flow.save()
+
+        return Response()
 
 
 class WorkflowsView(APIView):
@@ -127,8 +138,6 @@ class WorkflowsView(APIView):
 
 
 class JobView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         job = Job.objects.get(uuid=name)
@@ -149,8 +158,8 @@ class JobLogsView(APIView):
         if as_json:
             return Response(logs)
         else:
-            response = HttpResponse(logs, content_type='text/plain')
-            response['Content-Disposition'] = "attachment; filename=%s.log" % name
+            response = HttpResponse(logs, content_type="text/plain")
+            response["Content-Disposition"] = "attachment; filename=%s.log" % name
             return response
 
 
@@ -183,7 +192,6 @@ class WorkflowNameView(APIView):
 class ListImagesView(ListAPIView):
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class InspectImageView(APIView):
@@ -357,7 +365,6 @@ class UploadTreeView(APIView):
 class FileTypeListView(ListAPIView):
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class CreateDownload(APIView):
@@ -411,9 +418,10 @@ class NotificationView(APIView):
 
 
 class NamesForTypeView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request, format=None):
+        if not request.user.is_authenticated:
+            return Response([])
+
         f_type = request.GET.get("type", "file")
 
         names = []
