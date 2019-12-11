@@ -18,6 +18,7 @@ from .resource_usage import ResourceUsage
 from ..kube import get_status as kube_status
 from pathlib import Path
 from app.util import now
+from copy import deepcopy
 
 
 class Job(models.Model):
@@ -79,12 +80,13 @@ class Job(models.Model):
         mounts = []
         for i, host_path in enumerate(input_paths):
             cont_path = cont_input_paths[i]
+            meta = image["inputs_meta"][i]
             mounts.append(
                 {
                     "name": "vol",
                     "mountPath": cont_path,
                     "subPath": host_path,
-                    "readOnly": True,
+                    "readOnly": not meta[0].startswith("consumable "),
                 }
             )
         for i, host_path in enumerate(output_paths):
@@ -116,7 +118,12 @@ class Job(models.Model):
 
         entrypoint = " ".join(image["entrypoint"])
         cmd = " ".join(image["cmd"])
-        inputs = ";".join([",".join(i) for i in image["inputs_meta"]])
+        inputs_meta = deepcopy(image["inputs_meta"])
+        for i in inputs_meta:
+            p = "consumable "
+            if i[0].startswith(p):
+                i[0] = i[0][len(p) :]
+        inputs = ";".join([",".join(i) for i in inputs_meta])
         outputs = ";".join([",".join(i) for i in image["outputs_meta"]])
 
         app_entrypoint = image["labels"].get("app_entrypoint", None)
@@ -445,7 +452,7 @@ class Job(models.Model):
         for measure in measures:
             if measure.max_cpu > max_cpu:
                 max_cpu = measure.max_cpu
-        
+
         return max_cpu
 
     @property
@@ -456,5 +463,5 @@ class Job(models.Model):
         for measure in measures:
             if measure.max_memory > max_memory:
                 max_memory = measure.max_memory
-        
+
         return max_memory
