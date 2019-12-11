@@ -41,6 +41,7 @@ api = [
     path("workflow_storage/", WorkflowStorageView.as_view()),
     path("workflow_run/", WorkflowRunView.as_view()),
     path("workflow_name/", WorkflowNameView.as_view()),
+    path("share_workflow/", WorkflowShareView.as_view()),
     path("workflows/<path:name>/", WorkflowView.as_view()),
     path("workflows/", WorkflowsView.as_view()),
     path("job/logs/", JobLogsView.as_view()),

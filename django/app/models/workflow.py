@@ -18,6 +18,7 @@ class Workflow(models.Model):
     finished = models.BooleanField(default=False)
     status = models.CharField(max_length=32, blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
+    is_shared = models.BooleanField(default=False)
 
     @property
     def json(self):
