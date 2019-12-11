@@ -171,7 +171,11 @@ class NodeImage(models.Model):
 
     @property
     def inputs(self):
-        return [i[0] for i in self.inputs_meta]
+        inputs = [i[0] for i in self.inputs_meta]
+        p = "consumable "
+        inputs = [i[len(p) :] if i.startswith(p) else i for i in inputs]
+
+        return inputs
 
     @property
     def outputs_raw(self):
