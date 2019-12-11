@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import json
+import re
 
 
 class FileType(models.Model):
@@ -147,6 +148,7 @@ class NodeImage(models.Model):
 
         result = []
         for i in inputs:
+            i = re.sub(r",\s+", ",", i)
             input = i.split(",")
             defaults = ["file", "", "required", "filename", "*"]
 
@@ -198,6 +200,7 @@ class NodeImage(models.Model):
 
         result = []
         for i in outputs:
+            i = re.sub(r",\s+", ",", i)
             output = i.split(",")
             defaults = ["file", "stdout", "results.out"]
 
