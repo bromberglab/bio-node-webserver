@@ -439,6 +439,8 @@ class Job(models.Model):
     def clean_up(self):
         if self.is_node:
             clean_job(self)
+            self.body = ""
+            self.save()
 
     @property
     def logs(self):
