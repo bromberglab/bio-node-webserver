@@ -72,6 +72,8 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
 
 
 def get_status_all():
+    import threading
+
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
 
@@ -79,13 +81,20 @@ def get_status_all():
     status = "running"
     pod = None
     while True:
-        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=120):
+        w.stream()
+        for event in w.stream(
+            api.list_namespaced_pod, namespace="default", timeout_seconds=120
+        ):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
                 status = event["object"].status.phase.lower()
                 if status in ["succeeded", "failed"]:
-                    handle_status(api, k8s_batch_v1, job, pod, status)
+                    threading.Thread(
+                        target=lambda: handle_status(
+                            api, k8s_batch_v1, job, pod, status
+                        )
+                    ).start()
 
 
 def launch_delete_job(body):
