@@ -79,7 +79,7 @@ def get_status_all():
     status = "running"
     pod = None
     while True:
-        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
+        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=120):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
