@@ -402,10 +402,9 @@ class Job(models.Model):
             if did_fail:
                 # override status
                 job.status = status
-                job.save()
 
             if job.finished_runs < job.parallel_runs:
-                return
+                return job.save()
 
             if job.status != "failed":
                 # don't override 'failed'
