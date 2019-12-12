@@ -46,6 +46,7 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     from app.models import Job
     from app.management.commands.resources import reg
     import re
+    import time
 
     if not re.match(reg, pod):
         return
@@ -56,7 +57,13 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     except:
         return
 
-    logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+    logs = None
+    while logs is None:
+        try:
+            logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+        except:
+            time.sleep(3)
+
     create_logfile(pod, logs)
     resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
     api.delete_namespaced_pod(str(pod), namespace="default")
