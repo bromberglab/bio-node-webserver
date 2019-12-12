@@ -2,8 +2,9 @@ from django.core.management.base import BaseCommand
 
 
 def run():
-    print("[Deamon]")
-    pass
+    from app.kube import get_status_all
+
+    get_status_all()
 
 
 class Command(BaseCommand):

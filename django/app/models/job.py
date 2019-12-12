@@ -33,6 +33,7 @@ class Job(models.Model):
         Workflow, null=True, blank=True, on_delete=models.SET_NULL
     )
     parallel_runs = models.IntegerField(default=-1)
+    finished_runs = models.IntegerField(default=0)
 
     dependencies = models.ManyToManyField(
         "app.Job", related_name="dependents", blank=True
@@ -323,26 +324,6 @@ class Job(models.Model):
         data["type"] = "job"
         send_event("status-change", data)
 
-    def get_status(self):
-        status = None
-        if self.parallel_runs < 0:
-            status, pod = kube_status(str(self.pk))
-        else:
-            k8s_v1 = client.CoreV1Api()
-            k8s_batch_v1 = client.BatchV1Api()
-            for i in range(self.parallel_runs):
-                name = str(self.pk) + "-" + str(i)
-                job_status, pod = kube_status(name)
-                if status is None or job_status == "failed":
-                    status = job_status
-
-                resp = k8s_batch_v1.delete_namespaced_job(name, namespace="default")
-                resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
-
-        Notification.job_finished(self, status, pod)
-
-        return status, pod
-
     def create_output(self):
         conf = self.json
         data_output_type = self.data_output_type
@@ -370,12 +351,6 @@ class Job(models.Model):
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
-
-    def delete_job(self, pod):
-        k8s_batch_v1 = client.BatchV1Api()
-        k8s_v1 = client.CoreV1Api()
-        resp = k8s_batch_v1.delete_namespaced_job(str(self.pk), namespace="default")
-        resp = k8s_v1.delete_namespaced_pod(str(pod), namespace="default")
 
     def run_job(self):
         try:
@@ -408,18 +383,34 @@ class Job(models.Model):
         if job.is_node:
             job.prepare_job()
             job.launch_job()
-            status, pod = job.get_status()
-
-            if job.parallel_runs < 0:
-                # else all jobs are already deleted.
-                job.delete_job(pod)
+            return
         elif job.is_data_output:
             job.create_output()
 
-        job.status = status
-        did_fail = job.is_node and status != "succeeded"
+        self.handle_status(status)
 
+    def handle_status(self, status, pod=None):
+        if self.is_node:
+            Notification.job_finished(self, status, pod)
         with transaction.atomic():
+            # refreshing from db shouldn't be necessary
+            job = self # Job.objects.get(pk=self.pk)
+
+            job.finished_runs += 1
+            did_fail = job.is_node and status != "succeeded"
+
+            if did_fail:
+                # override status
+                job.status = status
+                job.save()
+
+            if job.finished_runs < job.parallel_runs:
+                return
+
+            if job.status != "failed":
+                # don't override 'failed'
+                job.status = status
+
             job.finish()
 
             w = job.workflow
