@@ -22,7 +22,7 @@ class Notification(models.Model):
     """
 
     @classmethod
-    def job_finished(cls, job, status, pod_name):
+    def job_finished(cls, job, status, pod_name=None):
         from .job import Job
         from .workflow import Workflow
 

@@ -42,6 +42,39 @@ def get_status(name, logging=True):
     return status, pod
 
 
+def handle_status(api, k8s_batch_v1, job_name, pod, status):
+    from app.models import Job
+
+    logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+    create_logfile(pod, logs)
+    resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
+    api.delete_namespaced_pod(str(pod), namespace="default")
+
+    try:
+        # job name is 'uuid-num', so we take the first 36 chars
+        job = Job.objects.get(uuid=job_name[:36])
+        job.handle_status(status, pod=pod)
+    except:
+        pass
+
+
+def get_status_all():
+    api = client.CoreV1Api()
+    k8s_batch_v1 = client.BatchV1Api()
+
+    w = watch.Watch()
+    status = "running"
+    pod = None
+    while True:
+        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
+            job = event["object"].metadata.labels.get("job-name", None)
+            if job is not None:
+                pod = event["object"].metadata.name
+                status = event["object"].status.phase.lower()
+                if status in ["succeeded", "failed"]:
+                    handle_status(api, k8s_batch_v1, job, pod, status)
+
+
 def launch_delete_job(body):
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
