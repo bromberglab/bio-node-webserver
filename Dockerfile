@@ -18,3 +18,5 @@ ADD django webservice-key.json.enc setup.sh requirements.txt .commit $APP_DIR/
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
     apk del .build-deps
+
+CMD [ "sh", "-c", "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py collectstatic --noinput; python /app/manage.py deamon & daphne config.asgi:application -b 0.0.0.0 -p 8080"]

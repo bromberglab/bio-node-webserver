@@ -106,12 +106,6 @@ spec:
         - name: django
           image: gcr.io/poised-cortex-254814/webservice-server:latest
           imagePullPolicy: "Always"
-          command: ["sh"]
-          args:
-            [
-              "-c",
-              "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py collectstatic --noinput; daphne config.asgi:application -b 0.0.0.0 -p 8080",
-            ]
           envFrom:
             - secretRef:
                 name: secrets-config
