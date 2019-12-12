@@ -81,7 +81,6 @@ def get_status_all():
     status = "running"
     pod = None
     while True:
-        w.stream()
         for event in w.stream(
             api.list_namespaced_pod, namespace="default", timeout_seconds=120
         ):
