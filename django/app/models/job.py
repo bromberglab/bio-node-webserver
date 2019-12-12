@@ -29,6 +29,7 @@ class Job(models.Model):
     json_string = models.TextField(default="{}")
     status = models.CharField(max_length=32, blank=True, default="")
     dependencies_met = models.BooleanField(default=True)
+    should_notify = models.BooleanField(default=False)
     workflow = models.ForeignKey(
         Workflow, null=True, blank=True, on_delete=models.SET_NULL
     )
@@ -313,9 +314,8 @@ class Job(models.Model):
     def finish(self):
         self.finished = True
         self.finished_at = now()
+        self.should_notify = True
         self.save()
-
-        self.status_change()
 
     def status_change(self):
         from app.serializers import JobSerializer
