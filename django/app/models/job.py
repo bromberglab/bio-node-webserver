@@ -383,7 +383,7 @@ class Job(models.Model):
         if job.is_node:
             job.prepare_job()
             job.launch_job()
-            return
+            return # handle_status will run asynchronously
         elif job.is_data_output:
             job.create_output()
 

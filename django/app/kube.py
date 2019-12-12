@@ -44,18 +44,24 @@ def get_status(name, logging=True):
 
 def handle_status(api, k8s_batch_v1, job_name, pod, status):
     from app.models import Job
+    from app.management.commands.resources import reg
+    import re
+
+    if not re.match(reg, pod):
+        return
+
+    try:
+        # job name is 'uuid-num', so we take the first 36 chars
+        job = Job.objects.get(uuid=job_name[:36])
+    except:
+        return
 
     logs = api.read_namespaced_pod_log(name=pod, namespace="default")
     create_logfile(pod, logs)
     resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
     api.delete_namespaced_pod(str(pod), namespace="default")
 
-    try:
-        # job name is 'uuid-num', so we take the first 36 chars
-        job = Job.objects.get(uuid=job_name[:36])
-        job.handle_status(status, pod=pod)
-    except:
-        pass
+    job.handle_status(status, pod=pod)
 
 
 def get_status_all():
