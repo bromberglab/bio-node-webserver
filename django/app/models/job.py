@@ -20,6 +20,8 @@ from pathlib import Path
 from app.util import now
 from copy import deepcopy
 
+TRUTHY = [1, "1", True, "true", "yes", "t", "y"]
+FALSY = [0, "0", False, "false", "no", "f", "n"]
 
 class Job(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
@@ -106,7 +108,7 @@ class Job(models.Model):
         bio_node_entrypoint = image["labels"].get(
             "bio-node_entrypoint", "/bio-node/entry.sh"
         )
-        if bio_node_entrypoint:
+        if bio_node_entrypoint and bio_node_entrypoint not in FALSY:
             c["command"] = bio_node_entrypoint.split(" ")
             c["args"] = []
 
@@ -135,7 +137,7 @@ class Job(models.Model):
             c["env"].append({"name": "PREV_ENTRYPOINT", "value": app_entrypoint})
 
         ignore_cmd = image["labels"].get("ignore_cmd", True)
-        if ignore_cmd in [0, "0", False, "false", "no", "f", "n"]:
+        if ignore_cmd in FALSY:
             c["env"].append({"name": "PREV_COMMAND", "value": cmd})
 
         timeout = image["labels"].get("timeout", None)
