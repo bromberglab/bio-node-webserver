@@ -178,6 +178,22 @@ class NodeImage(models.Model):
         return inputs
 
     @property
+    def add_input(self):
+        labels = self.labels
+        inp = labels.get("input_n", False)
+        if not inp:
+            return False
+        return re.sub(r",\s+", ",", inp).split(",")[0]
+
+    @property
+    def add_output(self):
+        labels = self.labels
+        out = labels.get("output_n", False)
+        if not out:
+            return False
+        return re.sub(r",\s+", ",", out).split(",")[0]
+
+    @property
     def outputs_raw(self):
         labels = self.labels
         if labels.get("output_1", False):
