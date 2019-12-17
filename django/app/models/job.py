@@ -375,6 +375,7 @@ class Job(models.Model):
                 u = self.workflow.user
                 e = str(e) + "\n" + traceback.format_exc()
                 Notification.send(u, "Scheduling Failed", e, 15)
+                self.handle_status("scheduling failed", notification=False)
             else:
                 raise e
 
@@ -402,8 +403,8 @@ class Job(models.Model):
 
         self.handle_status(status)
 
-    def handle_status(self, status, pod=None):
-        if self.is_node:
+    def handle_status(self, status, pod=None, notification=True):
+        if self.is_node and notification:
             Notification.job_finished(self, status, pod)
         with transaction.atomic():
             # refreshing from db shouldn't be necessary
