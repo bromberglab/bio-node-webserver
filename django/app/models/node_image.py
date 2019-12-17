@@ -142,30 +142,34 @@ class NodeImage(models.Model):
         # No-input mode
         return []
 
+    @classmethod
+    def prepare_input(cls, raw):
+        raw = re.sub(r",\s+", ",", raw)
+        raw = raw.split(",")
+        defaults = ["file", "", "required", "filename", "*"]
+
+        if len(raw) >= 2 and raw[1] == "stdin":
+            defaults[3] = "content"
+        if len(raw) > 4:
+            defaults[4] = raw[4]
+
+        for i in range(len(defaults)):
+            try:
+                assert raw[i] != ""
+            except:
+                if len(raw) > i:
+                    raw[i] = defaults[i]
+                else:
+                    raw.append(defaults[i])
+        return raw
+
     @property
     def inputs_meta(self):
         inputs = self.inputs_raw
 
         result = []
         for i in inputs:
-            i = re.sub(r",\s+", ",", i)
-            input = i.split(",")
-            defaults = ["file", "", "required", "filename", "*"]
-
-            if len(input) >= 2 and input[1] == "stdin":
-                defaults[3] = "content"
-            if len(input) > 4:
-                defaults[4] = input[4]
-
-            for i in range(len(defaults)):
-                try:
-                    assert input[i] != ""
-                except:
-                    if len(input) > i:
-                        input[i] = defaults[i]
-                    else:
-                        input.append(defaults[i])
-            result.append(input)
+            result.append(NodeImage.prepare_input(i))
 
         return result
 
@@ -186,12 +190,28 @@ class NodeImage(models.Model):
         return re.sub(r",\s+", ",", inp).split(",")[0]
 
     @property
+    def add_input_meta(self):
+        labels = self.labels
+        inp = labels.get("input_n", False)
+        if not inp:
+            return False
+        return NodeImage.prepare_input(inp)
+
+    @property
     def add_output(self):
         labels = self.labels
         out = labels.get("output_n", False)
         if not out:
             return False
         return re.sub(r",\s+", ",", out).split(",")[0]
+
+    @property
+    def add_output_meta(self):
+        labels = self.labels
+        out = labels.get("output_n", False)
+        if not out:
+            return False
+        return NodeImage.prepare_output(out)
 
     @property
     def outputs_raw(self):
@@ -214,32 +234,35 @@ class NodeImage(models.Model):
         # No-output mode
         return []
 
+    @classmethod
+    def prepare_output(cls, raw):
+        raw = re.sub(r",\s+", ",", raw)
+        raw = raw.split(",")
+        defaults = ["file", "stdout", "results.out"]
+
+        if len(raw) >= 3 and raw[2] == "":
+            # If the output filename is '', then don't override it. Foldername will be used as parameter.
+            defaults[2] = ""
+        if len(raw) >= 2 and raw[1] == "workingdir":
+            # Default for workingdir: Move all created files
+            defaults[2] = ""
+
+        for i in range(len(defaults)):
+            try:
+                assert raw[i] != ""
+            except:
+                if len(raw) > i:
+                    raw[i] = defaults[i]
+                else:
+                    raw.append(defaults[i])
+
     @property
     def outputs_meta(self):
         outputs = self.outputs_raw
 
         result = []
-        for i in outputs:
-            i = re.sub(r",\s+", ",", i)
-            output = i.split(",")
-            defaults = ["file", "stdout", "results.out"]
-
-            if len(output) >= 3 and output[2] == "":
-                # If the output filename is '', then don't override it. Foldername will be used as parameter.
-                defaults[2] = ""
-            if len(output) >= 2 and output[1] == "workingdir":
-                # Default for workingdir: Move all created files
-                defaults[2] = ""
-
-            for i in range(len(defaults)):
-                try:
-                    assert output[i] != ""
-                except:
-                    if len(output) > i:
-                        output[i] = defaults[i]
-                    else:
-                        output.append(defaults[i])
-            result.append(output)
+        for o in outputs:
+            result.append(NodeImage.prepare_output(o))
 
         return result
 
