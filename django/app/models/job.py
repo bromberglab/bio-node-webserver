@@ -23,6 +23,7 @@ from copy import deepcopy
 TRUTHY = [1, "1", True, "true", "yes", "t", "y"]
 FALSY = [0, "0", False, "false", "no", "f", "n"]
 
+
 class Job(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
     scheduled = models.BooleanField(default=False)
@@ -189,6 +190,16 @@ class Job(models.Model):
         id = conf["id"]
 
         image = conf["data"]["image"]
+
+        # Add dynamic inputs
+        for _ in range(conf["data"]["addInputs"]):
+            image["inputs_meta"] += deepcopy(image["add_input_meta"])
+            image["inputs"] += deepcopy(image["add_input"])
+
+        # Add dynamic outputs
+        for _ in range(conf["data"]["addOutputs"]):
+            image["outputs_meta"] += deepcopy(image["add_output_meta"])
+            image["outputs"] += deepcopy(image["add_output"])
 
         parallelism = image["labels"].get("parallelism", "1.0")
         parallelism = float(parallelism)
@@ -385,7 +396,7 @@ class Job(models.Model):
         if job.is_node:
             job.prepare_job()
             job.launch_job()
-            return # handle_status will run asynchronously
+            return  # handle_status will run asynchronously
         elif job.is_data_output:
             job.create_output()
 
@@ -396,7 +407,7 @@ class Job(models.Model):
             Notification.job_finished(self, status, pod)
         with transaction.atomic():
             # refreshing from db shouldn't be necessary
-            job = self # Job.objects.get(pk=self.pk)
+            job = self  # Job.objects.get(pk=self.pk)
 
             job.finished_runs += 1
             did_fail = job.is_node and status != "succeeded"
