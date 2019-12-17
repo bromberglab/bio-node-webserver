@@ -193,13 +193,13 @@ class Job(models.Model):
 
         # Add dynamic inputs
         for _ in range(conf["data"]["addInputs"]):
-            image["inputs_meta"] += deepcopy(image["add_input_meta"])
-            image["inputs"] += deepcopy(image["add_input"])
+            image["inputs_meta"].append(deepcopy(image["add_input_meta"]))
+            image["inputs"].append(deepcopy(image["add_input"]))
 
         # Add dynamic outputs
         for _ in range(conf["data"]["addOutputs"]):
-            image["outputs_meta"] += deepcopy(image["add_output_meta"])
-            image["outputs"] += deepcopy(image["add_output"])
+            image["outputs_meta"].append(deepcopy(image["add_output_meta"]))
+            image["outputs"].append(deepcopy(image["add_output"]))
 
         parallelism = image["labels"].get("parallelism", "1.0")
         parallelism = float(parallelism)
