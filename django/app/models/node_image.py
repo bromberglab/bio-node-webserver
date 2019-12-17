@@ -255,6 +255,7 @@ class NodeImage(models.Model):
                     raw[i] = defaults[i]
                 else:
                     raw.append(defaults[i])
+        return raw
 
     @property
     def outputs_meta(self):
