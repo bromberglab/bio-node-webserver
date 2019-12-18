@@ -71,8 +71,26 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     job.handle_status(status, pod=pod)
 
 
+def status_thread(lock, list):
+    import time
+
+    while True:
+        time.sleep(0.2)
+        try:
+            with lock:
+                el = list[0]
+                del list[0]
+            handle_status(*el)
+        except:
+            pass
+
+
 def get_status_all():
     import threading
+
+    lock = threading.Lock()
+    tasks = []
+    threading.Thread(target=status_thread, args=(lock, tasks)).start()
 
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
@@ -89,11 +107,8 @@ def get_status_all():
                 pod = event["object"].metadata.name
                 status = event["object"].status.phase.lower()
                 if status in ["succeeded", "failed"]:
-                    threading.Thread(
-                        target=lambda: handle_status(
-                            api, k8s_batch_v1, job, pod, status
-                        )
-                    ).start()
+                    with lock:
+                        tasks.append((api, k8s_batch_v1, job, pod, status))
 
 
 def launch_delete_job(body):
