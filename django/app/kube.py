@@ -75,7 +75,7 @@ def status_thread(lock, list):
     import time
 
     while True:
-        time.sleep(0.2)
+        time.sleep(0.1)
         try:
             with lock:
                 el = list[0]
