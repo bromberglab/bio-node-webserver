@@ -68,9 +68,9 @@ main = [
     path("accounts/profile/", RedirectView.as_view(url="/")),
     path("accounts/login/", LoginOverride.as_view()),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("cron/", CronView.as_view()),
 ]
 
 urlpatterns = [
     path("api/", include(main)),
-    path("cron/", CronView.as_view()),
 ]
