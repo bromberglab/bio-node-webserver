@@ -147,7 +147,6 @@ def get_resources(pod=None):
     import re
     from app.management.commands.resources import reg
 
-    core = client.CoreV1Api()
     api = client.CustomObjectsApi()
     if pod is not None:
         response = api.get_namespaced_custom_object(
@@ -156,19 +155,16 @@ def get_resources(pod=None):
 
         return _sum_containers(response["containers"])
     else:
-        pods = core.list_pod_for_all_namespaces(async_req=False)
+        response = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "pods")
 
         result = {}
 
-        for pod in pods.items:
-            try:
-                name = pod.metadata.name
-                if not re.match(reg, name):
-                    continue
-                resources = get_resources(name)
-                result[name] = resources
-            except:
-                pass
+        for item in response["items"]:
+            name = item["metadata"]["name"]
+            if not re.match(reg, name):
+                continue
+            resources = _sum_containers(item["containers"])
+            result[name] = resources
 
         return result
 
