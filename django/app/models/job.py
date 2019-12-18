@@ -407,8 +407,7 @@ class Job(models.Model):
         if self.is_node and notification:
             Notification.job_finished(self, status, pod)
         with transaction.atomic():
-            # refreshing from db shouldn't be necessary
-            job = self  # Job.objects.get(pk=self.pk)
+            job = Job.objects.get(pk=self.pk)
 
             job.finished_runs += 1
             did_fail = job.is_node and status != "succeeded"
