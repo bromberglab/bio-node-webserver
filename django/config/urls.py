@@ -60,7 +60,6 @@ api = [
 main = [
     path("v1/", include(api)),
     path(".commit/", CommitView.as_view()),
-    path("cron/", CronView.as_view()),
     path("admin/login/", RedirectView.as_view(url="/api/accounts/login")),
     path("admin/", admin.site.urls),
     path("createadmin/", AdminCreationView.as_view()),
@@ -73,4 +72,5 @@ main = [
 
 urlpatterns = [
     path("api/", include(main)),
+    path("cron/", CronView.as_view()),
 ]

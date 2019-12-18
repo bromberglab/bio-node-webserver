@@ -57,9 +57,10 @@ def cron_worker():
 
 
 def cron():
-    from threading import Thread
+    # from threading import Thread
 
-    Thread(target=cron_worker).start()
+    # Thread(target=cron_worker).start()
+    cron_worker()
 
 
 class Command(BaseCommand):
