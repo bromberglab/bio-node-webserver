@@ -81,16 +81,26 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
 
 def status_thread(lock, list):
     import time
+    import traceback
 
     while True:
         time.sleep(0.1)
+        el = None
         try:
             with lock:
                 el = list[0]
                 del list[0]
-            handle_status(*el)
         except:
             pass
+
+        if el is None:
+            continue
+
+        try:
+            handle_status(*el)
+        except Exception as e:
+            print("Handling error:", e)
+            traceback.print_exc()
 
 
 def get_status_all():
