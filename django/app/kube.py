@@ -69,14 +69,13 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
             except:
                 time.sleep(3)
 
-    create_logfile(pod, logs)
-    resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
     try:
+        resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
+        job.handle_status(status, pod=pod)
+        create_logfile(pod, logs)
         pass  # api.delete_namespaced_pod(str(pod), namespace="default")
     except:
         pass
-
-    job.handle_status(status, pod=pod)
 
 
 def status_thread(lock, list):
