@@ -72,7 +72,7 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     create_logfile(pod, logs)
     resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
     try:
-        api.delete_namespaced_pod(str(pod), namespace="default")
+        pass  # api.delete_namespaced_pod(str(pod), namespace="default")
     except:
         pass
 
