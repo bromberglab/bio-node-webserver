@@ -6,6 +6,20 @@ import threading
 from .jobs import create_logfile
 
 
+def retry(fun, times=4, wait=4, fail=False):
+    error = None
+    while times > 0:
+        try:
+            return fun()
+        except Exception as e:
+            error = e
+            time.sleep(wait)
+            times -= 1
+
+    if fail:
+        raise error
+
+
 def handle_status(api, k8s_batch_v1, job_name, pod, status):
     from app.models import Job
     from app.management.commands.resources import reg
@@ -19,28 +33,22 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     except:
         return
 
-    logs = None
-    tries = 5
-    while logs is None:
-        tries -= 1
-        if tries < 0:
-            logs = ""
-        else:
-            try:
-                logs = api.read_namespaced_pod_log(name=pod, namespace="default")
-            except:
-                time.sleep(3)
+    logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="default"))
+    logs = logs if isinstance(logs, str) else ""
 
-    resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
-    try:
-        api.delete_namespaced_pod(str(pod), namespace="default")
-    except:
-        pass
+    retry(
+        lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
+        fail=True,
+    )
+    retry(lambda: api.delete_namespaced_pod(str(pod), namespace="default"), fail=False)
+
     job.handle_status(status, pod=pod)
     create_logfile(pod, logs)
 
+    return 1
 
-def status_thread(lock, list):
+
+def status_thread(api, k8s_batch_v1, lock, pods, tasks):
     while True:
         time.sleep(0.1)
         el = None
@@ -55,13 +63,17 @@ def status_thread(lock, list):
             continue
 
         try:
-            handle_status(*el)
+            r = handle_status(api, k8s_batch_v1, *el)
+            if r == 1:
+                with lock:
+                    job = el[0]
+                    del pods[job]
         except Exception as e:
             print("Handling error:", e)
-            traceback.print_exc()
+            # traceback.print_exc()
 
 
-def pod_thread(pods, api):
+def pod_thread(lock, pods, api):
     w = watch.Watch()
 
     while True:
@@ -71,18 +83,21 @@ def pod_thread(pods, api):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
-                pods[job] = pod
+                with lock:
+                    pods[job] = pod
 
 
 def get_status_all():
     lock = threading.Lock()
     pods = {}
     tasks = []
-    threading.Thread(target=status_thread, args=(lock, tasks)).start()
 
     api = client.CoreV1Api()
-    threading.Thread(target=pod_thread, args=(pods, api)).start()
     k8s_batch_v1 = client.BatchV1Api()
+    threading.Thread(
+        target=status_thread, args=(api, k8s_batch_v1, lock, pods, tasks)
+    ).start()
+    threading.Thread(target=pod_thread, args=(lock, pods, api)).start()
 
     w = watch.Watch()
 
@@ -99,10 +114,10 @@ def get_status_all():
 
             if status is not None:
                 try:
-                    pod = pods[job]
-                    del pods[job]
+                    with lock:
+                        pod = pods[job]
                 except:
                     continue
                 with lock:
-                    tasks.append((api, k8s_batch_v1, job, pod, status))
+                    tasks.append((job, pod, status))
 
