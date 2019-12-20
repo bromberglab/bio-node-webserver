@@ -1,18 +1,14 @@
 from kubernetes import client, watch
-from django.conf import settings
-from pathlib import Path
-from app.util import now
-import string
-import os
-
+import re
+import time
+import traceback
+import threading
 from .jobs import create_logfile
 
 
 def handle_status(api, k8s_batch_v1, job_name, pod, status):
     from app.models import Job
     from app.management.commands.resources import reg
-    import re
-    import time
 
     if not re.match(reg, pod):
         return
@@ -35,19 +31,16 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
             except:
                 time.sleep(3)
 
+    resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
     try:
-        resp = k8s_batch_v1.delete_namespaced_job(job_name, namespace="default")
-        job.handle_status(status, pod=pod)
-        create_logfile(pod, logs)
-        pass  # api.delete_namespaced_pod(str(pod), namespace="default")
+        api.delete_namespaced_pod(str(pod), namespace="default")
     except:
         pass
+    job.handle_status(status, pod=pod)
+    create_logfile(pod, logs)
 
 
 def status_thread(lock, list):
-    import time
-    import traceback
-
     while True:
         time.sleep(0.1)
         el = None
@@ -68,19 +61,9 @@ def status_thread(lock, list):
             traceback.print_exc()
 
 
-def get_status_all():
-    import threading
-
-    lock = threading.Lock()
-    tasks = []
-    threading.Thread(target=status_thread, args=(lock, tasks)).start()
-
-    api = client.CoreV1Api()
-    k8s_batch_v1 = client.BatchV1Api()
-
+def pod_thread(pods, api):
     w = watch.Watch()
-    status = "running"
-    pod = None
+
     while True:
         for event in w.stream(
             api.list_namespaced_pod, namespace="default", timeout_seconds=120
@@ -88,8 +71,38 @@ def get_status_all():
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
-                status = event["object"].status.phase.lower()
-                if status in ["succeeded", "failed"]:
-                    with lock:
-                        tasks.append((api, k8s_batch_v1, job, pod, status))
+                pods[job] = pod
+
+
+def get_status_all():
+    lock = threading.Lock()
+    pods = {}
+    tasks = []
+    threading.Thread(target=status_thread, args=(lock, tasks)).start()
+
+    api = client.CoreV1Api()
+    threading.Thread(target=pod_thread, args=(pods, api)).start()
+    k8s_batch_v1 = client.BatchV1Api()
+
+    w = watch.Watch()
+
+    while True:
+        for event in w.stream(
+            k8s_batch_v1.list_namespaced_job, namespace="default", timeout_seconds=120
+        ):
+            job = event["object"].metadata.name
+
+            success = event["object"].status.succeeded is not None
+            failure = event["object"].status.failed is not None
+
+            status = "succeeded" if success else ("failed" if failure else None)
+
+            if status is not None:
+                try:
+                    pod = pods[job]
+                    del pods[job]
+                except:
+                    continue
+                with lock:
+                    tasks.append((api, k8s_batch_v1, job, pod, status))
 
