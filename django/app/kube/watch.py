@@ -136,5 +136,8 @@ def get_status_all():
                         print("no pod")
                     continue
                 with lock:
+                    for t in tasks:
+                        if t[1] == pod:
+                            continue
                     tasks.append((job, pod, status))
 
