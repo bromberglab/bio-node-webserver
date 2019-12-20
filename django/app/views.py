@@ -76,10 +76,18 @@ class WorkflowStorageView(APIView):
         name = request.GET.get("name", "")
         pk = request.GET.get("pk", "")
         if pk:
-            flow = Workflow.objects.get(pk=pk)
-            assert flow.is_shared or request.user.is_superuser or flow.user == request.user
+            try:
+                flow = Workflow.objects.get(pk=pk)
+            except:
+                return Response(status=HTTP_404_NOT_FOUND)
+            assert (
+                flow.is_shared or request.user.is_superuser or flow.user == request.user
+            )
         else:
-            flow = Workflow.objects.get(should_run=False, name=name)
+            try:
+                flow = Workflow.objects.get(should_run=False, name=name)
+            except:
+                return Response(status=HTTP_404_NOT_FOUND)
 
         return Response(flow.json)
 
@@ -98,8 +106,15 @@ class WorkflowStorageView(APIView):
 
 class WorkflowView(APIView):
     def get(self, request, name, format=None):
-        flow = Workflow.objects.get(pk=name)
-        if not flow.is_shared and flow.user != request.user and not request.user.is_superuser:
+        try:
+            flow = Workflow.objects.get(pk=name)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
+        if (
+            not flow.is_shared
+            and flow.user != request.user
+            and not request.user.is_superuser
+        ):
             return Response(status=HTTP_403_FORBIDDEN)
 
         serializer = WorkflowSerializer(flow)
@@ -112,7 +127,10 @@ class WorkflowShareView(APIView):
 
     def post(self, request, format=None):
         pk = request.data.get("pk" "")
-        flow = Workflow.objects.get(pk=pk)
+        try:
+            flow = Workflow.objects.get(pk=pk)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         if flow.user != request.user and not request.user.is_superuser:
             return Response(status=HTTP_403_FORBIDDEN)
 
@@ -140,7 +158,10 @@ class WorkflowsView(APIView):
 class JobView(APIView):
     def get(self, request, format=None):
         name = request.GET.get("name", "")
-        job = Job.objects.get(uuid=name)
+        try:
+            job = Job.objects.get(uuid=name)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
 
         job = JobSerializer(job)
 
@@ -152,7 +173,10 @@ class JobLogsView(APIView):
         name = request.GET.get("name", "")
         as_json = request.GET.get("json", False)
 
-        job = Job.objects.get(uuid=name)
+        try:
+            job = Job.objects.get(uuid=name)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         logs = job.logs
 
         if as_json:
@@ -181,7 +205,10 @@ class WorkflowNameView(APIView):
         old = request.data.get("pk", "")
         new = request.data.get("name", "")
 
-        flow = Workflow.objects.get(pk=old)
+        try:
+            flow = Workflow.objects.get(pk=old)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         if request.user.is_superuser or flow.user == request.user:
             flow.name = new
             flow.save()
@@ -272,7 +299,10 @@ class DeleteImageView(APIView):
         from .images import import_image
 
         name = request.data.get("name", "")
-        image = NodeImage.objects.get(name=name)
+        try:
+            image = NodeImage.objects.get(name=name)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         if image.imported_by == request.user or request.user.is_superuser:
             image.delete()
         else:
@@ -398,7 +428,10 @@ class NotificationView(APIView):
 
     def get(self, request, format=None):
         id = request.GET.get("id", "")
-        n = Notification.objects.get(pk=id)
+        try:
+            n = Notification.objects.get(pk=id)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         assert n.user == request.user
         n = NotificationSerializer(n).data
         return Response(n)
@@ -411,7 +444,10 @@ class NotificationView(APIView):
         return Response(serializer.data)
 
     def delete(self, request, format=None):
-        n = Notification.objects.get(pk=request.data["pk"])
+        try:
+            n = Notification.objects.get(pk=request.data["pk"])
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
         assert n.user == request.user
         n.delete()
         return Response()
