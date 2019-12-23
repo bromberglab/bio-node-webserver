@@ -38,12 +38,38 @@ class Job(models.Model):
     )
     parallel_runs = models.IntegerField(default=-1)
     finished_runs = models.IntegerField(default=0)
+    scheduled_runs = models.IntegerField(default=0)
 
     dependencies = models.ManyToManyField(
         "app.Job", related_name="dependents", blank=True
     )
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def schedulable_runs(self):
+        from app.kube.resources import SIConverter
+
+        if self.body == "":
+            return 1
+
+        body = json.loads(self.body)
+        c = body["spec"]["template"]["spec"]["containers"][0]
+        resources = c["resources"]["requests"]
+        mem = resources["memory"]
+        cpu = resources["cpu"]
+
+        mem = SIConverter.to_int(mem)
+        cpu = SIConverter.to_int(cpu)
+
+        mem = mem / 1024 / 1024
+
+        n1 = settings.MAX_MEMORY / mem
+        n2 = settings.MAX_CPU / cpu
+
+        n = n1 if n1 < n2 else n2
+
+        return n
 
     @property
     def runtime(self):
@@ -350,6 +376,20 @@ class Job(models.Model):
 
         copy_folder(input_paths[0], out_path)
 
+    def launch_more_jobs(self):
+        if self.scheduled_runs >= self.parallel_runs:
+            return
+
+        dep = json.loads(self.body)
+        k8s_batch_v1 = client.BatchV1Api()
+        dep["metadata"]["name"] = str(self.pk) + "-" + str(self.scheduled_runs)
+        c = dep["spec"]["template"]["spec"]["containers"][0]
+        c["env"][-1]["value"] = str(self.scheduled_runs)
+        resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+
+        self.scheduled_runs += 1
+        self.save()
+
     def launch_job(self):
         self.started_at = now()
         self.save()
@@ -359,11 +399,13 @@ class Job(models.Model):
         if self.parallel_runs < 0:
             dep["metadata"]["name"] = str(self.pk)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
-        for i in range(self.parallel_runs):
+            return
+        for i in range(self.schedulable_runs):
             dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+        self.scheduled_runs = self.schedulable_runs
 
     def run_job(self):
         try:
@@ -406,6 +448,8 @@ class Job(models.Model):
     def handle_status(self, status, pod=None, notification=True):
         if self.is_node and notification:
             Notification.job_finished(self, status, pod)
+
+        self.launch_more_jobs()
         with transaction.atomic():
             job = Job.objects.get(pk=self.pk)
 
