@@ -3,13 +3,14 @@ import re
 import time
 import traceback
 import threading
+import urllib3.exceptions
 from .jobs import create_logfile
 
 
 DEBUG_WATCH = False
 
 
-def retry(fun, times=4, wait=4, fail=False):
+def retry(fun, times=4, wait=1, fail=False):
     error = None
     while times > 0:
         try:
@@ -116,28 +117,32 @@ def get_status_all():
     w = watch.Watch()
 
     while True:
-        for event in w.stream(
-            k8s_batch_v1.list_namespaced_job, namespace="default", timeout_seconds=120
-        ):
-            job = event["object"].metadata.name
+        try:
+            for event in w.stream(
+                k8s_batch_v1.list_namespaced_job,
+                namespace="default",
+                timeout_seconds=120,
+            ):
+                job = event["object"].metadata.name
 
-            success = event["object"].status.succeeded is not None
-            failure = event["object"].status.failed is not None
+                success = event["object"].status.succeeded is not None
+                failure = event["object"].status.failed is not None
 
-            status = "succeeded" if success else ("failed" if failure else None)
+                status = "succeeded" if success else ("failed" if failure else None)
 
-            if status is not None:
-                if DEBUG_WATCH:
-                    print("new job", job, status)
-                with lock:
-                    pod = pods.get(job, None)
-                if pod is None:
+                if status is not None:
                     if DEBUG_WATCH:
-                        print("no pod")
-                    continue
-                with lock:
-                    for t in tasks:
-                        if t[1] == pod:
-                            continue
-                    tasks.append((job, pod, status))
-
+                        print("new job", job, status)
+                    with lock:
+                        pod = pods.get(job, None)
+                    if pod is None:
+                        if DEBUG_WATCH:
+                            print("no pod")
+                        continue
+                    with lock:
+                        for t in tasks:
+                            if t[1] == pod:
+                                continue
+                        tasks.append((job, pod, status))
+        except urllib3.exceptions.MaxRetryError:
+            pass
