@@ -1,5 +1,6 @@
 from kubernetes import client, watch
 import re
+import sys
 import time
 import traceback
 import threading
@@ -116,6 +117,8 @@ def get_status_all():
 
     w = watch.Watch()
 
+    ignored = []
+
     while True:
         try:
             for event in w.stream(
@@ -131,6 +134,11 @@ def get_status_all():
                 status = "succeeded" if success else ("failed" if failure else None)
 
                 if status is not None:
+                    if failure:
+                        if job not in ignored:
+                            print(event["object"], file=sys.stderr)
+                            ignored.append(job)
+                        continue
                     if DEBUG_WATCH:
                         print("new job", job, status)
                     with lock:
