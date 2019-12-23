@@ -121,7 +121,7 @@ def get_status_all():
             for event in w.stream(
                 k8s_batch_v1.list_namespaced_job,
                 namespace="default",
-                timeout_seconds=120,
+                timeout_seconds=300,
             ):
                 job = event["object"].metadata.name
 
