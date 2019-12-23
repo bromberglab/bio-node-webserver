@@ -69,6 +69,7 @@ class JobSerializer(serializers.ModelSerializer):
             "dependencies_met",
             "started_at",
             "parallel_runs",
+            "finished_runs",
             "finished_at",
             "runtime",
             "max_cpu",
