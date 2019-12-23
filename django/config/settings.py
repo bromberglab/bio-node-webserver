@@ -207,3 +207,6 @@ if not DEBUG:
             },
         },
     }
+
+MAX_CPU = 100  # cores
+MAX_MEMORY = 500000  # MiB
