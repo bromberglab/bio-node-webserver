@@ -7,7 +7,7 @@ import urllib3.exceptions
 from .jobs import create_logfile
 
 
-DEBUG_WATCH = False
+DEBUG_WATCH = True
 
 
 def retry(fun, times=4, wait=1, fail=False):
@@ -142,6 +142,8 @@ def get_status_all():
                     with lock:
                         for t in tasks:
                             if t[1] == pod:
+                                if DEBUG_WATCH:
+                                    print(pod, "already enlisted")
                                 continue
                         tasks.append((job, pod, status))
         except urllib3.exceptions.MaxRetryError:
