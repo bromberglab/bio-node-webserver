@@ -10,7 +10,7 @@ from .jobs import create_logfile
 DEBUG_WATCH = False
 
 
-def retry(fun, times=4, wait=1, fail=False):
+def retry(fun, times=2, wait=0.1, fail=False):
     error = None
     while times > 0:
         try:
