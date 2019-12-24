@@ -69,7 +69,7 @@ class Job(models.Model):
 
         n = n1 if n1 < n2 else n2
 
-        return n
+        return int(n)
 
     @property
     def runtime(self):
@@ -401,6 +401,8 @@ class Job(models.Model):
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
             return
         for i in range(self.schedulable_runs):
+            if i >= self.parallel_runs:
+                break
             dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
