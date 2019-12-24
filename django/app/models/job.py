@@ -404,6 +404,7 @@ class Job(models.Model):
 
     def launch_job(self):
         self.started_at = now()
+        self.scheduled_runs = self.schedulable_runs
         self.save()
         dep = json.loads(self.body)
 
@@ -419,7 +420,6 @@ class Job(models.Model):
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
-        self.scheduled_runs = self.schedulable_runs
 
     def run_job(self):
         try:
