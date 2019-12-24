@@ -59,8 +59,8 @@ class Job(models.Model):
         mem = resources["memory"]
         cpu = resources["cpu"]
 
-        mem = SIConverter.to_int(mem)
-        cpu = SIConverter.to_int(cpu)
+        mem = SIConverter.to_number(mem)
+        cpu = SIConverter.to_number(cpu)
 
         mem = mem / 1024 / 1024
 
