@@ -378,18 +378,29 @@ class Job(models.Model):
         copy_folder(input_paths[0], out_path)
 
     def launch_more_jobs(self):
-        if self.scheduled_runs >= self.parallel_runs:
-            return
+        with transaction.atomic():
+            j = Job.objects.get(pk=self.pk)
+            if j.scheduled_runs >= j.parallel_runs:
+                return
 
-        dep = json.loads(self.body)
-        k8s_batch_v1 = client.BatchV1Api()
-        dep["metadata"]["name"] = str(self.pk) + "-" + str(self.scheduled_runs)
-        c = dep["spec"]["template"]["spec"]["containers"][0]
-        c["env"][-1]["value"] = str(self.scheduled_runs)
-        resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+            j.scheduled_runs += 1
+            j.save()
 
-        self.scheduled_runs += 1
-        self.save()
+        while True:
+            try:
+                dep = json.loads(j.body)
+                k8s_batch_v1 = client.BatchV1Api()
+                dep["metadata"]["name"] = str(j.pk) + "-" + str(j.scheduled_runs - 1)
+                c = dep["spec"]["template"]["spec"]["containers"][0]
+                c["env"][-1]["value"] = str(j.scheduled_runs - 1)
+                resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+                break
+            except:
+                import traceback
+
+                traceback.print_exc(file=sys.stderr)
+                time.sleep(1)
+                pass
 
     def launch_job(self):
         self.started_at = now()
@@ -452,15 +463,7 @@ class Job(models.Model):
         if self.is_node and notification:
             Notification.job_finished(self, status, pod)
 
-        while True:
-            try:
-                self.launch_more_jobs()
-                break
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stderr)
-                time.sleep(1)
-                pass
+        self.launch_more_jobs()
         with transaction.atomic():
             job = Job.objects.get(pk=self.pk)
 
