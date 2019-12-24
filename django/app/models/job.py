@@ -4,6 +4,7 @@ import uuid as uu
 from django.conf import settings
 from app.events import send_event
 import time
+import sys
 import random
 import string
 from kubernetes import client, watch
@@ -451,7 +452,15 @@ class Job(models.Model):
         if self.is_node and notification:
             Notification.job_finished(self, status, pod)
 
-        self.launch_more_jobs()
+        while True:
+            try:
+                self.launch_more_jobs()
+                break
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+                time.sleep(1)
+                pass
         with transaction.atomic():
             job = Job.objects.get(pk=self.pk)
 

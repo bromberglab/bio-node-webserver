@@ -17,8 +17,9 @@ def retry(fun, times=2, wait=0.1, fail=False):
             return fun()
         except Exception as e:
             error = e
-            time.sleep(wait)
             times -= 1
+            if times > 0:
+                time.sleep(wait)
 
     if fail:
         raise error
@@ -48,7 +49,12 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
         lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
         fail=True,
     )
-    retry(lambda: api.delete_namespaced_pod(str(pod), namespace="default"), fail=False)
+    retry(
+        lambda: api.delete_namespaced_pod(str(pod), namespace="default"),
+        fail=False,
+        wait=2,
+        times=3,
+    )
     if DEBUG_WATCH:
         print("handling")
 
