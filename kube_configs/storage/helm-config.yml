@@ -25,6 +25,7 @@ service:
 
 persistence:
   enabled: true
+  storageClass: "-"
 
   ## Persistent Volume Storage Class
   ## If defined, storageClassName: <storageClass>
@@ -33,10 +34,10 @@ persistence:
   ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
   ##   GKE, AWS & OpenStack)
   ##
-  storageClass: "gce-slow"
+  # storageClass: "-"
 
   accessMode: ReadWriteOnce
-  size: 500Gi
+  size: "${mainstoragesize}"
 
 ## For creating the StorageClass automatically:
 storageClass:
@@ -63,7 +64,7 @@ storageClass:
     - noatime
 
   ## ReclaimPolicy field of the class, which can be either Delete or Retain
-  reclaimPolicy: Delete
+  reclaimPolicy: Retain
 
 ## For RBAC support:
 rbac:
@@ -82,7 +83,8 @@ resources:
   #  cpu: 100m
   #  memory: 128Mi
 
-nodeSelector: {}
+nodeSelector:
+  kubernetes.io/hostname: ${nodename}
 
 tolerations: []
 
