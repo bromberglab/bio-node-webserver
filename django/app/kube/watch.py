@@ -146,14 +146,25 @@ def get_status_all():
                             print("no pod")
                         continue
                     with lock:
-                        cont = False
+                        exists = False
                         for t in tasks:
-                            if t[1] == pod:
+                            if t[0] == job:
+                                old_pod = t[1]
+                                t[1] = pod
                                 if DEBUG_WATCH:
-                                    print(pod, "already enlisted")
-                                cont = True
+                                    print(job, "already enlisted")
+                                exists = True
                                 break
-                        if not cont:
+                        if not exists:
                             tasks.append((job, pod, status))
+                        else:
+                            retry(
+                                lambda: api.delete_namespaced_pod(
+                                    str(old_pod), namespace="default"
+                                ),
+                                fail=False,
+                                wait=2,
+                                times=3,
+                            )
         except urllib3.exceptions.MaxRetryError:
             pass
