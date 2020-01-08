@@ -122,6 +122,8 @@ def get_status_all():
 
     w = watch.Watch()
 
+    time.sleep(3)
+
     while True:
         try:
             for event in w.stream(
@@ -147,17 +149,20 @@ def get_status_all():
                         continue
                     with lock:
                         exists = False
-                        for t in tasks:
+                        for i, t in enumerate(tasks):
                             if t[0] == job:
                                 old_pod = t[1]
+
+                                t = list(t)
                                 t[1] = pod
+                                tasks[i] = tuple(t)
                                 if DEBUG_WATCH:
                                     print(job, "already enlisted")
                                 exists = True
                                 break
                         if not exists:
                             tasks.append((job, pod, status))
-                        else:
+                        elif pod != old_pod:
                             retry(
                                 lambda: api.delete_namespaced_pod(
                                     str(old_pod), namespace="default"
