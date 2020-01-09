@@ -1,7 +1,7 @@
 from kubernetes import client, watch
 from django.conf import settings
 from pathlib import Path
-from app.util import now
+from app.util import now, dtformat
 import string
 import os
 
@@ -12,7 +12,7 @@ def create_logfile(pod, logs):
 
     t = now()
 
-    file = t.strftime("%Y-%m-%d %H:%M:%S.log")
+    file = t.strftime(dtformat) + ".log"
 
     path = Path(settings.DATA_PATH) / "logs" / "/".join(pod.split("-")) / file
     os.makedirs(path.parent, exist_ok=True)

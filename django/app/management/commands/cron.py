@@ -33,6 +33,7 @@ def cron_worker():
     from .workflows import cron as workflows_cron
     from .downloads import cron as downloads_cron
     from .resources import cron as resources_cron
+    from app.files import clear_logs
 
     seconds = 1
     minutes = 60 * seconds
@@ -49,6 +50,7 @@ def cron_worker():
         CronTask("jobs_cron", 2 * seconds, jobs_cron),
         CronTask("downloads_cron", 15 * minutes, downloads_cron),
         CronTask("resources_cron", 10 * seconds, resources_cron),
+        CronTask("clear_logs", 1 * days, clear_logs),
     ]
 
     for task in tasks:

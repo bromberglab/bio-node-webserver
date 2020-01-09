@@ -12,6 +12,9 @@ from .models import Globals
 import subprocess
 import json
 from app.events import send_event
+from app.util import now, dtformat
+from datetime import datetime
+from django.utils.timezone import make_aware
 
 base_path = Path(settings.DATA_PATH)
 base_path /= "data"
@@ -765,6 +768,24 @@ def clean_job(job):
         pass
 
 
+def clear_logs():
+    path = Path(settings.DATA_PATH) / "logs"
+    files = list_all_files(path, relative=False, only_full_uploads=False)
+
+    for f in files:
+        file_name = f.name
+        time_name = file_name[:-4]
+        time = make_aware(datetime.strptime(time_name, dtformat))
+
+        if (now() - time).total_seconds() > 60 * 60 * 24 * 7:  # 7d
+            os.remove(f)
+
+            p = f.parent
+            while len(list_dirs(p)) == 0 and len(list_files(p)) == 0:
+                os.rmdir(p)
+                p = p.parent
+
+
 def logs_for(name):
     path = Path(settings.DATA_PATH) / "logs"
     for p in str(name).split("-"):
@@ -782,5 +803,8 @@ def logs_for(name):
         name = "%s [%s]:" % (dir_name, file_name)
 
         result += '%s\n%s\n' % (name, text)
+
+    if result == "":
+        return "Logs are kept for 7 days."
 
     return result
