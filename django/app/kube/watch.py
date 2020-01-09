@@ -25,7 +25,11 @@ def retry(fun, times=2, wait=0.1, fail=False):
         raise error
 
 
+handled_pods = []
+
+
 def handle_status(api, k8s_batch_v1, job_name, pod, status):
+    global handled_pods
     from app.models import Job
     from app.management.commands.resources import reg
 
@@ -33,6 +37,9 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
         if DEBUG_WATCH:
             print("no match")
         return
+
+    if pod in handled_pods:
+        return 1
 
     try:
         # job name is 'uuid-num', so we take the first 36 chars
@@ -60,6 +67,10 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
 
     job.handle_status(status, pod=pod)
     create_logfile(pod, logs)
+
+    handled_pods.append(pod)
+    if len(handled_pods) > 1000:
+        del handled_pods[0]
 
     return 1
 
