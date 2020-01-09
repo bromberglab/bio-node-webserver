@@ -23,3 +23,6 @@ def default_name(*a, **kw):
 
 def now():
     return timezone.now().astimezone(tz=settings.TZ)
+
+
+dtformat = "%Y-%m-%d %H:%M:%S"
