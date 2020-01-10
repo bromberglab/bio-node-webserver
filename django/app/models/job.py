@@ -498,7 +498,7 @@ class Job(models.Model):
                 dependent.save()
 
     def clean_up(self):
-        if self.is_node:
+        if self.is_node and len(self.body) > 0:
             clean_job(self)
             self.body = ""
             self.save()
