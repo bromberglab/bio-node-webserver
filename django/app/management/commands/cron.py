@@ -30,6 +30,7 @@ class CronTask:
 def cron_worker():
     from .images import cron as images_cron
     from .jobs import cron as jobs_cron
+    from .jobs import clear as clear_jobs
     from .workflows import cron as workflows_cron
     from .downloads import cron as downloads_cron
     from .resources import cron as resources_cron
@@ -51,6 +52,7 @@ def cron_worker():
         CronTask("downloads_cron", 15 * minutes, downloads_cron),
         CronTask("resources_cron", 10 * seconds, resources_cron),
         CronTask("clear_logs", 1 * days, clear_logs),
+        CronTask("clear_jobs", 1 * days, clear_jobs),
     ]
 
     for task in tasks:

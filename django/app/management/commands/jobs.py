@@ -25,6 +25,16 @@ def cron():
         job.run_job()
 
 
+def clear():
+    from django.utils import timezone
+    from datetime import timedelta
+
+    t = timezone.now() - timedelta(days=7)
+
+    for j in Job.objects.filter(started_at__lt=t):
+        j.clean_up()
+
+
 class Command(BaseCommand):
     help = "Runs jobs."
 
