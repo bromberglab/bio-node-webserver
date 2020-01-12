@@ -39,6 +39,7 @@ class Job(models.Model):
     )
     parallel_runs = models.IntegerField(default=-1)
     finished_runs = models.IntegerField(default=0)
+    retries_left = models.IntegerField(default=0)
     scheduled_runs = models.IntegerField(default=0)
 
     dependencies = models.ManyToManyField(
@@ -283,6 +284,7 @@ class Job(models.Model):
                 if k < 1:
                     k = 1
                 self.parallel_runs = k
+                self.retries_left = k // 10 + 1
                 self.save()
                 k = int((n // (k + 0.0001)) + 1)
         else:
@@ -386,16 +388,20 @@ class Job(models.Model):
             j.scheduled_runs += 1
             j.save()
 
+        j.schedule_run(j.scheduled_runs - 1)
+
+    def schedule_run(self, k):
         while True:
             try:
-                dep = json.loads(j.body)
+                dep = json.loads(self.body)
                 k8s_batch_v1 = client.BatchV1Api()
-                dep["metadata"]["name"] = str(j.pk) + "-" + str(j.scheduled_runs - 1)
+                dep["metadata"]["name"] = str(self.pk) + "-" + str(k)
                 c = dep["spec"]["template"]["spec"]["containers"][0]
-                c["env"][-1]["value"] = str(j.scheduled_runs - 1)
+                c["env"][-1]["value"] = str(k)
                 resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
                 break
             except:
+                # something went wrong. retry
                 import traceback
 
                 traceback.print_exc(file=sys.stderr)
@@ -502,6 +508,15 @@ class Job(models.Model):
             clean_job(self)
             self.body = ""
             self.save()
+
+    def retry(self, name):
+        with transaction.atomic():
+            self.retries_left = self.retries_left - 1
+            self.save()
+
+        # name is job name, not pod
+        num = int(name.split("-")[-1])
+        self.schedule_run(num)
 
     @property
     def logs(self):
