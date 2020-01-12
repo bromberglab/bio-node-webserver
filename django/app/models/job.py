@@ -284,7 +284,7 @@ class Job(models.Model):
                 if k < 1:
                     k = 1
                 self.parallel_runs = k
-                self.retries_left = k // 10 + 1
+                self.retries_left = max(5, k // 10 + 1)
                 self.save()
                 k = int((n // (k + 0.0001)) + 1)
         else:
