@@ -62,10 +62,18 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
         wait=2,
         times=3,
     )
-    if DEBUG_WATCH:
-        print("handling")
 
-    job.handle_status(status, pod=pod)
+    if status != "succeeded" and job.retries_left > 0:
+        if DEBUG_WATCH:
+            print("retry")
+
+        logs += "\nRetrying run ... (%d left)" % job.retries_left
+        job.retry(job_name)
+    else:
+        if DEBUG_WATCH:
+            print("handling")
+
+        job.handle_status(status, pod=pod)
     create_logfile(pod, logs)
 
     handled_pods.append(pod)
