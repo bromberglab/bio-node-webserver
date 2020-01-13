@@ -1,76 +1,76 @@
 ## Provide a name in place of minio for `app:` labels
 ##
-# nameOverride: ""
+nameOverride: ""
 
 ## Provide a name to substitute for the full names of resources
 ##
-# fullnameOverride: ""
+fullnameOverride: ""
 
 ## set kubernetes cluster domain where minio is running
 ##
-# clusterDomain: cluster.local
+clusterDomain: cluster.local
 
 ## Set default image, imageTag, and imagePullPolicy. mode is used to indicate the
 ##
-# image:
-#   repository: minio/minio
-#   tag: RELEASE.2020-01-03T19-12-21Z
-#   pullPolicy: IfNotPresent
+image:
+  repository: minio/minio
+  tag: RELEASE.2020-01-03T19-12-21Z
+  pullPolicy: IfNotPresent
 
 ## Set default image, imageTag, and imagePullPolicy for the `mc` (the minio
 ## client used to create a default bucket).
 ##
-# mcImage:
-#   repository: minio/mc
-#   tag: RELEASE.2020-01-03T20-33-14Z
-#   pullPolicy: IfNotPresent
+mcImage:
+  repository: minio/mc
+  tag: RELEASE.2020-01-03T20-33-14Z
+  pullPolicy: IfNotPresent
 
 ## minio server mode, i.e. standalone or distributed.
 ## Distributed Minio ref: https://docs.minio.io/docs/distributed-minio-quickstart-guide
 ##
-mode: distributed
+mode: standalone
 
 ## Additional arguments to pass to minio binary
-# extraArgs: []
+extraArgs: []
 
 ## Update strategy for Deployments
-# DeploymentUpdate:
-#   type: RollingUpdate
-#   maxUnavailable: 0
-#   maxSurge: 100%
+DeploymentUpdate:
+  type: RollingUpdate
+  maxUnavailable: 0
+  maxSurge: 100%
 
 ## Update strategy for StatefulSets
-# StatefulSetUpdate:
-#   updateStrategy: RollingUpdate
+StatefulSetUpdate:
+  updateStrategy: RollingUpdate
 
 ## Pod priority settings
 ## ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
 ##
-priorityClassName: "highest-priority"
+priorityClassName: ""
 
 ## Set default accesskey, secretkey, Minio config file path, volume mount path and
 ## number of nodes (only used for Minio distributed mode)
 ## AccessKey and secretKey is generated when not set
 ## Distributed Minio ref: https://docs.minio.io/docs/distributed-minio-quickstart-guide
 ##
-# existingSecret: ""
-accessKey: "1mardgOPu9uP8zGX2TcO20"
-secretKey: "FRAH/OfQbG22sVYu9GMn40"
-# certsPath: "/etc/minio/certs/"
-# configPathmc: "/etc/minio/mc/"
-# mountPath: "/export"
+existingSecret: ""
+accessKey: "AKIAIOSFODNN7EXAMPLE"
+secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+certsPath: "/etc/minio/certs/"
+configPathmc: "/etc/minio/mc/"
+mountPath: "/export"
 
 ## Override the root directory which the minio server should serve from.
 ## If left empty, it defaults to the value of {{ .Values.mountPath }}
 ## If defined, it must be a sub-directory of the path specified in {{ .Values.mountPath }}
-# bucketRoot: ""
+bucketRoot: ""
 
 # Number of drives attached to a node
-# drivesPerNode: 1
+drivesPerNode: 1
 # Number of MinIO containers running
 replicas: 4
 # Number of expanded MinIO clusters
-# zones: 1
+zones: 1
 
 ## TLS Settings for Minio
 tls:
@@ -100,10 +100,10 @@ persistence:
   ##
   ## Storage class of PV to bind. By default it looks for standard storage class.
   ## If the PV uses a different storage class, specify that here.
-  storageClass: "gce-slow"
-  # VolumeName: ""
+  storageClass: ""
+  VolumeName: ""
   accessMode: ReadWriteOnce
-  size: 500Gi
+  size: 10Gi
 
   ## If subPath is set mount a sub folder of a volume instead of the root of the volume.
   ## This is especially handy for volume plugins that don't natively support sub mounting (like glusterfs).
@@ -115,45 +115,46 @@ persistence:
 ## ref: http://kubernetes.io/docs/user-guide/services/
 ##
 
-# service:
-#   type: ClusterIP
-#   clusterIP: ~
-#   port: 9000
-#   nodePort: 31311
+service:
+  type: ClusterIP
+  clusterIP: ~
+  port: 9000
+  nodePort: 31311
 
-## List of IP addresses at which the Prometheus server service is available
-## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
-##
-# externalIPs: []
-#   - externalIp1
+  ## List of IP addresses at which the Prometheus server service is available
+  ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+  ##
+  externalIPs: []
+  #   - externalIp1
 
-# annotations:
-#   {}
-# prometheus.io/scrape: 'true'
-# prometheus.io/path:   '/minio/prometheus/metrics'
-# prometheus.io/port:   '9000'
+  annotations:
+    {}
+    # prometheus.io/scrape: 'true'
+    # prometheus.io/path:   '/minio/prometheus/metrics'
+    # prometheus.io/port:   '9000'
 
 ## Configure Ingress based on the documentation here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ##
 
 ingress:
   enabled: false
-  # labels:
-  #   {}
-  # node-role.kubernetes.io/ingress: platform
-  # annotations:
-  #   {}
-  # kubernetes.io/ingress.class: nginx
-  # kubernetes.io/tls-acme: "true"
-  # kubernetes.io/ingress.allow-http: "false"
-  # kubernetes.io/ingress.global-static-ip-name: ""
-  # nginx.ingress.kubernetes.io/secure-backends: "true"
-  # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-  # nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
-  # path: /
-  # hosts:
-  #   - chart-example.local
-  # tls: []
+  labels:
+    {}
+    # node-role.kubernetes.io/ingress: platform
+
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # kubernetes.io/ingress.allow-http: "false"
+    # kubernetes.io/ingress.global-static-ip-name: ""
+    # nginx.ingress.kubernetes.io/secure-backends: "true"
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
+  path: /
+  hosts:
+    - chart-example.local
+  tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
@@ -161,38 +162,38 @@ ingress:
 ## Node labels for pod assignment
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
 ##
-# nodeSelector: {}
-# tolerations: []
-# affinity: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
 
 ## Add stateful containers to have security context, if enabled MinIO will run as this
 ## user and group NOTE: securityContext is only enabled if persistence.enabled=true
-# securityContext:
-#   enabled: false
-#   runAsUser: 1000
-#   runAsGroup: 1000
-#   fsGroup: 1000
+securityContext:
+  enabled: false
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
 # Additational pod annotations
-# podAnnotations: {}
+podAnnotations: {}
 
 # Additional pod labels
-# podLabels: {}
+podLabels: {}
 
 ## Liveness and Readiness probe values.
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
-# livenessProbe:
-#   initialDelaySeconds: 5
-#   periodSeconds: 30
-#   timeoutSeconds: 1
-#   successThreshold: 1
-#   failureThreshold: 3
-# readinessProbe:
-#   initialDelaySeconds: 60
-#   periodSeconds: 15
-#   timeoutSeconds: 1
-#   successThreshold: 1
-#   failureThreshold: 3
+livenessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 30
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3
 
 ## Configure resource requests and limits
 ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -209,32 +210,33 @@ defaultBucket:
   ## If enabled, must be a string with length > 0
   name: bucket
   ## Can be one of none|download|upload|public
-  # policy: none
+  policy: none
   ## Purge if bucket exists already
-  # purge: false
+  purge: false
 
 ## Create multiple buckets after minio install
 ## Enabling `defaultBucket` will take priority over this list
 ##
 buckets:
-  - name: bucket
-    policy: public
-    purge: false
+  []
+  # - name: bucket1
+  #   policy: none
+  #   purge: false
   # - name: bucket2
   #   policy: none
   #   purge: false
 
 s3gateway:
   enabled: false
-  # replicas: 4
-  # serviceEndpoint: ""
+  replicas: 4
+  serviceEndpoint: ""
 
 ## Use minio as an azure blob gateway, you should disable data persistence so no volume claim are created.
 ## https://docs.minio.io/docs/minio-gateway-for-azure
 azuregateway:
   enabled: false
   # Number of parallel instances
-  # replicas: 4
+  replicas: 4
 
 ## Use minio as GCS (Google Cloud Storage) gateway, you should disable data persistence so no volume claim are created.
 ## https://docs.minio.io/docs/minio-gateway-for-gcs
@@ -242,17 +244,17 @@ azuregateway:
 gcsgateway:
   enabled: false
   # Number of parallel instances
-  # replicas: 4
+  replicas: 4
   # credential json file of service account key
-  # gcsKeyJson: ""
+  gcsKeyJson: ""
   # Google cloud project-id
-  # projectId: ""
+  projectId: ""
 
 ossgateway:
   enabled: false
   # Number of parallel instances
-  # replicas: 4
-  # endpointURL: ""
+  replicas: 4
+  endpointURL: ""
 
 ## Use minio on NAS backend
 ## https://docs.minio.io/docs/minio-gateway-for-nas
@@ -260,17 +262,17 @@ ossgateway:
 nasgateway:
   enabled: false
   # Number of parallel instances
-  # replicas: 4
+  replicas: 4
   # For NAS Gateway, you may want to bind the PVC to a specific PV. To ensure that happens, PV to bind to should have
   # a label like "pv: <value>", use value here.
-  # pv: ~
+  pv: ~
 
 ## Use minio as Backblaze B2 gateway
 ## https://github.com/minio/minio/blob/master/docs/gateway/b2.md
 b2gateway:
   enabled: false
   # Number of parallel instances
-  # replicas: 4
+  replicas: 4
 
 ## Use this field to add environment variables relevant to Minio server. These fields will be passed on to Minio container(s)
 ## when Chart is deployed
@@ -304,9 +306,9 @@ networkPolicy:
 ## PodDisruptionBudget settings
 ## ref: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
 ##
-# podDisruptionBudget:
-#   enabled: false
-#   maxUnavailable: 1
+podDisruptionBudget:
+  enabled: false
+  maxUnavailable: 1
 
 ## Specify the service account to use for the Minio pods. If 'create' is set to 'false'
 ## and 'name' is left unspecified, the account 'default' will be used.
@@ -314,7 +316,7 @@ serviceAccount:
   create: true
   ## The name of the service account to use. If 'create' is 'true', a service account with that name
   ## will be created. Otherwise, a name will be auto-generated.
-  name: minio-account
+  name:
 
 metrics:
   # Metrics can not be disabled yet: https://github.com/minio/minio/issues/7493
