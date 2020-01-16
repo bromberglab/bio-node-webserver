@@ -30,7 +30,7 @@ def get_resources(pod=None):
     api = client.CustomObjectsApi()
     if pod is not None:
         response = api.get_namespaced_custom_object(
-            "metrics.k8s.io", "v1beta1", "bio-node", "pods", pod
+            "metrics.k8s.io", "v1beta1", "default", "pods", pod
         )
 
         return _sum_containers(response["containers"])
