@@ -398,7 +398,7 @@ class Job(models.Model):
                 dep["metadata"]["name"] = str(self.pk) + "-" + str(k)
                 c = dep["spec"]["template"]["spec"]["containers"][0]
                 c["env"][-1]["value"] = str(k)
-                resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+                resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="bio-node")
                 break
             except:
                 # something went wrong. retry
@@ -417,7 +417,7 @@ class Job(models.Model):
         k8s_batch_v1 = client.BatchV1Api()
         if self.parallel_runs < 0:
             dep["metadata"]["name"] = str(self.pk)
-            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="bio-node")
             return
         for i in range(self.schedulable_runs):
             if i >= self.parallel_runs:
@@ -425,7 +425,7 @@ class Job(models.Model):
             dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
-            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
+            resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="bio-node")
 
     def run_job(self):
         try:

@@ -27,7 +27,9 @@ def get_status(name, logging=True):
     status = "running"
     pod = None
     while status not in ["succeeded", "failed"]:
-        for event in w.stream(api.list_pod_for_all_namespaces, timeout_seconds=0):
+        for event in w.stream(
+            api.list_namespaced_pod, namespace="bio-node", timeout_seconds=0
+        ):
             if event["object"].metadata.labels.get("job-name", None) == str(name):
                 pod = event["object"].metadata.name
                 status = event["object"].status.phase.lower()
@@ -35,7 +37,7 @@ def get_status(name, logging=True):
                     break
     w.stop()
 
-    logs = api.read_namespaced_pod_log(name=pod, namespace="default")
+    logs = api.read_namespaced_pod_log(name=pod, namespace="bio-node")
     if logging:
         create_logfile(pod, logs)
 
@@ -46,7 +48,7 @@ def launch_delete_job(body):
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
     name = str(body["metadata"]["name"])
-    resp = k8s_batch_v1.create_namespaced_job(body=body, namespace="default")
+    resp = k8s_batch_v1.create_namespaced_job(body=body, namespace="bio-node")
     status, pod = get_status(name, logging=False)
-    resp = k8s_batch_v1.delete_namespaced_job(name, namespace="default")
-    resp = api.delete_namespaced_pod(str(pod), namespace="default")
+    resp = k8s_batch_v1.delete_namespaced_job(name, namespace="bio-node")
+    resp = api.delete_namespaced_pod(str(pod), namespace="bio-node")
