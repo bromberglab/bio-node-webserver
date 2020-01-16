@@ -1,12 +1,12 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: default-pvc
 spec:
-  storageClassName: "nfs"
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: 1000G
+      storage: 400Gi
+  storageClassName: csi-cephfs
