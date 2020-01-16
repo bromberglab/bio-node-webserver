@@ -49,15 +49,15 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
             print("no job")
         return
 
-    logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="default"))
+    logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="bio-node"))
     logs = logs if isinstance(logs, str) else ""
 
     retry(
-        lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
+        lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="bio-node"),
         fail=True,
     )
     retry(
-        lambda: api.delete_namespaced_pod(str(pod), namespace="default"),
+        lambda: api.delete_namespaced_pod(str(pod), namespace="bio-node"),
         fail=False,
         wait=2,
         times=3,
@@ -118,7 +118,7 @@ def pod_thread(lock, pods, api):
 
     while True:
         for event in w.stream(
-            api.list_namespaced_pod, namespace="default", timeout_seconds=120
+            api.list_namespaced_pod, namespace="bio-node", timeout_seconds=120
         ):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
@@ -147,7 +147,7 @@ def get_status_all():
         try:
             for event in w.stream(
                 k8s_batch_v1.list_namespaced_job,
-                namespace="default",
+                namespace="bio-node",
                 timeout_seconds=300,
             ):
                 job = event["object"].metadata.name
@@ -184,7 +184,7 @@ def get_status_all():
                         elif pod != old_pod:
                             retry(
                                 lambda: api.delete_namespaced_pod(
-                                    str(old_pod), namespace="default"
+                                    str(old_pod), namespace="bio-node"
                                 ),
                                 fail=False,
                                 wait=2,
