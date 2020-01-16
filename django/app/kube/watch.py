@@ -175,6 +175,8 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
 
 
 def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
+    from app.management.commands.resources import reg
+
     w = watch.Watch()
 
     while True:
@@ -184,6 +186,9 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
+                if not re.match(reg, pod):
+                    continue
+
                 with lock:
                     pods[job] = pod
 
