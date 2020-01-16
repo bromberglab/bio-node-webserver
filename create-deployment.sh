@@ -8,15 +8,7 @@ kubectl apply -f kube_configs/secret.yml
 
 kubectl apply -f kube_configs/storage/classes.yml
 
-helm reset --force || echo no helm installed.
-kubectl delete -f kube_configs/storage/tiller.yml
-kubectl apply -f kube_configs/storage/tiller.yml
-helm init --history-max 200 --service-account tiller
-echo "waiting for tiller to start ..."; sleep 15
-helm install stable/nfs-server-provisioner -f kube_configs/storage/helm-config.yml
-echo "waiting for nfs to start ..."; sleep 15
-kubectl apply -f kube_configs/storage/pvc.yml
-echo "waiting for pvc ..."; sleep 5
+# todo: ceph
 
 kubectl apply -f kube_configs/deployment.yml
 echo "waiting for server to start ..."; sleep 30
