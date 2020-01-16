@@ -5,6 +5,7 @@ import traceback
 import threading
 import urllib3.exceptions
 from .jobs import create_logfile
+from django.utils.timezone import now
 
 
 DEBUG_WATCH = False
@@ -28,7 +29,9 @@ def retry(fun, times=2, wait=0.1, fail=False):
 handled_pods = []
 
 
-def handle_status(api, k8s_batch_v1, job_name, pod, status):
+def handle_status(
+    api, k8s_batch_v1, unhandled_pods, unhandled_jobs, job_name, pod, status
+):
     global handled_pods
     from app.models import Job
     from app.management.commands.resources import reg
@@ -52,6 +55,11 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
             fail=False,
         )
         return
+
+    if unhandled_jobs.get(job_name, None) is not None:
+        del unhandled_jobs[job_name]
+    if unhandled_pods.get(pod, None) is not None:
+        del unhandled_pods[pod]
 
     logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="bio-node"))
     logs = logs if isinstance(logs, str) else ""
@@ -87,7 +95,9 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     return 1
 
 
-def status_thread(api, k8s_batch_v1, lock, pods, tasks):
+def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs):
+    unhandled_check = now()
+
     while True:
         time.sleep(0.1)
         el = None
@@ -103,7 +113,7 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks):
             print("new task", el)
 
         try:
-            r = handle_status(api, k8s_batch_v1, *el)
+            r = handle_status(api, k8s_batch_v1, unhandled_pods, unhandled_jobs, *el)
             if DEBUG_WATCH:
                 print("handle_status", r)
             if r == 1:
@@ -116,8 +126,55 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks):
                 print("Handling error:", e)
             # traceback.print_exc()
 
+        if (now() - unhandled_check).total_seconds() > 5 * 60:  # 5min
+            """
+            Remove ghost jobs and pods.
+            """
+            unhandled_check = now()
+            del_items = []
+            for pod, time in unhandled_pods.items():
+                if (now() - time).total_seconds() > 60 * 60:  # 60min
+                    job = "-".join(pod.split("-")[:-1])
 
-def pod_thread(lock, pods, api):
+                    result = retry(
+                        lambda: k8s_batch_v1.read_namespaced_job_status(
+                            job, namespace="bio-node"
+                        ),
+                        wait=2,
+                        times=3,
+                    )
+                    if result is None:
+                        retry(
+                            lambda: api.delete_namespaced_pod(
+                                pod, namespace="bio-node"
+                            ),
+                            fail=False,
+                            wait=2,
+                            times=3,
+                        )
+                        del_items.append(pod)
+            for pod in del_items:
+                del unhandled_pods[pod]
+
+            del_items = []
+            for job, time in unhandled_jobs.items():
+                if (now() - time).total_seconds() > 60 * 60:  # 60min
+                    result = pods.get(job, None)
+                    if result is None:
+                        retry(
+                            lambda: k8s_batch_v1.delete_namespaced_job(
+                                job, namespace="bio-node"
+                            ),
+                            fail=False,
+                            wait=2,
+                            times=3,
+                        )
+                        del_items.append(job)
+            for job in del_items:
+                del unhandled_jobs[job]
+
+
+def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
     w = watch.Watch()
 
     while True:
@@ -130,18 +187,27 @@ def pod_thread(lock, pods, api):
                 with lock:
                     pods[job] = pod
 
+                if unhandled_pods.get(pod, None) is None:
+                    unhandled_pods[pod] = now()
+
 
 def get_status_all():
+    global handled_pods
     lock = threading.Lock()
     pods = {}
     tasks = []
+    unhandled_pods = {}
+    unhandled_jobs = {}
 
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
     threading.Thread(
-        target=status_thread, args=(api, k8s_batch_v1, lock, pods, tasks)
+        target=status_thread,
+        args=(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs),
     ).start()
-    threading.Thread(target=pod_thread, args=(lock, pods, api)).start()
+    threading.Thread(
+        target=pod_thread, args=(lock, pods, api, unhandled_pods, unhandled_jobs)
+    ).start()
 
     w = watch.Watch()
 
@@ -169,6 +235,8 @@ def get_status_all():
                     if pod is None:
                         if DEBUG_WATCH:
                             print("no pod")
+                        if unhandled_jobs.get(job, None) is None:
+                            unhandled_jobs[job] = now()
                         continue
                     with lock:
                         exists = False
