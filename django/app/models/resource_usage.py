@@ -11,6 +11,8 @@ class ResourceUsage(models.Model):
 
     @classmethod
     def update(cls, combined_name, cpu, memory):
+        if combined_name.startswith("bio"):
+            combined_name = combined_name[3:]
         name = combined_name[:36]
         combined_name = combined_name[37:].split("-")
         if len(combined_name) > 1:

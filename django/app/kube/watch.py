@@ -46,7 +46,8 @@ def handle_status(
 
     try:
         # job name is 'uuid-num', so we take the first 36 chars
-        job = Job.objects.get(uuid=job_name[:36])
+        # remove bio prefix
+        job = Job.objects.get(uuid=job_name[3:39])
     except:
         if DEBUG_WATCH:
             print("no job")

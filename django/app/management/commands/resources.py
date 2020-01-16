@@ -3,7 +3,7 @@ from app.models import *
 from app.kube import get_resources
 import re
 
-reg = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-\d+)?-.{5}$"
+reg = r"^bio[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-\d+)?-.{5}$"
 
 
 def cron():
