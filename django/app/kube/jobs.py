@@ -10,6 +10,9 @@ def create_logfile(pod, logs):
     if pod is None:
         return
 
+    if pod.startswith("bio"):
+        pod = pod[3:]
+
     t = now()
 
     file = t.strftime(dtformat) + ".log"

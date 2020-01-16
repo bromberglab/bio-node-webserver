@@ -16,7 +16,6 @@ from .node_image import NodeImage
 from .globals import Globals
 from .notification import Notification
 from .resource_usage import ResourceUsage
-from ..kube import get_status as kube_status
 from pathlib import Path
 from app.util import now
 from copy import deepcopy
@@ -395,7 +394,7 @@ class Job(models.Model):
             try:
                 dep = json.loads(self.body)
                 k8s_batch_v1 = client.BatchV1Api()
-                dep["metadata"]["name"] = str(self.pk) + "-" + str(k)
+                dep["metadata"]["name"] = "bio" + str(self.pk) + "-" + str(k)
                 c = dep["spec"]["template"]["spec"]["containers"][0]
                 c["env"][-1]["value"] = str(k)
                 resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
@@ -416,13 +415,13 @@ class Job(models.Model):
 
         k8s_batch_v1 = client.BatchV1Api()
         if self.parallel_runs < 0:
-            dep["metadata"]["name"] = str(self.pk)
+            dep["metadata"]["name"] = "bio" + str(self.pk)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
             return
         for i in range(self.schedulable_runs):
             if i >= self.parallel_runs:
                 break
-            dep["metadata"]["name"] = str(self.pk) + "-" + str(i)
+            dep["metadata"]["name"] = "bio" + str(self.pk) + "-" + str(i)
             c = dep["spec"]["template"]["spec"]["containers"][0]
             c["env"][-1]["value"] = str(i)
             resp = k8s_batch_v1.create_namespaced_job(body=dep, namespace="default")
