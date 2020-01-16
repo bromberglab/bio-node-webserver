@@ -101,7 +101,7 @@ def cron_old():
     for i in images:
         labels, entrypoint, cmd, env = get_image_meta(i, delete=True)
 
-        if not labels.get("bio-node", False):
+        if not labels.get("default", False):
             continue
         valid_images.append(i)
 

@@ -51,7 +51,7 @@ def handle_status(
         if DEBUG_WATCH:
             print("no job")
         retry(
-            lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="bio-node"),
+            lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
             fail=False,
         )
         return
@@ -61,15 +61,15 @@ def handle_status(
     if unhandled_pods.get(pod, None) is not None:
         del unhandled_pods[pod]
 
-    logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="bio-node"))
+    logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="default"))
     logs = logs if isinstance(logs, str) else ""
 
     retry(
-        lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="bio-node"),
+        lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
         fail=True,
     )
     retry(
-        lambda: api.delete_namespaced_pod(str(pod), namespace="bio-node"),
+        lambda: api.delete_namespaced_pod(str(pod), namespace="default"),
         fail=False,
         wait=2,
         times=3,
@@ -138,16 +138,14 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
 
                     result = retry(
                         lambda: k8s_batch_v1.read_namespaced_job_status(
-                            job, namespace="bio-node"
+                            job, namespace="default"
                         ),
                         wait=2,
                         times=3,
                     )
                     if result is None:
                         retry(
-                            lambda: api.delete_namespaced_pod(
-                                pod, namespace="bio-node"
-                            ),
+                            lambda: api.delete_namespaced_pod(pod, namespace="default"),
                             fail=False,
                             wait=2,
                             times=3,
@@ -163,7 +161,7 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                     if result is None:
                         retry(
                             lambda: k8s_batch_v1.delete_namespaced_job(
-                                job, namespace="bio-node"
+                                job, namespace="default"
                             ),
                             fail=False,
                             wait=2,
@@ -181,7 +179,7 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
 
     while True:
         for event in w.stream(
-            api.list_namespaced_pod, namespace="bio-node", timeout_seconds=120
+            api.list_namespaced_pod, namespace="default", timeout_seconds=120
         ):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
@@ -222,7 +220,7 @@ def get_status_all():
         try:
             for event in w.stream(
                 k8s_batch_v1.list_namespaced_job,
-                namespace="bio-node",
+                namespace="default",
                 timeout_seconds=300,
             ):
                 job = event["object"].metadata.name
@@ -261,7 +259,7 @@ def get_status_all():
                         elif pod != old_pod:
                             retry(
                                 lambda: api.delete_namespaced_pod(
-                                    str(old_pod), namespace="bio-node"
+                                    str(old_pod), namespace="default"
                                 ),
                                 fail=False,
                                 wait=2,
