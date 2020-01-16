@@ -47,6 +47,10 @@ def handle_status(api, k8s_batch_v1, job_name, pod, status):
     except:
         if DEBUG_WATCH:
             print("no job")
+        retry(
+            lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="bio-node"),
+            fail=False,
+        )
         return
 
     logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="bio-node"))
