@@ -133,8 +133,8 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
             """
             unhandled_check = now()
             del_items = []
-            for pod, time in unhandled_pods.items():
-                if (now() - time).total_seconds() > 60 * 60:  # 60min
+            for pod, t in unhandled_pods.items():
+                if (now() - t).total_seconds() > 60 * 60:  # 60min
                     job = "-".join(pod.split("-")[:-1])
 
                     result = retry(
@@ -156,8 +156,8 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                 del unhandled_pods[pod]
 
             del_items = []
-            for job, time in unhandled_jobs.items():
-                if (now() - time).total_seconds() > 60 * 60:  # 60min
+            for job, t in unhandled_jobs.items():
+                if (now() - t).total_seconds() > 60 * 60:  # 60min
                     result = pods.get(job, None)
                     if result is None:
                         retry(
