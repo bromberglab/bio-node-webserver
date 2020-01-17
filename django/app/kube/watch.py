@@ -156,10 +156,12 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
             """
             Remove ghost jobs and pods.
             """
+            debug_print("stale")
             unhandled_check = now()
             del_items = []
             for pod, t in unhandled_pods.items():
                 if (now() - t).total_seconds() > 60 * 60:  # 60min
+                    debug_print("stale pod", pod)
                     job = "-".join(pod.split("-")[:-1])
 
                     result = retry(
@@ -183,6 +185,7 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
             del_items = []
             for job, t in unhandled_jobs.items():
                 if (now() - t).total_seconds() > 60 * 60:  # 60min
+                    debug_print("stale job", job)
                     result = pods.get(job, None)
                     if result is None:
                         retry(
