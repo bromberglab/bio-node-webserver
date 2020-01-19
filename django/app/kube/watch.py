@@ -127,78 +127,86 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
     unhandled_check = now()
 
     while True:
-        debug_print("loop status_thread", high_frequency=True)
-        time.sleep(0.1)
-        el = None
-        with lock:
-            if len(tasks) > 0:
-                el = tasks[0]
-                del tasks[0]
-
-        if el is None:
-            continue
-
-        debug_print("new task", el)
-
         try:
-            r = handle_status(api, k8s_batch_v1, unhandled_pods, unhandled_jobs, *el)
-            debug_print("handle_status", r)
-            if r == 1:
-                job = el[0]
-                with lock:
-                    if pods.get(job, None) is not None:
-                        del pods[job]
-        except Exception as e:
-            debug_print("Handling error:", e)
-            # traceback.print_exc()
+            debug_print("loop status_thread", high_frequency=True)
+            time.sleep(0.1)
+            el = None
+            with lock:
+                if len(tasks) > 0:
+                    el = tasks[0]
+                    del tasks[0]
 
-        if (now() - unhandled_check).total_seconds() > 5 * 60:  # 5min
-            """
-            Remove ghost jobs and pods.
-            """
-            debug_print("stale")
-            unhandled_check = now()
-            del_items = []
-            for pod, t in unhandled_pods.items():
-                if (now() - t).total_seconds() > 60 * 60:  # 60min
-                    debug_print("stale pod", pod)
-                    job = "-".join(pod.split("-")[:-1])
+            if el is None:
+                continue
 
-                    result = retry(
-                        lambda: k8s_batch_v1.read_namespaced_job_status(
-                            job, namespace="default"
-                        ),
-                        wait=2,
-                        times=3,
-                    )
-                    if result is None:
-                        retry(
-                            lambda: api.delete_namespaced_pod(pod, namespace="default"),
-                            fail=False,
-                            wait=2,
-                            times=3,
-                        )
-                        del_items.append(pod)
-            for pod in del_items:
-                del unhandled_pods[pod]
+            debug_print("new task", el)
 
-            del_items = []
-            for job, t in unhandled_jobs.items():
-                if (now() - t).total_seconds() > 60 * 60:  # 60min
-                    debug_print("stale job", job)
-                    result = pods.get(job, None)
-                    if result is None:
-                        retry(
-                            lambda: k8s_batch_v1.delete_namespaced_job(
+            try:
+                r = handle_status(
+                    api, k8s_batch_v1, unhandled_pods, unhandled_jobs, *el
+                )
+                debug_print("handle_status", r)
+                if r == 1:
+                    job = el[0]
+                    with lock:
+                        if pods.get(job, None) is not None:
+                            del pods[job]
+            except Exception as e:
+                debug_print("Handling error:", e)
+                # traceback.print_exc()
+
+            if (now() - unhandled_check).total_seconds() > 5 * 60:  # 5min
+                """
+                Remove ghost jobs and pods.
+                """
+                debug_print("stale")
+                unhandled_check = now()
+                del_items = []
+                for pod, t in unhandled_pods.items():
+                    if (now() - t).total_seconds() > 60 * 60:  # 60min
+                        debug_print("stale pod", pod)
+                        job = "-".join(pod.split("-")[:-1])
+
+                        result = retry(
+                            lambda: k8s_batch_v1.read_namespaced_job_status(
                                 job, namespace="default"
                             ),
-                            fail=False,
                             wait=2,
                             times=3,
                         )
-                        del_items.append(job)
-            for job in del_items:
-                del unhandled_jobs[job]
+                        if result is None:
+                            retry(
+                                lambda: api.delete_namespaced_pod(
+                                    pod, namespace="default"
+                                ),
+                                fail=False,
+                                wait=2,
+                                times=3,
+                            )
+                            del_items.append(pod)
+                for pod in del_items:
+                    del unhandled_pods[pod]
+
+                del_items = []
+                for job, t in unhandled_jobs.items():
+                    if (now() - t).total_seconds() > 60 * 60:  # 60min
+                        debug_print("stale job", job)
+                        result = pods.get(job, None)
+                        if result is None:
+                            retry(
+                                lambda: k8s_batch_v1.delete_namespaced_job(
+                                    job, namespace="default"
+                                ),
+                                fail=False,
+                                wait=2,
+                                times=3,
+                            )
+                            del_items.append(job)
+                for job in del_items:
+                    del unhandled_jobs[job]
+        except Exception as e:
+            debug_print("Status error:", e)
+            traceback.print_exc()
 
 
 def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
@@ -217,14 +225,25 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
                 if not re.match(reg, pod):
                     continue
 
+                if (
+                    pods.get(job, None) is None
+                    and unhandled_pods.get(pod, None) is None
+                ):
+                    """
+                    add the pod just once.
+                    Whatever happens during handling,
+                    even if the pod fails to delete,
+                    it will be removed from the pods dict.
+                    Then it's added again.
+                    """
+                    unhandled_pods[pod] = now()
                 with lock:
                     pods[job] = pod
 
-                if unhandled_pods.get(pod, None) is None:
-                    unhandled_pods[pod] = now()
-
 
 def get_status_all():
+    from app.management.commands.resources import reg
+
     global handled_pods
     lock = threading.Lock()
     pods = {}
@@ -261,15 +280,25 @@ def get_status_all():
 
                 status = "succeeded" if success else ("failed" if failure else None)
 
+                with lock:
+                    pod = pods.get(job, None)
+                if pod is not None:
+                    """
+                    we have a job now for this pod. It is not unhandled.
+                    """
+                    if unhandled_pods.get(pod, None) is not None:
+                        del unhandled_pods[pod]
                 if status is not None:
+                    if not re.match(reg, job + "-xxxxx"):
+                        continue
+
                     debug_print("new job", job, status)
-                    with lock:
-                        pod = pods.get(job, None)
                     if pod is None:
                         debug_print("no pod")
                         if unhandled_jobs.get(job, None) is None:
                             unhandled_jobs[job] = now()
                         continue
+
                     with lock:
                         exists = False
                         for i, t in enumerate(tasks):
