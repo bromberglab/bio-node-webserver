@@ -134,6 +134,17 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                 Remove ghost jobs and pods.
                 """
                 debug_print("stale")
+
+                with lock:
+                    for _, pod in pods.items():
+                        if unhandled_pods.get(pod, None) is None:
+                            """
+                            This is a failover check if
+                            anything goes wrong during
+                            pod handling.
+                            """
+                            unhandled_pods[pod] = now()
+
                 unhandled_check = now()
                 del_items = []
                 for pod, t in unhandled_pods.items():
@@ -160,6 +171,9 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                             del_items.append(pod)
                 for pod in del_items:
                     del unhandled_pods[pod]
+                    job = "-".join(pod.split("-")[:-1])
+                    with lock:
+                        del pods[job]
 
                 del_items = []
                 for job, t in unhandled_jobs.items():
