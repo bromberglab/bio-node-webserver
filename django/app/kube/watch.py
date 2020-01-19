@@ -129,32 +129,6 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
     while True:
         try:
             debug_print("loop status_thread", high_frequency=True)
-            time.sleep(0.1)
-            el = None
-            with lock:
-                if len(tasks) > 0:
-                    el = tasks[0]
-                    del tasks[0]
-
-            if el is None:
-                continue
-
-            debug_print("new task", el)
-
-            try:
-                r = handle_status(
-                    api, k8s_batch_v1, unhandled_pods, unhandled_jobs, *el
-                )
-                debug_print("handle_status", r)
-                if r == 1:
-                    job = el[0]
-                    with lock:
-                        if pods.get(job, None) is not None:
-                            del pods[job]
-            except Exception as e:
-                debug_print("Handling error:", e)
-                # traceback.print_exc()
-
             if (now() - unhandled_check).total_seconds() > 5 * 60:  # 5min
                 """
                 Remove ghost jobs and pods.
@@ -204,6 +178,32 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                             del_items.append(job)
                 for job in del_items:
                     del unhandled_jobs[job]
+            time.sleep(0.1)
+            el = None
+            with lock:
+                if len(tasks) > 0:
+                    el = tasks[0]
+                    del tasks[0]
+
+            if el is None:
+                continue
+
+            debug_print("new task", el)
+
+            try:
+                r = handle_status(
+                    api, k8s_batch_v1, unhandled_pods, unhandled_jobs, *el
+                )
+                debug_print("handle_status", r)
+                if r == 1:
+                    job = el[0]
+                    with lock:
+                        if pods.get(job, None) is not None:
+                            del pods[job]
+            except Exception as e:
+                debug_print("Handling error:", e)
+                # traceback.print_exc()
+
         except Exception as e:
             debug_print("Status error:", e)
             traceback.print_exc()
