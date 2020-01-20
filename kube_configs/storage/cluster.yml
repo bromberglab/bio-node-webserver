@@ -92,7 +92,7 @@ spec:
             spec:
               resources:
                 requests:
-                  storage: 500Gi
+                  storage: 1000Gi
               # IMPORTANT: Change the storage class depending on your environment (e.g. local-storage, gp2)
               storageClassName: gce-fast
               volumeMode: Block
