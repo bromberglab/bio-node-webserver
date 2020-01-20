@@ -177,7 +177,8 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                     del unhandled_pods[pod]
                     job = "-".join(pod.split("-")[:-1])
                     with lock:
-                        del pods[job]
+                        if pods.get(job, "") == pod:
+                            del pods[job]
 
                 del_items = []
                 for job, t in unhandled_jobs.items():
