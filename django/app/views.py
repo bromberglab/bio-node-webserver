@@ -482,12 +482,8 @@ class NotificationsList(ListAPIView):
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
-        """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
-        """
         user = self.request.user
-        return Notification.objects.filter(user=user)
+        return Notification.objects.filter(user=user).order_by("-created_at")[:25]
 
     def delete(self, request, format=None):
         user = self.request.user
