@@ -408,7 +408,11 @@ class Job(models.Model):
     def schedule_run(self, k):
         while True:
             try:
-                dep = json.loads(self.body)
+                try:
+                    dep = json.loads(self.body)
+                except:
+                    print("no body", k, str(self.uuid))
+                    return
                 k8s_batch_v1 = client.BatchV1Api()
                 dep["metadata"]["name"] = "bio" + str(self.pk) + "-" + str(k)
                 c = dep["spec"]["template"]["spec"]["containers"][0]
