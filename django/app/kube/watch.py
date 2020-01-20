@@ -105,11 +105,15 @@ def handle_status(
         times=3,
     )
 
-    if status != "succeeded" and job.retries_left > 0:
+    try:
+        n = int(job_name[40:])
+    except:
+        n = 0
+    if status != "succeeded" and job.retries_left(n) > 0:
         debug_print("retry")
 
-        logs += "\nRetrying run ... (%d left)" % job.retries_left
-        job.retry(job_name)
+        logs += "\nRetrying run ... (%d left)" % job.retries_left(n)
+        job.retry(n)
     else:
         debug_print("handling")
 

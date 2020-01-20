@@ -38,7 +38,6 @@ class Job(models.Model):
     )
     parallel_runs = models.IntegerField(default=-1)
     finished_runs = models.IntegerField(default=0)
-    retries_left = models.IntegerField(default=0)
     scheduled_runs = models.IntegerField(default=0)
 
     dependencies = models.ManyToManyField(
@@ -283,7 +282,6 @@ class Job(models.Model):
                 if k < 1:
                     k = 1
                 self.parallel_runs = k
-                self.retries_left = max(5, k // 10 + 1)
                 self.save()
                 k = int((n // (k + 0.0001)) + 1)
         else:
@@ -294,6 +292,24 @@ class Job(models.Model):
                 image, input_paths, cont_input_paths, output_paths, cont_output_paths, k
             )
         )
+
+    def retries_left(self, n):
+        try:
+            obj = self.retries.filter(n=n).first()
+            retries = obj.retries
+        except:
+            retries = 0
+
+        return 2 - retries
+
+    def remove_retry(self, n):
+        try:
+            obj = self.retries.filter(n=n).first()
+            obj.retries += 1
+        except:
+            obj = JobRetries(job=self, n=n)
+
+        obj.save()
 
     @property
     def is_node(self):
@@ -507,14 +523,13 @@ class Job(models.Model):
             clean_job(self)
             self.body = ""
             self.save()
+            for retry in self.retries.all():
+                retry.delete()
 
-    def retry(self, name):
+    def retry(self, n):
         with transaction.atomic():
-            self.retries_left = self.retries_left - 1
-            self.save()
+            self.remove_retry(int(n))
 
-        # name is job name, not pod
-        num = int(name.split("-")[-1])
         self.schedule_run(num)
 
     @property
@@ -542,3 +557,9 @@ class Job(models.Model):
                 max_memory = measure.max_memory
 
         return max_memory
+
+
+class JobRetries(models.Model):
+    job = models.ForeignKey(Job, related_name="retries", on_delete=models.CASCADE)
+    n = models.IntegerField()
+    retries = models.IntegerField(default=1)
