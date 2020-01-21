@@ -11,7 +11,7 @@ import json
 from app.util import now, dtformat
 
 
-DEBUG_WATCH = True
+DEBUG_WATCH = False
 
 
 def debug_print(*msg, high_frequency=False):
@@ -236,7 +236,7 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
     while True:
         debug_print("loop pod_thread", high_frequency=True)
         for event in w.stream(
-            api.list_namespaced_pod, namespace="default", timeout_seconds=120
+            api.list_namespaced_pod, namespace="default", timeout_seconds=550
         ):
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
@@ -290,7 +290,7 @@ def get_status_all():
             for event in w.stream(
                 k8s_batch_v1.list_namespaced_job,
                 namespace="default",
-                timeout_seconds=300,
+                timeout_seconds=600,
             ):
                 job = event["object"].metadata.name
 
