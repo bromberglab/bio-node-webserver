@@ -1,12 +1,21 @@
 import os
+import time
 import subprocess
 from django.conf import settings
 
 
-def resize(num=None):
+def resize(*a, **kw):
+    import threading
+
+    threading.Thread(target=resize_, args=a, kwargs=kw).start()
+
+
+def resize_(num=None):
     """
     Resize cluster. num=None means minimum.
     """
+
+    time.sleep(10)
 
     path = settings.BASE_DIR
     path = os.path.join(path, "resize.sh")
