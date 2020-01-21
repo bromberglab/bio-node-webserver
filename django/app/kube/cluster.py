@@ -7,6 +7,8 @@ from django.conf import settings
 def resize(*a, **kw):
     import threading
 
+    return
+
     threading.Thread(target=resize_, args=a, kwargs=kw).start()
 
 
