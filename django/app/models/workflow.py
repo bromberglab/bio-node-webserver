@@ -36,11 +36,6 @@ class Workflow(models.Model):
         self.save()
         self.clean_up()
 
-        if Workflow.objects.filter(should_run=True, finished=False).count() == 0:
-            from app.kube.cluster import resize
-
-            resize()
-
     def clean_up(self):
         for job in self.job_set.all():
             job.clean_up()
