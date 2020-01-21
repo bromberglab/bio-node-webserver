@@ -10,7 +10,7 @@ chardet==3.0.4
 constantly==15.1.0
 cryptography==2.8
 daphne==2.3.0
-Django==2.2.8
+Django==2.2.9
 django-cors-headers==3.1.1
 django-eventstream==2.6.0
 django-grip==2.0.2
