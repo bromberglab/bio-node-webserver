@@ -1,19 +1,19 @@
-# ---
-# apiVersion: storage.k8s.io/v1
-# kind: StorageClass
-# metadata:
-#   name: gce-slow
-# provisioner: kubernetes.io/gce-pd
-# parameters:
-#   type: pd-standard
-# ---
-# apiVersion: storage.k8s.io/v1
-# kind: StorageClass
-# metadata:
-#   name: gce-fast
-# provisioner: kubernetes.io/gce-pd
-# parameters:
-#   type: pd-ssd
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gce-slow
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gce-fast
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
