@@ -505,6 +505,7 @@ class Job(models.Model):
             if job.status != "failed":
                 # don't override 'failed'
                 job.status = status
+            did_fail = job.is_node and job.status == "failed"
 
             job.finish()
 
