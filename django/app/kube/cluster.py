@@ -33,6 +33,7 @@ def drain():
     for node in unsafe_nodes:
         print("delete node", node)
         api.delete_node(node)
+    resize(len(safe_nodes))
 
 
 def drain_if_no_workflows():
@@ -40,3 +41,12 @@ def drain_if_no_workflows():
 
     if Workflow.objects.filter(should_run=True, finished=False).count() == 0:
         drain()
+
+
+def resize():
+    path = settings.BASE_DIR
+    path = os.path.join(path, "resize.sh")
+    cmd = [path]
+    if num is not None:
+        cmd += str(num)
+    subprocess.run(cmd)
