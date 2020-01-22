@@ -91,6 +91,7 @@ class Job(models.Model):
     ):
         import yaml
         import os
+        from app.kube.resources import SIConverter
 
         yaml_dir = settings.BASE_DIR
         yaml_dir = os.path.join(yaml_dir, "kube_templates")
