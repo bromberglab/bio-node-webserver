@@ -22,6 +22,8 @@ class Workflow(models.Model):
     updated_resources = models.BooleanField(default=False)
 
     def update_resources(self):
+        from app.models import Job
+
         if not self.finished:
             return False
         if self.some_failed:
@@ -29,7 +31,7 @@ class Workflow(models.Model):
         if self.updated_resources:
             return False
         body = self.json
-        for i, node in body.items():
+        for i, node in body["nodes"].items():
             try:
                 job = Job.objects.get(uuid=i)
             except:
