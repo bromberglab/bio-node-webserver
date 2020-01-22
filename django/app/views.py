@@ -506,3 +506,18 @@ class RandomNameView(APIView):
         from .util import default_name
 
         return Response(default_name())
+
+
+class UpdateResourcesView(APIView):
+    def post(self, request, format=None):
+        try:
+            pk = request.data.get("pk", "")
+            workflow = Workflow.objects.get(pk=pk)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
+
+        try:
+            result = workflow.update_resources()
+            assert result
+        except:
+            return Response(status=HTTP_400_BAD_REQUEST)

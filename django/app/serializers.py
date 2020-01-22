@@ -108,4 +108,5 @@ class WorkflowSerializer(serializers.ModelSerializer):
             "status",
             "some_failed",
             "created_at",
+            "updated_resources",
         ]

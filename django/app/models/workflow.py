@@ -19,6 +19,32 @@ class Workflow(models.Model):
     status = models.CharField(max_length=32, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     is_shared = models.BooleanField(default=False)
+    updated_resources = models.BooleanField(default=False)
+
+    def update_resources(self):
+        if not self.finished:
+            return False
+        if self.some_failed:
+            return False
+        if self.updated_resources:
+            return False
+        self.updated_resources = True
+        self.save()
+        body = self.json
+        for i, node in body.items:
+            try:
+                job = Job.objects.get(uuid=i)
+            except:
+                continue
+
+            cpu = job.max_cpu
+            memory = job.max_memory
+            if cpu <= 0:
+                continue
+            if memory <= 0:
+                continue
+            node["data"]["image"]["labels"]["cpu"] = "%dm" % int(cpu)
+            node["data"]["image"]["labels"]["memory"] = "%dMi" % int(memory)
 
     @property
     def json(self):

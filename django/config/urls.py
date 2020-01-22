@@ -55,6 +55,7 @@ api = [
     path("notification/", NotificationView.as_view()),
     path("notifications/", NotificationsList.as_view()),
     path("random_name/", RandomNameView.as_view()),
+    path("update_resources/", UpdateResourcesView.as_view()),
 ]
 
 main = [
