@@ -28,8 +28,6 @@ class Workflow(models.Model):
             return False
         if self.updated_resources:
             return False
-        self.updated_resources = True
-        self.save()
         body = self.json
         for i, node in body.items:
             try:
@@ -45,6 +43,9 @@ class Workflow(models.Model):
                 continue
             node["data"]["image"]["labels"]["cpu"] = "%dm" % int(cpu)
             node["data"]["image"]["labels"]["memory"] = "%dMi" % int(memory)
+        self.json = body
+        self.updated_resources = True
+        self.save()
         return True
 
     @property
