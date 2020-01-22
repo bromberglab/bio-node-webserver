@@ -43,7 +43,11 @@ def drain_if_no_workflows():
         drain()
 
 
-def resize():
+def resize(num=None):
+    """
+    None for minimum size.
+    """
+
     path = settings.BASE_DIR
     path = os.path.join(path, "resize.sh")
     cmd = [path]
