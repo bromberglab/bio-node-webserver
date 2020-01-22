@@ -45,6 +45,7 @@ class Workflow(models.Model):
                 continue
             node["data"]["image"]["labels"]["cpu"] = "%dm" % int(cpu)
             node["data"]["image"]["labels"]["memory"] = "%dMi" % int(memory)
+        return True
 
     @property
     def json(self):
