@@ -29,7 +29,7 @@ class Workflow(models.Model):
         if self.updated_resources:
             return False
         body = self.json
-        for i, node in body.items:
+        for i, node in body.items():
             try:
                 job = Job.objects.get(uuid=i)
             except:
