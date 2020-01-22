@@ -521,3 +521,4 @@ class UpdateResourcesView(APIView):
             assert result
         except:
             return Response(status=HTTP_400_BAD_REQUEST)
+        return Response
