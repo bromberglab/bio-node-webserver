@@ -256,8 +256,8 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
                     Then it's added again.
                     """
                     unhandled_pods[pod] = now()
-                with lock:
-                    pods[job] = pod
+
+                pods[job] = pod
 
 
 def get_status_all():
@@ -299,8 +299,7 @@ def get_status_all():
 
                 status = "succeeded" if success else ("failed" if failure else None)
 
-                with lock:
-                    pod = pods.get(job, None)
+                pod = pods.get(job, None)
                 if pod is not None:
                     """
                     we have a job now for this pod. It is not unhandled.
