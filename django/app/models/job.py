@@ -101,8 +101,19 @@ class Job(models.Model):
 
         c = body["spec"]["template"]["spec"]["containers"][0]
         resources = c["resources"]["requests"]
-        resources["memory"] = image["labels"].get("memory", resources["memory"])
-        resources["cpu"] = image["labels"].get("cpu", resources["cpu"])
+        memory = image["labels"].get("memory", resources["memory"])
+        cpu = image["labels"].get("cpu", resources["cpu"])
+
+        memory = int(SIConverter.to_number(memory) / 1024 / 1024) #MiB
+        cpu = int(SIConverter.to_number(cpu) * 1000)  #mCPU
+        m_memory = max(settings.RESOURCE_LIMIT_MULTIPLIER * memory, settings.MIN_MEMORY)
+        m_cpu = max(settings.RESOURCE_LIMIT_MULTIPLIER * cpu, settings.MIN_CPU)
+        memory = max(memory, settings.MIN_MEMORY)
+        cpu = max(cpu, settings.MIN_CPU)
+        c["resources"]["requests"]["cpu"] = "%dm" % cpu
+        c["resources"]["requests"]["memory"] = "%dMi" % memory
+        c["resources"]["limits"]["cpu"] = "%dm" % m_cpu
+        c["resources"]["limits"]["memory"] = "%dMi" % m_memory
 
         tag = image["name"]
         img: NodeImage = NodeImage.objects.get(name=tag)
