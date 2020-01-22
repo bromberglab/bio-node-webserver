@@ -556,23 +556,17 @@ class Job(models.Model):
     def max_cpu(self):
         measures = ResourceUsage.objects.filter(name=str(self.uuid))
 
-        max_cpu = -1.0
-        for measure in measures:
-            if measure.max_cpu > max_cpu:
-                max_cpu = measure.max_cpu
+        values = [measure.max_cpu for measure in measures]
 
-        return max_cpu
+        return max(-1.0, *values)
 
     @property
     def max_memory(self):
         measures = ResourceUsage.objects.filter(name=str(self.uuid))
 
-        max_memory = -1.0
-        for measure in measures:
-            if measure.max_memory > max_memory:
-                max_memory = measure.max_memory
+        values = [measure.max_memory for measure in measures]
 
-        return max_memory
+        return max(-1.0, *values)
 
 
 class JobRetries(models.Model):
