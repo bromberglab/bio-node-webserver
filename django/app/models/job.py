@@ -105,12 +105,17 @@ class Job(models.Model):
         memory = image["labels"].get("memory", resources["memory"])
         cpu = image["labels"].get("cpu", resources["cpu"])
 
-        memory = int(SIConverter.to_number(memory) / 1024 / 1024) #MiB
-        cpu = int(SIConverter.to_number(cpu) * 1000)  #mCPU
+        memory = int(SIConverter.to_number(memory) / 1024 / 1024)  # MiB
+        cpu = int(SIConverter.to_number(cpu) * 1000)  # mCPU
         m_memory = max(settings.RESOURCE_LIMIT_MULTIPLIER * memory, settings.MIN_MEMORY)
         m_cpu = max(settings.RESOURCE_LIMIT_MULTIPLIER * cpu, settings.MIN_CPU)
         memory = max(memory, settings.MIN_MEMORY)
         cpu = max(cpu, settings.MIN_CPU)
+
+        c["resources"] = c.get("resources", {})
+        c["resources"]["requests"] = c["resources"].get("requests", {})
+        c["resources"]["limits"] = c["resources"].get("limits", {})
+
         c["resources"]["requests"]["cpu"] = "%dm" % cpu
         c["resources"]["requests"]["memory"] = "%dMi" % memory
         c["resources"]["limits"]["cpu"] = "%dm" % m_cpu
