@@ -557,16 +557,18 @@ class Job(models.Model):
         measures = ResourceUsage.objects.filter(name=str(self.uuid))
 
         values = [measure.max_cpu for measure in measures]
+        values.append(-1.0)
 
-        return max(-1.0, *values)
+        return max(values)
 
     @property
     def max_memory(self):
         measures = ResourceUsage.objects.filter(name=str(self.uuid))
 
         values = [measure.max_memory for measure in measures]
+        values.append(-1.0)
 
-        return max(-1.0, *values)
+        return max(values)
 
 
 class JobRetries(models.Model):
