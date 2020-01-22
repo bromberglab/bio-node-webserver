@@ -39,6 +39,9 @@ def drain():
 def drain_if_no_workflows():
     from app.models import Workflow
 
+    if settings.DEBUG:
+        return
+
     if Workflow.objects.filter(should_run=True, finished=False).count() == 0:
         drain()
 
