@@ -30,6 +30,9 @@ def drain():
             api.delete_namespaced_pod(name, namespace=namespace)
         except:
             pass
+    for node in unsafe_nodes:
+        print("delete node", node)
+        api.delete_node(node)
 
 
 def drain_if_no_workflows():
