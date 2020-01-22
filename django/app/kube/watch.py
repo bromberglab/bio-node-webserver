@@ -197,7 +197,7 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
                             del_items.append(job)
                 for job in del_items:
                     del unhandled_jobs[job]
-            time.sleep(0.1)
+            time.sleep(0.01)
             el = None
             with lock:
                 if len(tasks) > 0:
