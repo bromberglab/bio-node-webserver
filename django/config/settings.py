@@ -192,6 +192,7 @@ if not DEBUG:
         "handlers": {
             "console": {"level": "ERROR", "class": "logging.StreamHandler"},
             "file": {
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "formatter": "verbose",
                 "filename": "/app/debug.log",
@@ -203,7 +204,7 @@ if not DEBUG:
             "django": {
                 "handlers": ["file", "console"],
                 "propagate": True,
-                "level": "DEBUG",
+                "level": "INFO",
             },
         },
     }
