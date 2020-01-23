@@ -552,7 +552,7 @@ class Job(models.Model):
         with transaction.atomic():
             self.remove_retry(int(n))
 
-        self.schedule_run(num)
+        self.schedule_run(n)
 
     @property
     def logs(self):
