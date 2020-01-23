@@ -11,7 +11,7 @@ import json
 from app.util import now, dtformat
 
 
-DEBUG_WATCH = False
+DEBUG_WATCH = 1
 
 
 def debug_print(*msg, high_frequency=False):
