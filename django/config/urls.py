@@ -70,6 +70,7 @@ main = [
     path("accounts/login/", LoginOverride.as_view()),
     path("accounts/", include("django.contrib.auth.urls")),
     path("cron/", CronView.as_view()),
+    path("token_login/", TokenLoginView.as_view()),
 ]
 
 urlpatterns = [
