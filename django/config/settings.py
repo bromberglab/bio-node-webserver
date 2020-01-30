@@ -211,6 +211,6 @@ if not DEBUG:
 MAX_CPU = 100  # cores
 MAX_MEMORY = 500000  # MiB
 
-MIN_CPU = 100  # mCPU
-MIN_MEMORY = 100  # MiB
+MIN_CPU = 50  # mCPU
+MIN_MEMORY = 50  # MiB
 RESOURCE_LIMIT_MULTIPLIER = 2  # limits = x * requests
