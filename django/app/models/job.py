@@ -45,6 +45,7 @@ class Job(models.Model):
     )
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
+    resource_exhaustion = models.BooleanField(default=False)
 
     @property
     def schedulable_runs(self):

@@ -74,6 +74,7 @@ class JobSerializer(serializers.ModelSerializer):
             "runtime",
             "max_cpu",
             "max_memory",
+            "resource_exhaustion",
         ]
 
 
