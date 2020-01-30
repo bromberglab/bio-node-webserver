@@ -8,3 +8,4 @@ from .workflow import Workflow
 from .notification import Notification
 from .permissions import Permissions
 from .resource_usage import ResourceUsage
+from .api_token import ApiToken

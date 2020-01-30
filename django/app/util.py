@@ -21,6 +21,17 @@ def default_name(*a, **kw):
     return " ".join(random_words())
 
 
+def random_chars(k=16, allow_uppercase=False):
+    import random
+    import string
+
+    chars = string.ascii_lowercase + string.digits
+    if allow_uppercase:
+        chars += string.ascii_uppercase
+
+    return "".join(random.choices(chars, k=k))
+
+
 def now():
     return timezone.now().astimezone(tz=settings.TZ)
 

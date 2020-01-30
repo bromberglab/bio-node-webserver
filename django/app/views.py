@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.utils.decorators import method_decorator
 from django_zip_stream.responses import FolderZipResponse
+from django.contrib.auth import login, logout
 
 # Create your views here.
 
@@ -506,6 +507,20 @@ class RandomNameView(APIView):
         from .util import default_name
 
         return Response(default_name())
+
+
+class TokenLoginView(APIView):
+    def post(self, request, format=None):
+        token = request.data.get("token", "")
+
+        try:
+            token = ApiToken.objects.get(token=token)
+        except:
+            return Response(status=HTTP_400_BAD_REQUEST)
+
+        logout(request)
+        login(request, token.user, backend=settings.AUTHENTICATION_BACKENDS[0])
+        return Response()
 
 
 class UpdateResourcesView(APIView):
