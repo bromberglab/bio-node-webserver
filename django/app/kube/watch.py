@@ -93,6 +93,9 @@ def handle_status(
 
     logs = retry(lambda: api.read_namespaced_pod_log(name=pod, namespace="default"))
     logs = logs if isinstance(logs, str) else ""
+    if "Killed" in logs[-200:].split("\n")[-3:]:
+        job.resource_exhaustion = True
+        job.save()
 
     retry(
         lambda: k8s_batch_v1.delete_namespaced_job(job_name, namespace="default"),
