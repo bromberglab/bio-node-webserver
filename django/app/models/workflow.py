@@ -165,6 +165,7 @@ class ApiWorkflow(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
     json_string = models.TextField(default="{}")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    outputs_count = models.IntegerField(default=-1)
 
     @property
     def json(self):
@@ -186,17 +187,24 @@ class ApiWorkflow(models.Model):
             if name.startswith("from_data"):
                 n = "i/%d" % (len(inputs) + 1)
 
-                inputs[n] = "[%s]/[%s]" % (node["data"]["type"], node["data"]["data_name"])
+                inputs[n] = "[%s]/[%s]" % (
+                    node["data"]["type"],
+                    node["data"]["data_name"],
+                )
 
                 node["data"]["type"] = uuid
                 node["data"]["data_name"] = n
             if name.startswith("to_data"):
                 n = "o/%d" % (len(outputs) + 1)
 
-                outputs[n] = "[%s]/[%s]" % (node["data"]["type"], node["data"]["data_name"])
+                outputs[n] = "[%s]/[%s]" % (
+                    node["data"]["type"],
+                    node["data"]["data_name"],
+                )
 
                 node["data"]["type"] = uuid
                 node["data"]["data_name"] = n
         self.json = body
+        self.outputs_count = len(outputs)
 
         return inputs, outputs
