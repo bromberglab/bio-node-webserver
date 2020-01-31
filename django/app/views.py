@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.generics import ListAPIView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -510,6 +510,8 @@ class RandomNameView(APIView):
 
 
 class ApiWorkflowView(APIView):
+    permission_classes = [IsAdminUser]
+
     def post(self, request, format=None):
         pk = request.data.get("pk", -1)
         flow = Workflow.objects.get(pk=pk)
@@ -522,8 +524,19 @@ class ApiWorkflowView(APIView):
 
 
 class RunApiWorkflowView(APIView):
+    permission_classes = [IsAdminUser]
+
     def post(self, request, format=None):
-        return Response({"pk": 0})
+        pk = request.data.get("name", "")
+        flow = ApiWorkflow.objects.get(pk=pk)
+        w_flow = Workflow(
+            json_string=flow.json_string,
+            user=flow.user,
+            should_run=True,
+            name="API/%s" % pk,
+        )
+        w_flow.save()
+        return Response({"pk": w_flow.pk, "outputs": flow.outputs_count})
 
 
 class TokenLoginView(APIView):
