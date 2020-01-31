@@ -141,6 +141,15 @@ uploadfolder() {
     apipost 'v1/finalize_upload' '{"manual_format":"'"$uploadtype"'","wrap_files":'"$hasfiles"',"checkboxes":[],"suffixes":[],"types":[]}' >/dev/null
 }
 
+waitforflow() {
+    num="$1"
+    sleep 1
+    while [ "$(api 'v1/workflows/'"$num" | jq '.finished')" = "false" ]
+    do
+        sleep 3
+    done
+}
+
 main() {
     for req in curl jq tar
     do

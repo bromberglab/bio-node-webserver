@@ -509,6 +509,23 @@ class RandomNameView(APIView):
         return Response(default_name())
 
 
+class ApiWorkflowView(APIView):
+    def post(self, request, format=None):
+        pk = request.data.get("pk", -1)
+        flow = Workflow.objects.get(pk=pk)
+
+        flow = ApiWorkflow(json_string=flow.json_string, user=flow.user)
+        inputs, outputs = flow.prepare()
+        flow.save()
+
+        return Response({"name": flow.pk, "inputs": inputs, "outputs": outputs})
+
+
+class RunApiWorkflowView(APIView):
+    def post(self, request, format=None):
+        return Response({"pk": 0})
+
+
 class TokenLoginView(APIView):
     def post(self, request, format=None):
         token = request.data.get("token", "")
