@@ -536,6 +536,7 @@ class RunApiWorkflowView(APIView):
             user=flow.user,
             should_run=True,
             name="API/%s" % pk,
+            api_workflow=flow,
         )
         w_flow.save()
         return Response({"pk": w_flow.pk, "outputs": flow.outputs_count})
