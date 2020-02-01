@@ -27,6 +27,7 @@ from .files import (
     file_tree,
     finish_upload,
     finalize_upload,
+    clear_my_upload,
     clear_upload,
 )
 from .serializers import *
@@ -372,7 +373,7 @@ class MyUploadView(viewsets.ViewSet):
         return Response(serializer.data)
 
     def remove(self, request):
-        clear_upload(request)
+        clear_my_upload(request)
         return Response()
 
 
@@ -531,6 +532,12 @@ class RunApiWorkflowView(APIView):
     def post(self, request, format=None):
         pk = request.data.get("name", "")
         flow = ApiWorkflow.objects.get(pk=pk)
+
+        for u in Upload.objects.filter(file_type=pk):
+            if u.name.startswith("o/"):
+                clear_upload(u)
+                u.delete()
+
         w_flow = Workflow(
             json_string=flow.json_string,
             user=flow.user,

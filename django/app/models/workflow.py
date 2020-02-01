@@ -119,8 +119,17 @@ class Workflow(models.Model):
         self.clean_up()
 
     def clean_up(self):
+        from .upload import Upload
+        from app.files import clear_upload
+
         for job in self.job_set.all():
             job.clean_up()
+        if self.api_workflow is not None:
+            pk = str(self.api_workflow.pk)
+            for u in Upload.objects.filter(file_type=pk):
+                if u.name.startswith("i/"):
+                    clear_upload(u)
+                    u.delete()
 
     @classmethod
     def id_for(cls, key, workflow_ids):
