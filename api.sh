@@ -105,11 +105,11 @@ download() {
     outputfile="${3:-}"
     if [ "$outputfile" = "" ]
     then
-        outputfile="$downloadname.zip"
+        outputfile="$(echo "$downloadname.zip" | sed -e 's;/;;g')"
     fi
 
     url="$(apipost 'v1/create_download' '{"name":"'"$downloadname"'","type":"'"$downloadtype"'"}' | jq -r '.url')"
-    curl --fail --silent --show-error -b /tmp/cookies.txt -o "$outputfile" "$url"
+    curl -L --fail --silent --show-error -b /tmp/cookies.txt -o "$outputfile" "$url"
 }
 
 uploadfolder() {
@@ -177,6 +177,7 @@ runapiflow() {
     pk="$(echo "$result" | jq -r '.pk')"
     numout="$(echo "$result" | jq -r '.outputs')"
 
+    echo Running...
     waitforflow $pk
 
     rm -rf "$outputsdir" 2>/dev/null
