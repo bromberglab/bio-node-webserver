@@ -9,6 +9,55 @@ from app.events import send_event
 from app.util import default_name
 
 
+class ApiWorkflow(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
+    json_string = models.TextField(default="{}")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    outputs_count = models.IntegerField(default=-1)
+
+    @property
+    def json(self):
+        return json.loads(self.json_string)
+
+    @json.setter
+    def json(self, value):
+        self.json_string = json.dumps(value)
+
+    def prepare(self):
+        uuid = str(self.uuid)
+        body = self.json
+
+        inputs = {}
+        outputs = {}
+
+        for id, node in body["nodes"].items():
+            name = node["name"]
+            if name.startswith("from_data"):
+                n = "i/%d" % (len(inputs) + 1)
+
+                inputs[n] = "[%s]/[%s]" % (
+                    node["data"]["type"],
+                    node["data"]["data_name"],
+                )
+
+                node["data"]["type"] = uuid
+                node["data"]["data_name"] = n
+            if name.startswith("to_data"):
+                n = "o/%d" % (len(outputs) + 1)
+
+                outputs[n] = "[%s]/[%s]" % (
+                    node["data"]["type"],
+                    node["data"]["data_name"],
+                )
+
+                node["data"]["type"] = uuid
+                node["data"]["data_name"] = n
+        self.json = body
+        self.outputs_count = len(outputs)
+
+        return inputs, outputs
+
+
 class Workflow(models.Model):
     name = models.CharField(max_length=64, default=default_name)
     json_string = models.TextField(default="{}")
@@ -20,6 +69,9 @@ class Workflow(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_shared = models.BooleanField(default=False)
     updated_resources = models.BooleanField(default=False)
+    api_workflow = models.ForeignKey(
+        ApiWorkflow, null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     def update_resources(self):
         from app.models import Job
@@ -159,52 +211,3 @@ class Workflow(models.Model):
             if job.is_node and job.status != "succeeded":
                 return True
         return False
-
-
-class ApiWorkflow(models.Model):
-    uuid = models.UUIDField(primary_key=True, default=uu.uuid4, editable=False)
-    json_string = models.TextField(default="{}")
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-    outputs_count = models.IntegerField(default=-1)
-
-    @property
-    def json(self):
-        return json.loads(self.json_string)
-
-    @json.setter
-    def json(self, value):
-        self.json_string = json.dumps(value)
-
-    def prepare(self):
-        uuid = str(self.uuid)
-        body = self.json
-
-        inputs = {}
-        outputs = {}
-
-        for id, node in body["nodes"].items():
-            name = node["name"]
-            if name.startswith("from_data"):
-                n = "i/%d" % (len(inputs) + 1)
-
-                inputs[n] = "[%s]/[%s]" % (
-                    node["data"]["type"],
-                    node["data"]["data_name"],
-                )
-
-                node["data"]["type"] = uuid
-                node["data"]["data_name"] = n
-            if name.startswith("to_data"):
-                n = "o/%d" % (len(outputs) + 1)
-
-                outputs[n] = "[%s]/[%s]" % (
-                    node["data"]["type"],
-                    node["data"]["data_name"],
-                )
-
-                node["data"]["type"] = uuid
-                node["data"]["data_name"] = n
-        self.json = body
-        self.outputs_count = len(outputs)
-
-        return inputs, outputs
