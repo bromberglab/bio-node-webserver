@@ -4,10 +4,13 @@ debugprintout=false
 
 api() {
     path="https://bio-no.de/api/$1/"
+    $debugprintout && (echo ">curl $path">&2)
     shift
     curl --fail --silent --show-error -b /tmp/cookies.txt "$path" "$@"
+    # $debugprintout && (echo ^curl --fail --silent --show-error -b /tmp/cookies.txt "$path" "$@">&2)
 }
 apipost() {
+    $debugprintout && (echo ">post $2">&2)
     api "$1" -H 'content-type: application/json;charset=UTF-8' --data-binary "$2"
 }
 
@@ -134,7 +137,11 @@ uploadfolder() {
     
     apipost 'v1/finish_upload' '{"extract":true}' >/dev/null
     sleep 1
-    while [ "$(api 'v1/my_upload' | jq '.extracting')" = "true" ]
+    while ! [ "$(api 'v1/my_upload' | jq '.reassembling')" = "false" ]
+    do
+        sleep 3
+    done
+    while ! [ "$(api 'v1/my_upload' | jq '.extracting')" = "false" ]
     do
         sleep 3
     done
@@ -150,6 +157,38 @@ waitforflow() {
     done
 }
 
+runapiflow() {
+    apiflow="$1"
+    inputsdir="$2"
+    outputsdir="$3"
+    mainpath="$(pwd)"
+
+    echo Running flow $apiflow
+
+    num=0
+    cd "$inputsdir"
+    for file in $(ls -1)
+    do
+        num=$((num+1))
+        uploadfolder "$file" "$apiflow" "i/$num"
+    done
+    cd "$mainpath"
+    result="$(apipost 'v1/api_workflow/run' '{"name":"'"$apiflow"'"}')"
+    pk="$(echo "$result" | jq -r '.pk')"
+    numout="$(echo "$result" | jq -r '.outputs')"
+
+    waitforflow $pk
+
+    rm -rf "$outputsdir" 2>/dev/null
+    mkdir "$outputsdir"
+    cd "$outputsdir"
+    for num in $(seq "$numout")
+    do
+        download "$apiflow" "o/$num"
+    done
+    cd "$mainpath"
+}
+
 main() {
     for req in curl jq tar
     do
@@ -160,10 +199,11 @@ main() {
         fi
     done
 
+    echo TOKEN="$(echo $TOKEN | sed -E 's/^(.).*(.)$/\1******\2/')"
+
     curl --fail --silent --show-error -c /tmp/cookies.txt 'https://bio-no.de/api/token_login/' -H 'content-type: application/json;charset=UTF-8' --data-binary '{"token":"'"$TOKEN"'"}'
-    uploadfolder "./input" "test" "test"
-    download "test" "test"
+    runapiflow "$1" "inputs" "outputs"
     rm /tmp/cookies.txt
 }
 
-main
+main "$@"
