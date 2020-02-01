@@ -188,6 +188,7 @@ runapiflow() {
         download "$apiflow" "o/$num"
     done
     cd "$mainpath"
+    echo "Created $numout outputs."
 }
 
 main() {
