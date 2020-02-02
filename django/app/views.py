@@ -219,6 +219,7 @@ class WorkflowNameView(APIView):
 
 
 class ListImagesView(ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer
 
@@ -360,6 +361,8 @@ class CheckAuthView(APIView):
 
 
 class MyUploadView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
     def retrieve(self, request):
         upload = get_upload(request)
         serializer = UploadSerializer(upload)
@@ -378,16 +381,22 @@ class MyUploadView(viewsets.ViewSet):
 
 
 class FinishUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
         return Response(finish_upload(request, get_upload(request)))
 
 
 class FinalizeUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, format=None):
         return Response(finalize_upload(request, get_upload(request)))
 
 
 class UploadTreeView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         upload = get_upload(request)
         tree = file_tree("file", upload.uuid)
@@ -483,6 +492,7 @@ class CookieInfoView(APIView):
 
 
 class NotificationsList(ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
@@ -513,7 +523,7 @@ class RandomNameView(APIView):
 
 
 class ApiWorkflowView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
         pk = request.data.get("pk", -1)
@@ -527,7 +537,7 @@ class ApiWorkflowView(APIView):
 
 
 class RunApiWorkflowView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
         pk = request.data.get("name", "")
