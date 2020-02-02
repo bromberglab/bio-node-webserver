@@ -224,6 +224,19 @@ class ListImagesView(ListAPIView):
     serializer_class = NodeImageSerializer
 
 
+class ListUploadsView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UploadSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        query = Upload.objects.filter(is_finished=True)
+        if user.is_superuser:
+            return query
+        return query.filter(user=user)
+
+
 class InspectImageView(APIView):
     permission_classes = [IsAuthenticated]
 
