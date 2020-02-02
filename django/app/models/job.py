@@ -412,6 +412,9 @@ class Job(models.Model):
 
         copy_folder(input_paths[0], out_path)
 
+        output = Upload.objects.get(uuid=self.data_id)
+        output.calc_size()
+
     def launch_more_jobs(self):
         with transaction.atomic():
             j = Job.objects.get(pk=self.pk)
