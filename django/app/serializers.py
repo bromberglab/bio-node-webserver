@@ -9,7 +9,6 @@ class UploadSerializer(serializers.ModelSerializer):
         fields = [
             "uuid",
             "file_type",
-            "job_count",
             "is_finished",
             "name",
             "display_name",

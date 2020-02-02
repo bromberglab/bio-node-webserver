@@ -15,11 +15,13 @@ class Upload(models.Model):
     extracting = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
     is_newest = models.BooleanField(default=True)
-    job_count = models.CharField(
-        choices=(("auto", "Auto"), ("single", "Single"), ("multiple", "Multiple"),),
-        max_length=16,
-        default="auto",
-    )
+    size = models.FloatField(default=-1.0)
+
+    def calc_size(self):
+        from app.files import calc_size
+
+        self.size = calc_size(self.file_type, str(self.uuid))
+        self.save()
 
     @property
     def display_name(self):

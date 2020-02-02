@@ -570,6 +570,8 @@ def move_file(
     else:
         move(from_path, to_path)
 
+    upload.calc_size()
+
 
 def finalize_upload(request, upload):
     """ move files according to the format annotations from the user """
@@ -672,6 +674,8 @@ def finalize_upload(request, upload):
         except:
             pass
 
+        upload.calc_size()
+
     update_file_types()
     return 0
 
@@ -757,6 +761,7 @@ def clear_my_upload(request):
     except:
         pass
 
+
 def clear_upload(upload):
     uuid = str(upload.uuid)
     path = base_path / upload.file_type / uuid
@@ -808,12 +813,23 @@ def logs_for(name):
             text = handle.read()
         dir_name = str(f.parent.parent).replace("/", "-")
         file_name = f.name
-        file_name = file_name.split('.')[0]
+        file_name = file_name.split(".")[0]
         name = "%s [%s]:" % (dir_name, file_name)
 
-        result += '%s\n%s\n' % (name, text)
+        result += "%s\n%s\n" % (name, text)
 
     if result == "":
         return "Logs are kept for 7 days."
 
     return result
+
+
+def calc_size(*a):
+    path = Path(settings.DATA_PATH) / "data"
+    for p in a:
+        path /= p
+
+    s = subprocess.run(["du", "-ks", str(path)], capture_output=True).stdout.decode()
+    s = s.split("\t")[0].replace(" ", "")
+    return int(s) * 1024.0
+
