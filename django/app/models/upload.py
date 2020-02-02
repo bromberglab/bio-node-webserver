@@ -20,8 +20,11 @@ class Upload(models.Model):
     def calc_size(self):
         from app.files import calc_size
 
-        self.size = calc_size(self.file_type, str(self.uuid))
-        self.save()
+        try:
+            self.size = calc_size(self.file_type, str(self.uuid))
+            self.save()
+        except:
+            pass
 
     @property
     def display_name(self):
