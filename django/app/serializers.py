@@ -9,13 +9,25 @@ class UploadSerializer(serializers.ModelSerializer):
         fields = [
             "uuid",
             "file_type",
+            "started_at",
+            "is_newest",
             "is_finished",
             "name",
             "display_name",
             "reassembling",
             "extracting",
+            "size",
         ]
-        read_only_fields = ["uuid", "display_name", "is_finished"]
+        read_only_fields = [
+            "uuid",
+            "started_at",
+            "is_newest",
+            "is_finished",
+            "display_name",
+            "reassembling",
+            "extracting",
+            "size",
+        ]
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
