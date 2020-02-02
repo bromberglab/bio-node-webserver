@@ -237,6 +237,20 @@ class ListUploadsView(ListAPIView):
         return query.filter(user=user)
 
 
+class UploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, uuid, format=None):
+        user = self.request.user
+
+        upload = Upload.objects.get(uuid=uuid)
+        if not user.is_superuser and upload.user != user:
+            return Response(status=HTTP_403_FORBIDDEN)
+        upload.delete()
+        clear_upload(upload)
+        return Response()
+
+
 class InspectImageView(APIView):
     permission_classes = [IsAuthenticated]
 

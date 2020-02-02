@@ -29,6 +29,7 @@ api = [
     path("change_image/", ChangeImageView.as_view()),
     path("delete_image/", DeleteImageView.as_view()),
     path("uploads/", ListUploadsView.as_view()),
+    path("uploads/<uuid:uuid>/", UploadView.as_view()),
     path("upload/<str:name>/", FileUploadView.as_view(), name="upload"),
     path("upload/", FileUploadView.as_view()),
     path(
