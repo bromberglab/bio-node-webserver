@@ -575,6 +575,9 @@ class RunApiWorkflowView(APIView):
                 clear_upload(u)
                 u.delete()
 
+        for w in Workflow.objects.filter(api_workflow=flow):
+            w.delete()
+
         w_flow = Workflow(
             json_string=flow.json_string,
             user=flow.user,
