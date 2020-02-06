@@ -126,9 +126,12 @@ class Job(models.Model):
         c["resources"]["limits"]["cpu"] = "%dm" % m_cpu
         c["resources"]["limits"]["memory"] = "%dMi" % m_memory
 
-        tag = image["name"]
-        img: NodeImage = NodeImage.objects.get(name=tag)
-        c["image"] = tag
+        image_name = image["name"]
+        img: NodeImage = NodeImage.objects.get(name=image_name)
+        tag = img.imported_tag
+        if tag == '' or not tag:
+            tag = 'latest'
+        c["image"] = image_name + ':' + tag
 
         mounts = []
         for i, host_path in enumerate(input_paths):
