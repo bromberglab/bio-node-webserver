@@ -103,8 +103,12 @@ class Job(models.Model):
 
         c = body["spec"]["template"]["spec"]["containers"][0]
         resources = c["resources"]["requests"]
-        memory = image["labels"].get("memory", resources["memory"])
-        cpu = image["labels"].get("cpu", resources["cpu"])
+        memory = image["labels"].get("memory", "")
+        if memory == "":
+            memory = resources["memory"]
+        cpu = image["labels"].get("cpu", "")
+        if cpu == "":
+            cpu = resources["cpu"]
 
         memory = int(SIConverter.to_number(memory) / 1024 / 1024)  # MiB
         cpu = int(SIConverter.to_number(cpu) * 1000)  # mCPU
