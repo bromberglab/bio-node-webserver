@@ -130,12 +130,30 @@ def handle_status(
     return 1
 
 
-def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs):
+def status_thread(
+    api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs, unschedulable
+):
     unhandled_check = now()
+    last_expand = now() - timedelta(hours=1)
 
     while True:
         try:
             debug_print("loop status_thread", high_frequency=True)
+            for pod, t in unschedulable.items():
+                if (now() - last_expand).total_seconds() < 90:  # 90s
+                    break
+                if (now() - t).total_seconds() > 45:  # 45s
+                    from .cluster import expand
+
+                    expand()
+                    last_expand = now()
+
+                    with lock:
+                        for pod, _ in unschedulable.items():
+                            unschedulable[pod] = now() + timedelta(seconds=90 + 5)
+
+                    break
+
             if (now() - unhandled_check).total_seconds() > 5 * 60:  # 5min
                 """
                 Remove ghost jobs and pods.
@@ -231,13 +249,10 @@ def status_thread(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandle
             traceback.print_exc()
 
 
-def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
+def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable):
     from app.management.commands.resources import reg
 
     w = watch.Watch()
-
-    unschedulable = {}
-    last_expand = now() - timedelta(hours=1)
 
     while True:
         debug_print("loop pod_thread", high_frequency=True)
@@ -271,24 +286,19 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
 
                 pods[job] = pod
 
-                try:
-                    if event["object"].status.conditions[0].reason == "Unschedulable":
-                        if (now() - last_expand).total_seconds() > 60 * 3:  # 3m
-                            t = unschedulable.get(pod, None)
-                            if t is not None:
-                                if (now() - t).total_seconds() > 30:  # 30s
-                                    from .cluster import expand
-
-                                    expand()
-                                    last_expand = now()
-                                    unschedulable[pod] = now()
-                            else:
+                with lock:
+                    try:
+                        if (
+                            event["object"].status.conditions[0].reason
+                            == "Unschedulable"
+                        ):
+                            if unschedulable.get(pod, None) is None:
                                 unschedulable[pod] = now()
-                    else:
-                        if unschedulable.get(pod, None) is not None:
-                            del unschedulable[pod]
-                except Exception as e:
-                    debug_print("unschedulable check exception:", e)
+                        else:
+                            if unschedulable.get(pod, None) is not None:
+                                del unschedulable[pod]
+                    except Exception as e:
+                        pass
 
 
 def get_status_all():
@@ -300,15 +310,26 @@ def get_status_all():
     tasks = []
     unhandled_pods = {}
     unhandled_jobs = {}
+    unschedulable = {}
 
     api = client.CoreV1Api()
     k8s_batch_v1 = client.BatchV1Api()
     threading.Thread(
         target=status_thread,
-        args=(api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs),
+        args=(
+            api,
+            k8s_batch_v1,
+            lock,
+            pods,
+            tasks,
+            unhandled_pods,
+            unhandled_jobs,
+            unschedulable,
+        ),
     ).start()
     threading.Thread(
-        target=pod_thread, args=(lock, pods, api, unhandled_pods, unhandled_jobs)
+        target=pod_thread,
+        args=(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable),
     ).start()
 
     w = watch.Watch()
