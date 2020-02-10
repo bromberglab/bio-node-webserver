@@ -271,21 +271,24 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
 
                 pods[job] = pod
 
-                if event["object"].status.conditions[0].reason == "Unschedulable":
-                    if (now() - last_expand).total_seconds() > 60 * 3:  # 3m
-                        t = unschedulable.get(pod, None)
-                        if t is not None:
-                            if (now() - t).total_seconds() > 30:  # 30s
-                                from .cluster import expand
+                try:
+                    if event["object"].status.conditions[0].reason == "Unschedulable":
+                        if (now() - last_expand).total_seconds() > 60 * 3:  # 3m
+                            t = unschedulable.get(pod, None)
+                            if t is not None:
+                                if (now() - t).total_seconds() > 30:  # 30s
+                                    from .cluster import expand
 
-                                expand()
-                                last_expand = now()
+                                    expand()
+                                    last_expand = now()
+                                    unschedulable[pod] = now()
+                            else:
                                 unschedulable[pod] = now()
-                        else:
-                            unschedulable[pod] = now()
-                else:
-                    if unschedulable.get(pod, None) is not None:
-                        del unschedulable[pod]
+                    else:
+                        if unschedulable.get(pod, None) is not None:
+                            del unschedulable[pod]
+                except Exception as e:
+                    debug_print("unschedulable check exception:", e)
 
 
 def get_status_all():
