@@ -214,3 +214,5 @@ MAX_MEMORY = 500000  # MiB
 MIN_CPU = 50  # mCPU
 MIN_MEMORY = 50  # MiB
 RESOURCE_LIMIT_MULTIPLIER = 2  # limits = x * requests
+
+MAX_NODES = 10

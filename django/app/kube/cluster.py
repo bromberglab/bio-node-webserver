@@ -46,6 +46,15 @@ def drain_if_no_workflows():
         drain()
 
 
+def expand():
+    api = client.CoreV1Api()
+
+    n = len(api.list_node().items)
+
+    if n < settings.MAX_NODES:
+        resize(n + 1)
+
+
 def resize(num=None):
     """
     None for minimum size.

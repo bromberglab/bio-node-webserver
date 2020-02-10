@@ -5,7 +5,7 @@ import traceback
 import threading
 import urllib3.exceptions
 from .jobs import create_logfile
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from django.conf import settings
 import json
 from app.util import now, dtformat
@@ -236,8 +236,17 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
 
     w = watch.Watch()
 
+    unschedulable = {}
+    last_expand = now() - timedelta(hours=1)
+
     while True:
         debug_print("loop pod_thread", high_frequency=True)
+        del_unschedulable_pods = []
+        for pod, t in unschedulable.items():
+            if (now() - t).total_seconds() > 60 * 60:  # 1h
+                del_unschedulable_pods.append(pod)
+        for pod in del_unschedulable_pods:
+            del unschedulable[pod]
         for event in w.stream(
             api.list_namespaced_pod, namespace="default", timeout_seconds=550
         ):
@@ -261,6 +270,22 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs):
                     unhandled_pods[pod] = now()
 
                 pods[job] = pod
+
+                if event["object"].status.conditions[0].reason == "Unschedulable":
+                    if (now() - last_expand).total_seconds() > 60 * 3:  # 3m
+                        t = unschedulable.get(pod, None)
+                        if t is not None:
+                            if (now() - t).total_seconds() > 30:  # 30s
+                                from .cluster import expand
+
+                                expand()
+                                last_expand = now()
+                                unschedulable[pod] = now()
+                        else:
+                            unschedulable[pod] = now()
+                else:
+                    if unschedulable.get(pod, None) is not None:
+                        del unschedulable[pod]
 
 
 def get_status_all():
