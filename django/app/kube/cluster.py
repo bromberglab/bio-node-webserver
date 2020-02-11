@@ -49,7 +49,9 @@ def drain_if_no_workflows():
 def expand():
     api = client.CoreV1Api()
 
-    n = len(api.list_node().items)
+    n = 0
+    while n < 1:
+        n = len(api.list_node().items)
 
     if n < settings.MAX_NODES:
         resize(n + 1)
