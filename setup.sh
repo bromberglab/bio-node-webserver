@@ -10,3 +10,4 @@ kubectl get pods
 mkdir /volume/logs
 mkdir /volume/logs/django
 mkdir /volume/logs/daemon
+rm /volume/logs/daemon/watch.log
