@@ -62,6 +62,7 @@ def resize(num=None):
     None for minimum size.
     """
 
+    print("Resizing cluster to", num)
     path = settings.BASE_DIR
     path = os.path.join(path, "resize.sh")
     cmd = [path]

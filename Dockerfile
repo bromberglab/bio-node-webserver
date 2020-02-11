@@ -19,4 +19,4 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
     apk del .build-deps
 
-CMD [ "sh", "-c", "(/app/setup.sh; python /app/manage.py migrate; python /app/manage.py collectstatic --noinput; (sleep 48h; reboot) & python /app/manage.py deamon & daphne config.asgi:application -b 0.0.0.0 -p 8080) | multilog t s1048576 n5 /volume/logs/django"]
+CMD [ "sh", "-c", "(/app/setup.sh; python /app/manage.py migrate; python /app/manage.py collectstatic --noinput; (sleep 48h; reboot) & python /app/manage.py daemon & daphne config.asgi:application -b 0.0.0.0 -p 8080) | multilog t s1048576 n5 /volume/logs/django"]
