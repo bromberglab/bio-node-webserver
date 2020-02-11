@@ -128,15 +128,13 @@ class WorkflowView(APIView):
             flow = Workflow.objects.get(pk=name)
         except:
             return Response(status=HTTP_404_NOT_FOUND)
-        if (
-            flow.user != request.user
-            and not request.user.is_superuser
-        ):
+        if flow.user != request.user and not request.user.is_superuser:
             return Response(status=HTTP_403_FORBIDDEN)
 
         flow.delete()
 
         return Response()
+
 
 class WorkflowShareView(APIView):
     permission_classes = [IsAuthenticated]
@@ -233,7 +231,7 @@ class WorkflowNameView(APIView):
 
 
 class ListImagesView(ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer
 
