@@ -8,7 +8,7 @@ def run():
 
 
 class Command(BaseCommand):
-    help = "Run deamon."
+    help = "Run daemon."
 
     def handle(self, *_, **__):
         run()
