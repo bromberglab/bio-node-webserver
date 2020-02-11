@@ -10,6 +10,9 @@ def drain():
     Drain cluster.
     """
 
+    print("drain")
+    return
+
     api = client.CoreV1Api()
     safe_nodes = []
     unsafe_nodes = []
@@ -39,8 +42,6 @@ def drain():
 def drain_if_no_workflows():
     from app.models import Workflow
 
-    return
-
     if settings.DEBUG:
         return
 
@@ -51,7 +52,7 @@ def drain_if_no_workflows():
 def expand():
     api = client.CoreV1Api()
 
-    return
+    print("expand")
 
     n = 0
     while n < 1:
@@ -66,10 +67,9 @@ def resize(num=None):
     None for minimum size.
     """
 
+    print("Resizing cluster to", num)
     return
 
-    num = 5
-    print("Resizing cluster to", num)
     path = settings.BASE_DIR
     path = os.path.join(path, "resize.sh")
     cmd = [path]
