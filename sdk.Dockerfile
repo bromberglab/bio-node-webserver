@@ -2,15 +2,17 @@ FROM docker:17.12.0-ce as static-docker-source
 
 RUN cd /usr/local/bin/ \
     && wget https://github.com/lukas2511/alpine-docker-images/raw/master/parts/tools/daemontools/files/command/multilog \
+    && wget https://github.com/lukas2511/alpine-docker-images/raw/master/parts/tools/daemontools/files/command/tai64nlocal \
     && chmod +x multilog \
+    && chmod +x tai64nlocal \
     && cd
 
 FROM python:3.7-alpine
-ARG CLOUD_SDK_VERSION=274.0.0
+ARG CLOUD_SDK_VERSION=280.0.0
 ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
 
 ENV PATH /google-cloud-sdk/bin:$PATH
-COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/multilog /usr/local/bin/
+COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/multilog /usr/local/bin/tai64nlocal /usr/local/bin/
 RUN apk --no-cache add \
     curl \
     py-crcmod \
