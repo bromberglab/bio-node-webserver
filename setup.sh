@@ -7,3 +7,6 @@ gcloud container clusters get-credentials standard-cluster-1 --zone us-east4-a -
 rm webservice-key.json.enc
 unset encryption_key
 kubectl get pods
+mkdir /volume/logs
+mkdir /volume/logs/django
+mkdir /volume/logs/daemon

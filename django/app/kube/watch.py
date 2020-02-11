@@ -21,11 +21,13 @@ def debug_print(*msg, high_frequency=False):
     msg = str(msg)
     fullmsg = "[%s] %s" % (now().strftime(dtformat), msg)
 
-    logdir = settings.BASE_DIR + "/watch.log"
-    hflogdir = settings.BASE_DIR + "/watch.log.latest"
-
     if settings.DEBUG:
+        logdir = settings.BASE_DIR + "/watch.log"
+        hflogdir = settings.BASE_DIR + "/watch.log.latest"
         print(fullmsg)
+    else:
+        logdir = "/volume/logs/daemon/watch.log"
+        hflogdir = "/volume/logs/daemon/watch.log.latest"
 
     if not high_frequency:
         with open(logdir, "a") as f:
