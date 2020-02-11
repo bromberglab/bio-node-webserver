@@ -463,7 +463,7 @@ class CreateDownload(APIView):
 
 
 class DownloadView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def get(self, request, name="", filename="", format=None):
 
