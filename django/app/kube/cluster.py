@@ -39,6 +39,8 @@ def drain():
 def drain_if_no_workflows():
     from app.models import Workflow
 
+    return
+
     if settings.DEBUG:
         return
 
@@ -48,6 +50,8 @@ def drain_if_no_workflows():
 
 def expand():
     api = client.CoreV1Api()
+
+    return
 
     n = 0
     while n < 1:
@@ -61,6 +65,8 @@ def resize(num=None):
     """
     None for minimum size.
     """
+
+    return
 
     num = 5
     print("Resizing cluster to", num)
