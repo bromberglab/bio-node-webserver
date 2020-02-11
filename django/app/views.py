@@ -448,7 +448,7 @@ class FileTypeListView(ListAPIView):
 
 
 class CreateDownload(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def post(self, request, format=None):
         name = request.data.get("name", "")
