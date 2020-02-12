@@ -572,7 +572,7 @@ class ApiWorkflowView(APIView):
         inputs, outputs = flow.prepare()
         flow.save()
 
-        return Response({"name": flow.pk, "inputs": inputs, "outputs": outputs})
+        return Response({"api-key": flow.pk, "inputs": inputs, "outputs": outputs})
 
 
 class RunApiWorkflowView(APIView):
