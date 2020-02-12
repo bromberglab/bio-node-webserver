@@ -36,6 +36,7 @@ from .files import (
 )
 from .serializers import *
 from .events import send_event
+from .util import NoGuestPermission
 
 
 @login_required
@@ -78,6 +79,8 @@ class AdminCreationView(APIView):
 
 
 class WorkflowStorageView(APIView):
+    permission_classes = [NoGuestPermission]
+
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         pk = request.GET.get("pk", "")
@@ -111,6 +114,8 @@ class WorkflowStorageView(APIView):
 
 
 class WorkflowView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, name, format=None):
         try:
             flow = Workflow.objects.get(pk=name)
@@ -141,7 +146,7 @@ class WorkflowView(APIView):
 
 
 class WorkflowShareView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         pk = request.data.get("pk" "")
@@ -174,6 +179,8 @@ class WorkflowsView(APIView):
 
 
 class JobView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         try:
@@ -187,6 +194,8 @@ class JobView(APIView):
 
 
 class JobLogsView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         name = request.GET.get("name", "")
         as_json = request.GET.get("json", False)
@@ -206,7 +215,7 @@ class JobLogsView(APIView):
 
 
 class WorkflowRunView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         flow = Workflow(should_run=True, user=request.user)
@@ -217,7 +226,7 @@ class WorkflowRunView(APIView):
 
 
 class WorkflowNameView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         old = request.data.get("pk", "")
@@ -235,13 +244,13 @@ class WorkflowNameView(APIView):
 
 
 class ListImagesView(ListAPIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     queryset = NodeImage.objects.all()
     serializer_class = NodeImageSerializer
 
 
 class ListUploadsView(ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
     serializer_class = UploadSerializer
 
     def get_queryset(self):
@@ -308,7 +317,7 @@ class ImportImageView(APIView):
 
 
 class UpdateImageView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         from .images import update_image
@@ -323,7 +332,7 @@ class UpdateImageView(APIView):
 
 
 class ChangeImageView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         from .images import change_image
@@ -339,7 +348,7 @@ class ChangeImageView(APIView):
 
 
 class DeleteImageView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def delete(self, request, format=None):
         from .images import import_image
@@ -388,7 +397,7 @@ class GoogleStorageWebhook(APIView):
 
 
 class FileUploadView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
     parser_classes = [MultiPartParser]
 
     def put(self, request, name=None, format=None):
@@ -447,12 +456,13 @@ class UploadTreeView(APIView):
 
 
 class FileTypeListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
 
 
 class CreateDownload(APIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
         name = request.data.get("name", "")
@@ -467,7 +477,7 @@ class CreateDownload(APIView):
 
 
 class DownloadView(APIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, name="", filename="", format=None):
 
@@ -510,6 +520,8 @@ class NotificationView(APIView):
 
 
 class NamesForTypeView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         if not request.user.is_authenticated:
             return Response([])
@@ -566,7 +578,7 @@ class RandomNameView(APIView):
 
 
 class ApiWorkflowView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         pk = request.data.get("pk", -1)
@@ -580,7 +592,7 @@ class ApiWorkflowView(APIView):
 
 
 class RunApiWorkflowView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NoGuestPermission]
 
     def post(self, request, format=None):
         pk = request.data.get("name", "")
@@ -620,6 +632,8 @@ class TokenLoginView(APIView):
 
 
 class UpdateResourcesView(APIView):
+    permission_classes = [NoGuestPermission]
+
     def post(self, request, format=None):
         try:
             pk = request.data.get("pk", "")
