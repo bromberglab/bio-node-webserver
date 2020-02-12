@@ -7,6 +7,8 @@ class Globals(models.Model):
     gs_webhook_working = models.BooleanField(default=False)
     gs_webhook_fired = models.BooleanField(default=False)
     log_chars_kept = models.IntegerField(default=1000)
+    should_expand = models.BooleanField(default=False)
+    drained = models.BooleanField(default=False)
 
     @property
     def instance(self) -> "Globals":
