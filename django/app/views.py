@@ -1,4 +1,5 @@
 import os
+import time
 from django.shortcuts import render, redirect
 from django.views import View as RegView
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -11,12 +12,14 @@ from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.generics import ListAPIView
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView as BaseLoginView
+from django.contrib.auth.password_validation import validate_password
 from django.utils.decorators import method_decorator
 from django_zip_stream.responses import FolderZipResponse
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
+from django.core.validators import validate_email
 
 # Create your views here.
 
@@ -546,7 +549,7 @@ class NotificationsList(ListAPIView):
         return Response()
 
 
-class LoginOverride(LoginView):
+class LoginOverride(BaseLoginView):
     def get(self, request, *args, **kwargs):
         if request.GET.get("next", None) is None:
             return HttpResponseRedirect(request.path_info + "?next=/")
@@ -629,3 +632,82 @@ class UpdateResourcesView(APIView):
         except:
             return Response(status=HTTP_400_BAD_REQUEST)
         return Response()
+
+
+class LoginView(APIView):
+    def post(self, request, format=None):
+        logout(request)
+        try:
+            username = request.data.get("username", "")
+            password = request.data.get("password", "")
+
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return Response({"success": True})
+
+        except:
+            pass
+
+        return Response({"success": False})
+
+
+class LogoutView(APIView):
+    def post(self, request, format=None):
+        try:
+            logout(request)
+            return Response({"success": True})
+        except:
+            pass
+
+        return Response({"success": False})
+
+
+class GuestLoginView(APIView):
+    def post(self, request, format=None):
+        logout(request)
+
+        time.sleep(10)
+
+        guest = User.objects.filter(username="guest").first()
+        if guest is None:
+            guest = User(username="guest")
+            guest.save()
+            guest.user_permissions.add(Permission.objects.get(codename="is_guest_user"))
+            guest.save()
+
+        login(request, guest, backend=settings.AUTHENTICATION_BACKENDS[0])
+
+        return Response({"success": True})
+
+
+class RegisterView(APIView):
+    def post(self, request, format=None):
+        logout(request)
+
+        username = request.data.get("username", "admin")
+        email = request.data.get("email", "")
+        password = request.data.get("password", "")
+
+        if User.objects.filter(username=username).first() is not None:
+            return Response({"success": False, "reason": "Username exists."})
+        if User.objects.filter(email=email).first() is not None:
+            return Response({"success": False, "reason": "E-Mail exists."})
+        try:
+            validate_email(email)
+        except:
+            return Response({"success": False, "reason": "E-Mail invalid."})
+
+        user = User(username=username, email=email)
+        try:
+            validate_password(password, user)
+        except Exception as e:
+            return Response({"success": False, "reason": " ".join(e)})
+        user.set_password(password)
+        time.sleep(10)
+        user.save()
+        user.user_permissions.add(Permission.objects.get(codename="is_guest_user"))
+        login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
+
+        return Response({"success": True})
+

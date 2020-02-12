@@ -36,4 +36,10 @@ def now():
     return timezone.now().astimezone(tz=settings.TZ)
 
 
+def is_guest(user):
+    if user.is_superuser:
+        return False
+    return user.has_perm("app.is_guest_user")
+
+
 dtformat = "%Y-%m-%d %H:%M:%S"
