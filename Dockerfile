@@ -5,6 +5,8 @@ ENV APP_DIR=/app
 RUN mkdir $APP_DIR && \
     apk update && \
     apk upgrade && \
+    apk add tzdata && \
+    cp /usr/share/zoneinfo/EST /etc/localtime && \
     apk add --no-cache --virtual .build-deps \
     gcc \
     libc-dev \
