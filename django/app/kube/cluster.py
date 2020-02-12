@@ -11,8 +11,6 @@ def drain():
     """
 
     print("drain")
-    return
-
     api = client.CoreV1Api()
     safe_nodes = []
     unsafe_nodes = []
@@ -20,6 +18,10 @@ def drain():
         name = p.metadata.name
         if "-osd-" in name and "-osd-prep" not in name:
             safe_nodes.append(p.spec.node_name)
+    if len(safe_nodes) < settings.MIN_NODES:
+        print("Too few nodes.")
+        return False
+
     for n in api.list_node().items:
         name = n.metadata.name
         if name not in safe_nodes:
@@ -58,10 +60,9 @@ def drain_if_no_workflows():
             g.save()
 
     if g.should_expand:
-        g.should_expand = False
-        g.save()
-
-        expand()
+        if expand() != False:
+            g.should_expand = False
+            g.save()
 
 
 def expand():
@@ -84,11 +85,14 @@ def resize(num=None):
     """
 
     print("Resizing cluster to", num)
-    return
+    num = settings.MIN_NODES if num is None else num
 
-    path = settings.BASE_DIR
-    path = os.path.join(path, "resize.sh")
-    cmd = [path]
-    if num is not None:
-        cmd += str(num)
-    subprocess.run(cmd)
+    if settings.MIN_NODES <= num <= settings.MAX_NODES:
+        path = settings.BASE_DIR
+        path = os.path.join(path, "resize.sh")
+        cmd = [path]
+        if num is not None:
+            cmd += str(num)
+        subprocess.run(cmd)
+    else:
+        print("Out of bounds")
