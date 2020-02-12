@@ -150,7 +150,7 @@ def status_thread(
         try:
             debug_print("loop status_thread", high_frequency=True)
             for pod, t in unschedulable.items():
-                if (now() - last_expand).total_seconds() < 90:  # 90s
+                if (now() - last_expand).total_seconds() < 120:  # 120s
                     break
                 if (now() - t).total_seconds() > 45:  # 45s
                     expand()
@@ -158,7 +158,7 @@ def status_thread(
 
                     with lock:
                         for pod, _ in unschedulable.items():
-                            unschedulable[pod] = now() + timedelta(seconds=90 + 5)
+                            unschedulable[pod] = now() + timedelta(seconds=120 + 5)
 
                     break
 
