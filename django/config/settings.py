@@ -215,4 +215,5 @@ MIN_CPU = 50  # mCPU
 MIN_MEMORY = 50  # MiB
 RESOURCE_LIMIT_MULTIPLIER = 2  # limits = x * requests
 
-MAX_NODES = 10
+MIN_NODES = 3
+MAX_NODES = 9
