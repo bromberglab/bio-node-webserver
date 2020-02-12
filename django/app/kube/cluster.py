@@ -37,7 +37,7 @@ def drain():
             pass
     for node in unsafe_nodes:
         print("delete node", node)
-        api.delete_node(node)
+        api.delete_node(node, async_req=True)
     resize(len(safe_nodes))
 
 
