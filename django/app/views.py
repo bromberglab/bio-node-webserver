@@ -20,6 +20,7 @@ from django.utils.decorators import method_decorator
 from django_zip_stream.responses import FolderZipResponse
 from django.contrib.auth import authenticate, login, logout
 from django.core.validators import validate_email
+from django.utils import timezone
 
 # Create your views here.
 
@@ -677,6 +678,9 @@ class GuestLoginView(APIView):
             guest.save()
 
         login(request, guest, backend=settings.AUTHENTICATION_BACKENDS[0])
+        request.session["logout_at"] = (
+            timezone.now() + timezone.timedelta(days=1)
+        ).isoformat()
 
         return Response({"success": True})
 
