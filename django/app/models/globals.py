@@ -3,6 +3,11 @@ import uuid as uu
 
 
 class Globals(models.Model):
+    class Meta:
+        permissions = [
+            ("is_guest_user", "This user has the status Guest."),
+        ]
+
     some_uuid = models.UUIDField(default=uu.uuid4)
     gs_webhook_working = models.BooleanField(default=False)
     gs_webhook_fired = models.BooleanField(default=False)

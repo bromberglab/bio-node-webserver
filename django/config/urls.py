@@ -60,6 +60,10 @@ api = [
     path("notifications/", NotificationsList.as_view()),
     path("random_name/", RandomNameView.as_view()),
     path("update_resources/", UpdateResourcesView.as_view()),
+    path("login/", LoginView.as_view()),
+    path("guestlogin/", GuestLoginView.as_view()),
+    path("logout/", LogoutView.as_view()),
+    path("register/", RegisterView.as_view()),
 ]
 
 main = [
