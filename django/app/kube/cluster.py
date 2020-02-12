@@ -60,8 +60,10 @@ def drain_if_no_workflows():
             g.save()
 
     if g.should_expand:
-        if expand() != False:
-            g.should_expand = False
+        g.should_expand = False
+        g.save()
+        if expand() == False:
+            g.should_expand = True
             g.save()
 
 
