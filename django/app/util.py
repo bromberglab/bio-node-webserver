@@ -2,6 +2,17 @@ import os
 import random
 from django.utils import timezone
 from django.conf import settings
+from rest_framework import permissions
+
+
+class NoGuestPermission(permissions.BasePermission):
+    """
+    Global permission check for guests.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and not is_guest(request.user)
+
 
 list_path = os.path.join(settings.BASE_DIR, "assets", "The_Oxford_3000.list")
 with open(list_path, "r") as f:
