@@ -51,9 +51,11 @@ def drain_if_no_workflows():
 
     if Workflow.objects.filter(should_run=True, finished=False).count() == 0:
         if not g.drained:
-            drain()
             g.drained = True
             g.save()
+            if drain() == False:
+                g.drained = False
+                g.save()
     else:
         if g.drained:
             g.drained = False
