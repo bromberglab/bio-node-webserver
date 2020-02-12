@@ -40,13 +40,28 @@ def drain():
 
 
 def drain_if_no_workflows():
-    from app.models import Workflow
+    from app.models import Workflow, Globals
 
     if settings.DEBUG:
         return
 
+    g = Globals().instance
+
     if Workflow.objects.filter(should_run=True, finished=False).count() == 0:
-        drain()
+        if not g.drained:
+            drain()
+            g.drained = True
+            g.save()
+    else:
+        if g.drained:
+            g.drained = False
+            g.save()
+
+    if g.should_expand:
+        g.should_expand = False
+        g.save()
+
+        expand()
 
 
 def expand():
@@ -57,6 +72,7 @@ def expand():
     n = 0
     while n < 1:
         n = len(api.list_node().items)
+    print(n)
 
     if n < settings.MAX_NODES:
         resize(n + 1)

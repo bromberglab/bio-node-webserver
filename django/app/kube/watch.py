@@ -132,6 +132,14 @@ def handle_status(
     return 1
 
 
+def expand():
+    from app.models import Globals
+
+    g = Globals().instance
+    g.should_expand = True
+    g.save()
+
+
 def status_thread(
     api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs, unschedulable
 ):
@@ -145,8 +153,6 @@ def status_thread(
                 if (now() - last_expand).total_seconds() < 90:  # 90s
                     break
                 if (now() - t).total_seconds() > 45:  # 45s
-                    from .cluster import expand
-
                     expand()
                     last_expand = now()
 

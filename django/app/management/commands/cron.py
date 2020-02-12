@@ -54,7 +54,7 @@ def cron_worker():
         CronTask("resources_cron", 10 * seconds, resources_cron),
         CronTask("clear_logs", 1 * days, clear_logs),
         CronTask("clear_jobs", 1 * days, clear_jobs),
-        CronTask("drain", 1 * minutes, drain_if_no_workflows),
+        CronTask("drain", 10 * seconds, drain_if_no_workflows),
     ]
 
     for task in tasks:
