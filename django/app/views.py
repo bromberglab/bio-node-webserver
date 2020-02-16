@@ -383,19 +383,6 @@ class CronView(APIView):
         return Response(status=HTTP_200_OK)
 
 
-class GoogleStorageWebhook(APIView):
-    def post(self, request):
-        if request.headers.get("X-Goog-Channel-Token", "-") == os.environ.get(
-            "gs_secret", "-"
-        ):
-            glob = Globals().instance
-            glob.gs_webhook_fired = True
-            glob.gs_webhook_working = True
-            glob.save()
-
-        return Response(status=HTTP_200_OK)
-
-
 class FileUploadView(APIView):
     permission_classes = [NoGuestPermission]
     parser_classes = [MultiPartParser]
