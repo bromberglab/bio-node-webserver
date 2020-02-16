@@ -1,6 +1,5 @@
 .pyenv/
-travis-key.json
-webservice-key.json
+*key.json
 kube_configs/secret.yml
 django/volume
 

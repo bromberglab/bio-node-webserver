@@ -101,6 +101,9 @@ spec:
           persistentVolumeClaim:
             claimName: default-pvc
             readOnly: false
+        - name: sa-key
+          secret:
+            secretName: sa-key
       terminationGracePeriodSeconds: 5
       priorityClassName: highest-priority
       containers:
@@ -117,6 +120,9 @@ spec:
               mountPath: /volume
             - name: html
               mountPath: /var/www
+            - name: sa-key
+              mountPath: "/keys"
+              readOnly: true
         - name: nginx
           image: yspreen/nginx
           ports:
