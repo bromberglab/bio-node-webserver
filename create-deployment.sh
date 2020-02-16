@@ -5,16 +5,22 @@ DOMAIN="bio-no.de"
 ZONENAME="us-east1-a"
 CLUSTERNAME="bio-node-cluster"
 SANAME="bio-node-sa"
-helmversion="v3.0.2"
+# helmversion="v3.0.2"
 PROJECTNAME='$fromgcloud'
 DBSIZE="10Gi"
+# TOTALSTORAGE will be calculated as size per node * nodes
+STORAGENODES="3"
 VOLUMESIZEPERNODE="1000Gi"
 VOLUMEMETASIZEPERNODE="10Gi"
-STORAGENODES="3"
 MAXNODES="9"
+MACHINETYPE="n1-standard-8"
+ACCESSTYPE="-1"
 MACHINETYPE="n1-standard-8"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
+
+nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE"
+allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
 confirm() {
     read -e -p "
@@ -36,7 +42,7 @@ $1 ${2:-[Y/n]} " YN
 
 save_settings() {
     [ -f .bio-node.config ] && rm .bio-node.config
-    for setting in DOMAINWAIT ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN
+    for setting in $allsettings
     do
         echo "export $setting="\""$(eval 'echo $'$setting)"\" >> .bio-node.config
     done
@@ -66,14 +72,14 @@ print_apply_subst() {
     cat "$f" | envsubst
 }
 
-helm_subst() {
-    f="$1"
-    shift
+# helm_subst() {
+#     f="$1"
+#     shift
 
-    cat "$f" | envsubst > .helm.yml
-    $helm install "$@" -f .helm.yml
-    rm .helm.yml
-}
+#     cat "$f" | envsubst > .helm.yml
+#     $helm install "$@" -f .helm.yml
+#     rm .helm.yml
+# }
 
 make_secret() {
     if [ $# -eq 1 ]
@@ -111,17 +117,17 @@ sa_secret() {
     # rm ./sa-key.json
 }
 
-install_helm() {
-    mkdir helmdir
-    cd helmdir
-    curl -o helm.tgz --location "https://get.helm.sh/helm-$helmversion-linux-amd64.tar.gz"
-    tar xzf helm.tgz
-    rm helm.tgz
-    cd *
-    mv helm ../../
-    cd ../..
-    rm -rf helmdir
-}
+# install_helm() {
+#     mkdir helmdir
+#     cd helmdir
+#     curl -o helm.tgz --location "https://get.helm.sh/helm-$helmversion-linux-amd64.tar.gz"
+#     tar xzf helm.tgz
+#     rm helm.tgz
+#     cd *
+#     mv helm ../../
+#     cd ../..
+#     rm -rf helmdir
+# }
 
 requirements() {
     for r in curl tar gcloud kubectl envsubst
@@ -142,6 +148,21 @@ new_cluster() {
     gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES
 }
 
+confirm_settings() {
+    echo "*** Bio-Node Setup ***"
+    echo "Please confirm the following settings:"
+    
+    for setting in $nontechsettings
+    do
+        echo "$setting: "\""$(eval 'echo $'$setting)"\"
+    done
+    confirm "Continue?" "[Y/n]"
+    if [ "$YN" = "n" ]
+    then
+        return 1
+    fi
+}
+
 main() {
     program="$1"
     shift
@@ -152,21 +173,45 @@ main() {
         PROJECTNAME="$(gcloud info | grep project | sed -E 's/^.* (.*)$/\1/g' | sed -E 's/(\[|\])//g')"
     fi
     DOMAINWAIT=false
+    SETTINGSCONFIRMED=false
     load_settings
+    VOLUMESIZEPERNODENUM="$(echo $VOLUMESIZEPERNODE | grep -Eo '\d+')"
+    VOLUMESIZEPERNODESUFFIX="$(echo $VOLUMESIZEPERNODE | grep -Eo '[^0-9]+')"
+    export TOTALSTORAGE="$((VOLUMESIZEPERNODENUM*STORAGENODES))$VOLUMESIZEPERNODESUFFIX"
 
-    if ! $DOMAINWAIT
+    if [ "$ACCESSTYPE" -eq -1 ]
     then
-        if which helm>/dev/null
+        echo "Select one of the following public access methods:"
+        echo " 0: No automatic setup. Create ingress manually later."
+        echo " 1: GKE HTTPS Ingress for my domain. ($DOMAIN)"
+        read -e -p "
+Selected access method: [0] " ACCESSTYPE
+        if [ "$ACCESSTYPE" = "" ]
         then
-            helm="helm"
-        else
-            if ! [ -f helm ]
-            then
-                install_helm
-            fi
-            helm="./helm"
+            ACCESSTYPE=0
         fi
-        helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+    fi
+
+    if ! $SETTINGSCONFIRMED
+    then
+        confirm_settings || return 1
+        SETTINGSCONFIRMED=true
+        save_settings
+    fi
+
+    if (! $DOMAINWAIT) || (! [ "$ACCESSTYPE" -eq 1 ])
+    then
+        # if which helm>/dev/null
+        # then
+        #     helm="helm"
+        # else
+        #     if ! [ -f helm ]
+        #     then
+        #         install_helm
+        #     fi
+        #     helm="./helm"
+        # fi
+        # helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
         rm sa-key.json
         new_account
@@ -174,28 +219,33 @@ main() {
         new_cluster
 
         gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
-        gcloud compute addresses create bio-node-address --global
+        if [ "$ACCESSTYPE" -eq 1 ]
+        then
+            gcloud compute addresses create bio-node-address --global
+        fi
     fi
     IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
     echo "Please point $DOMAIN to the following IP address:"
     echo $IPADDRESS
-    DOMAINWAIT=true
-    save_settings
-    confirm "Domain configured and DNS valid? (check ping)" "[y/N]"
-    if ! [ "$YN" = "y" ]
+    if [ "$ACCESSTYPE" -eq 1 ]
     then
-        echo "To continue the process, run"
-        echo " $program"
-        echo "again."
-        return 1
-    fi
+        DOMAINWAIT=true
+        save_settings
+        confirm "Domain configured and DNS valid? (check ping)" "[y/N]"
+        if ! [ "$YN" = "y" ]
+        then
+            echo "To continue the process, run"
+            echo " $program"
+            echo "again."
+            return 1
+        fi
 
-    DOMAINWAIT=false
+        DOMAINWAIT=false
+    fi
     save_settings
 
     cd kube_configs
     secretvalues="
-    db_pw
     sendgrid_key
     sendgrid_sender
     POSTGRES_DB
@@ -223,26 +273,31 @@ main() {
 
 
     kubectl apply -f secret.yml
+    if [ "$ACCESSTYPE" -eq 1 ]
+    then
+        kubectl apply -f cert.yml
+    fi
     kubectl apply -f storage/gce.yml
     kubectl apply -f priority.yml
     apply_subst db.yml
     apply_subst cert.yml
-
-    helm_subst $kubeconfigs/storage/helm-config.yml nfs-release stable/nfs-server-provisioner
+    kubectl apply -f storage/rook.yml
+    kubectl apply -f storage/rook-operator.yml
     sleep 5
-    export nfspvcname="$(kubectl get persistentvolumeclaim -o name | grep nfs-release | sed 's/persistentvolumeclaim\///')"
-    apply_subst $kubeconfigs/storage/classes.yml
+    apply_subst storage/cluster.yml
     sleep 5
-    apply_subst $kubeconfigs/storage/pvc.yml
+    kubectl apply -f storage/fs.yml
+    sleep 5
+    kubectl apply -f storage/classes.yml
+    apply_subst storage/pvc.yml
 
-
-    echo "waiting for nfs to start ..."; sleep 15
-    kubectl apply -f $kubeconfigs/storage/pvc.yml
-    echo "waiting for pvc ..."; sleep 5
-
+    echo "waiting for storage to start ..."; sleep 30
     kubectl apply -f $kubeconfigs/deployment.yml
     echo "waiting for server to start ..."; sleep 30
-    kubectl apply -f kube_configs/ingress.yml
+    if [ "$ACCESSTYPE" -eq 1 ]
+    then
+        kubectl apply -f kube_configs/ingress.yml
+    fi
     kubectl apply -f kube_configs/dist.yml
     echo "waiting for dist copy ..."; sleep 15
     kubectl delete -f kube_configs/dist.yml
