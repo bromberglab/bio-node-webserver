@@ -199,7 +199,7 @@ Selected access method: [0] " ACCESSTYPE
         save_settings
     fi
 
-    if (! $DOMAINWAIT) || (! [ "$ACCESSTYPE" -eq 1 ])
+    if (! $DOMAINWAIT)
     then
         # if which helm>/dev/null
         # then
@@ -224,14 +224,14 @@ Selected access method: [0] " ACCESSTYPE
             gcloud compute addresses create bio-node-address --global
         fi
     fi
-    IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
-    echo "Please point $DOMAIN to the following IP address:"
-    echo $IPADDRESS
     if [ "$ACCESSTYPE" -eq 1 ]
     then
+        IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
+        echo "Please point $DOMAIN to the following IP address:"
+        echo $IPADDRESS
         DOMAINWAIT=true
         save_settings
-        confirm "Domain configured and DNS valid? (check ping)" "[y/N]"
+        confirm "Domain configured and DNS valid? (check 'ping $DOMAIN')" "[y/N]"
         if ! [ "$YN" = "y" ]
         then
             echo "To continue the process, run"
