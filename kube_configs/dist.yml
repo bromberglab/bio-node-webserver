@@ -14,7 +14,7 @@ spec:
             readOnly: false
       containers:
         - name: container
-          image: gcr.io/poised-cortex-254814/webservice-client
+          image: bromberglab/bio-node-webclient
           volumeMounts:
             - name: nfs
               mountPath: /volume
@@ -35,7 +35,7 @@ spec:
             readOnly: false
       containers:
         - name: container
-          image: gcr.io/poised-cortex-254814/webservice-docs
+          image: bromberglab/bio-node-docs
           volumeMounts:
             - name: nfs
               mountPath: /volume

@@ -108,7 +108,7 @@ spec:
       priorityClassName: highest-priority
       containers:
         - name: django
-          image: gcr.io/poised-cortex-254814/webservice-server:latest
+          image: bromberglab/bio-node-webserver:latest
           imagePullPolicy: "Always"
           envFrom:
             - secretRef:
