@@ -217,6 +217,7 @@ Selected access method: [0] " ACCESSTYPE
         new_account
         sa_secret
         new_cluster
+        echo "waiting for cluster to start ..."; sleep 180
 
         gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
         if [ "$ACCESSTYPE" -eq 1 ]
@@ -297,11 +298,12 @@ Selected access method: [0] " ACCESSTYPE
     if [ "$ACCESSTYPE" -eq 1 ]
     then
         kubectl apply -f kube_configs/ingress.yml
+        echo "ingress may need ~5min to boot."
     fi
     kubectl apply -f kube_configs/dist.yml
     echo "waiting for dist copy ..."; sleep 15
     kubectl delete -f kube_configs/dist.yml
-    echo "done. ingress may need ~5min to boot."
+    echo "done."
 }
 
 main "$0" "$@"
