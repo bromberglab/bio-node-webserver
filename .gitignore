@@ -2,6 +2,7 @@
 *key.json
 kube_configs/secret.yml
 django/volume
+.bio-node.config
 
 # ^ ADD CUSTOM HERE ^ #
 

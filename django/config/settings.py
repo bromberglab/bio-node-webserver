@@ -217,5 +217,5 @@ MIN_CPU = 50  # mCPU
 MIN_MEMORY = 50  # MiB
 RESOURCE_LIMIT_MULTIPLIER = 2  # limits = x * requests
 
-MIN_NODES = 3
-MAX_NODES = 9
+MIN_NODES = int(os.environ.get("minnodes", "3"))
+MAX_NODES = int(os.environ.get("maxnodes", "9"))
