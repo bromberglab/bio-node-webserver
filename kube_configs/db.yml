@@ -9,7 +9,7 @@ spec:
   storageClassName: gce-fast
   resources:
     requests:
-      storage: 10Gi
+      storage: $DBSIZE
 ---
 apiVersion: v1
 kind: Service
