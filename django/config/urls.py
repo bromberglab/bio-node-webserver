@@ -72,7 +72,6 @@ main = [
     path("admin/login/", RedirectView.as_view(url="/api/accounts/login")),
     path("admin/", admin.site.urls),
     path("createadmin/", AdminCreationView.as_view()),
-    path("webhooks/gs_update/", GoogleStorageWebhook.as_view()),
     path("", IndexView.as_view(), name="index"),
     path("accounts/profile/", RedirectView.as_view(url="/")),
     path("accounts/login/", LoginOverride.as_view()),
