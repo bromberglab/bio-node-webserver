@@ -4,7 +4,7 @@ kind: "Ingress"
 metadata:
   name: "server-ingress"
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: server-address
+    kubernetes.io/ingress.global-static-ip-name: bio-node-address
     networking.gke.io/managed-certificates: server-certificate
 spec:
   backend:

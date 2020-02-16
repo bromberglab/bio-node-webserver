@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # DEFAULTS for all settings:
+DOMAIN="bio-no.de"
 ZONENAME="us-east1-a"
 CLUSTERNAME="bio-node-cluster"
 SANAME="bio-node-sa"
@@ -15,13 +16,18 @@ MACHINETYPE="n1-standard-8"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
-load_settings() {
-    [ -f .bio-node.config ] && source .bio-node.config && rm .bio-node.config
-    for setting in ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE
+save_settings() {
+    [ -f .bio-node.config ] && rm .bio-node.config
+    for setting in DOMAINWAIT ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN
     do
         echo "export $setting="\""$(eval 'echo $'$setting)"\" >> .bio-node.config
     done
     source .bio-node.config
+}
+
+load_settings() {
+    [ -f .bio-node.config ] && source .bio-node.config
+    save_settings
 }
 
 random_string()
@@ -125,6 +131,7 @@ main() {
     then
         PROJECTNAME="$(gcloud info | grep project | sed -E 's/^.* (.*)$/\1/g' | sed -E 's/(\[|\])//g')"
     fi
+    DOMAINWAIT=false
     load_settings
 
     if which helm>/dev/null
@@ -137,6 +144,7 @@ main() {
         fi
         helm="./helm"
     fi
+    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
     rm sa-key.json
     new_account
@@ -144,9 +152,13 @@ main() {
     new_cluster
 
     gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
-    gcloud compute addresses create server-address --global
+    gcloud compute addresses create bio-node-address --global
+    IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
+    echo "Please point $DOMAIN to the following IP address:"
+    echo $IPADDRESS
+    DOMAINWAIT=true
+    save_settings
 
-    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
     cd kube_configs
     secretvalues="
@@ -181,6 +193,7 @@ main() {
     kubectl apply -f storage/gce.yml
     kubectl apply -f priority.yml
     apply_subst db.yml
+    apply_subst cert.yml
 
     helm_subst $kubeconfigs/storage/helm-config.yml nfs-release stable/nfs-server-provisioner
     sleep 5
