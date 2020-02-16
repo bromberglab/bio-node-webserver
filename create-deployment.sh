@@ -143,6 +143,8 @@ new_cluster() {
 }
 
 main() {
+    program="$1"
+    shift
     requirements || return 1
 
     if [ "$PROJECTNAME" = '$fromgcloud' ]
@@ -173,14 +175,20 @@ main() {
 
         gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
         gcloud compute addresses create bio-node-address --global
-        IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
-        echo "Please point $DOMAIN to the following IP address:"
-        echo $IPADDRESS
-        DOMAINWAIT=true
-        save_settings
     fi
+    IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
+    echo "Please point $DOMAIN to the following IP address:"
+    echo $IPADDRESS
+    DOMAINWAIT=true
+    save_settings
     confirm "Domain configured and DNS valid? (check ping)" "[y/N]"
-    [ "$YN" = "y" ] || return 1
+    if ! [ "$YN" = "y" ]
+    then
+        echo "To continue the process, run"
+        echo " $program"
+        echo "again."
+        return 1
+    fi
 
     DOMAINWAIT=false
     save_settings
@@ -241,4 +249,4 @@ main() {
     echo "done. ingress may need ~5min to boot."
 }
 
-main
+main "$0" "$@"
