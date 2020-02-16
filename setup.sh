@@ -7,3 +7,4 @@ kubectl get pods>/dev/null
 mkdir -p /volume/logs/django
 mkdir -p /volume/logs/daemon
 rm /volume/logs/daemon/watch.log
+export GOOGLE_APPLICATION_CREDENTIALS="/keys/sa-key.json"
