@@ -16,6 +16,24 @@ MACHINETYPE="n1-standard-8"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
+confirm() {
+    read -e -p "
+$1 ${2:-[Y/n]} " YN
+    if [ "$YN" = "" ] || [ "$YN" = "y" ] || [ "$YN" = "n" ] || [ "$YN" = "Y" ] || [ "$YN" = "N" ]
+    then
+        if [ "$YN" = "Y" ]
+        then
+            YN=y
+        fi
+        if [ "$YN" = "N" ]
+        then
+            YN=n
+        fi
+    else
+        confirm "$@"
+    fi
+}
+
 save_settings() {
     [ -f .bio-node.config ] && rm .bio-node.config
     for setting in DOMAINWAIT ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN
@@ -134,31 +152,38 @@ main() {
     DOMAINWAIT=false
     load_settings
 
-    if which helm>/dev/null
+    if ! $DOMAINWAIT
     then
-        helm="helm"
-    else
-        if ! [ -f helm ]
+        if which helm>/dev/null
         then
-            install_helm
+            helm="helm"
+        else
+            if ! [ -f helm ]
+            then
+                install_helm
+            fi
+            helm="./helm"
         fi
-        helm="./helm"
+        helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+
+        rm sa-key.json
+        new_account
+        sa_secret
+        new_cluster
+
+        gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
+        gcloud compute addresses create bio-node-address --global
+        IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
+        echo "Please point $DOMAIN to the following IP address:"
+        echo $IPADDRESS
+        DOMAINWAIT=true
+        save_settings
     fi
-    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+    confirm "Domain configured and DNS valid? (check ping)" "[y/N]"
+    [ "$YN" = "y" ] || return 1
 
-    rm sa-key.json
-    new_account
-    sa_secret
-    new_cluster
-
-    gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
-    gcloud compute addresses create bio-node-address --global
-    IPADDRESS="$(gcloud compute addresses list | grep -e '^bio-node-address.*' | grep -oE '\d+.\d+\.\d+\.\d+')"
-    echo "Please point $DOMAIN to the following IP address:"
-    echo $IPADDRESS
-    DOMAINWAIT=true
+    DOMAINWAIT=false
     save_settings
-
 
     cd kube_configs
     secretvalues="
