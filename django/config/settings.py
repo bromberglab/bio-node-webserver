@@ -31,6 +31,8 @@ if DEBUG:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
         BASE_BASE_DIR, "sa-key.json"
     )
+else:
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/keys/sa-key.json"
 
 LOGIN_URL = LOGIN_REDIRECT_URL = "/api/accounts/login/"
 
