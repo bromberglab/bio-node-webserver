@@ -600,7 +600,7 @@ class RunApiWorkflowView(APIView):
             name="API/%s" % pk,
             api_workflow=flow,
         )
-        w_flow.save()
+        w_flow.prepare_workflow()
         return Response({"pk": w_flow.pk, "outputs": flow.outputs_count})
 
 
