@@ -100,3 +100,16 @@ def resize(num=None):
         subprocess.run(cmd)
     else:
         print("Out of bounds")
+
+
+def init_check():
+    if settings.DEBUG:
+        return
+
+    api = client.CoreV1Api()
+    n = 0
+    while n < 1:
+        n = len(api.list_node().items)
+
+    if n == settings.MIN_NODES:
+        resize(n)
