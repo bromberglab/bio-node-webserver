@@ -311,8 +311,10 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable):
 
 def get_status_all():
     from app.management.commands.resources import reg
+    from .cluster import init_check
 
     global handled_pods
+    init_check()
     lock = threading.Lock()
     pods = {}
     tasks = []
