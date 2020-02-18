@@ -169,6 +169,9 @@ confirm_settings() {
     confirm "Continue?" "[Y/n]"
     if [ "$YN" = "n" ]
     then
+        echo
+        echo "Aborting. To change settings:"
+        echo " $> vi .bio-node.config"
         return 1
     fi
 }
@@ -245,7 +248,7 @@ Selected access method: [0] " ACCESSTYPE
         (cat sa-key.json | grep -o private_key >/dev/null) || rm sa-key.json
         [ -f sa-key.json ] || new_account
         new_cluster
-        printf "waiting for cluster to start ... "; spin
+        printf "Waiting for cluster to start ... (up to 4 minutes) "; spin
 
         while ! gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME >/dev/null 2>&1
         do
@@ -256,7 +259,11 @@ Selected access method: [0] " ACCESSTYPE
         do
             spin
         done
-        spin
+        # wait another 3 minutes to make sure all nodes are there
+        for i in $(seq 20)
+        do
+            spin
+        done
         echo
         if [ "$ACCESSTYPE" -eq 1 ]
         then
@@ -349,10 +356,14 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
     kubectl apply -f storage/classes.yml
     apply_subst storage/pvc.yml
 
-    printf "waiting for storage to start ... "; spin; spin; spin; spin
+    printf "Waiting for storage to start ... (up to 2 minutes) "
+    for i in $(seq 10)
+    do
+        spin
+    done
     echo
     kubectl apply -f deployment.yml
-    printf "waiting for server to start ... (up to 10 minutes) "; spin
+    printf "Waiting for server to start ... (up to 4 minutes) "; spin
     while ! kubectl get pod -l app=server -o json | jq -r '.items[0].status.phase' | grep -i running
     do
         spin
@@ -361,19 +372,20 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
     if [ "$ACCESSTYPE" -eq 1 ]
     then
         kubectl apply -f ingress.yml
-        echo "ingress may need ~5min to boot."
-    elif [ "$ACCESSTYPE" -eq 0 ]
+        echo "Ingress may need ~5min to boot."
+    fi
+    kubectl apply -f dist.yml
+    printf "Waiting for dist copy ... "; spin; spin; spin; spin; spin; spin; spin
+    echo
+    kubectl delete -f dist.yml
+    echo "Done."
+    echo
+    if [ "$ACCESSTYPE" -eq 0 ]
     then
-        echo "to access the cluster, run:"
+        echo "To access the cluster, run:"
         echo " $> kubectl port-forward service/server-service 8080:80 & sleep 2"
         echo " $> curl localhost:8080/api/.commit/ && echo"
     fi
-    kubectl apply -f dist.yml
-    printf "waiting for dist copy ... "; spin; spin; spin; spin; spin; spin; spin
-    echo
-    kubectl delete -f dist.yml
-    echo "done."
-    echo
     echo "To create the admin account, visit $DOMAIN/api/createadmin or localhost:8080/api/createadmin"
 }
 
