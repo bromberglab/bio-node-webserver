@@ -2,7 +2,7 @@
 
 # DEFAULTS for all settings:
 DOMAIN="bio-no.de"
-ZONENAME="us-east1-a"
+ZONENAME="us-east1-c"
 CLUSTERNAME="bio-node-cluster"
 SANAME="bio-node-sa"
 # helmversion="v3.0.2"
@@ -15,10 +15,11 @@ VOLUMEMETASIZEPERNODE="10Gi"
 MAXNODES="9"
 MACHINETYPE="n1-standard-8"
 ACCESSTYPE="-1"
+RELEASECHANNEL="regular"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
-nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE"
+nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE RELEASECHANNEL"
 allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
 confirm() {
@@ -144,7 +145,7 @@ requirements() {
 }
 
 new_cluster() {
-    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES
+    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES --zone $ZONENAME --release-channel $RELEASECHANNEL --metadata disable-legacy-endpoints=true
 }
 
 confirm_settings() {
@@ -215,9 +216,18 @@ Selected access method: [0] " ACCESSTYPE
         rm sa-key.json
         new_account
         new_cluster
-        echo "waiting for cluster to start ..."; sleep 180
+        echo "waiting for cluster to start ..."; sleep 10
 
-        gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME
+        while ! gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME >/dev/null 2>&1
+        do
+            sleep 10
+        done
+        sleep 10
+        while ! kubectl get pod >/dev/null 2>&1
+        do
+            sleep 10
+        done
+        sleep 10
         if [ "$ACCESSTYPE" -eq 1 ]
         then
             gcloud compute addresses create bio-node-address --global
