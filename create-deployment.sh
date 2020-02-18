@@ -214,7 +214,6 @@ Selected access method: [0] " ACCESSTYPE
 
         rm sa-key.json
         new_account
-        sa_secret
         new_cluster
         echo "waiting for cluster to start ..."; sleep 180
 
@@ -223,6 +222,7 @@ Selected access method: [0] " ACCESSTYPE
         then
             gcloud compute addresses create bio-node-address --global
         fi
+        sa_secret
     fi
     if [ "$ACCESSTYPE" -eq 1 ]
     then
