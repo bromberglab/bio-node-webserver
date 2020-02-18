@@ -15,7 +15,6 @@ VOLUMEMETASIZEPERNODE="10Gi"
 MAXNODES="9"
 MACHINETYPE="n1-standard-8"
 ACCESSTYPE="-1"
-MACHINETYPE="n1-standard-8"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
@@ -247,8 +246,6 @@ Selected access method: [0] " ACCESSTYPE
 
     cd kube_configs
     secretvalues="
-    sendgrid_key
-    sendgrid_sender
     POSTGRES_DB
     POSTGRES_USER
     POSTGRES_PASSWORD
@@ -271,7 +268,27 @@ Selected access method: [0] " ACCESSTYPE
     grep "clustername": secret.yml >/dev/null || make_secret "clustername" "$CLUSTERNAME"
     grep "minnodes": secret.yml >/dev/null || make_secret "minnodes" "$STORAGENODES"
     grep "maxnodes": secret.yml >/dev/null || make_secret "maxnodes" "$MAXNODES"
-
+    if ! grep "sendgrid_key": secret.yml >/dev/null
+    then
+        confirm "Do you want to use sendgrid to send server mail?" "[y/N]"
+        if [ "$YN" = y ]
+        then
+            SENDGRIDKEY=""
+            while [ "$SENDGRIDKEY" = "" ]
+            do
+                read -e -p "
+Sendgrid key: " SENDGRIDKEY
+            done
+            SENDGRIDSENDER=""
+            while [ "$SENDGRIDSENDER" = "" ]
+            do
+                read -e -p "
+Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
+            done
+            grep "sendgrid_key": secret.yml >/dev/null || make_secret "sendgrid_key" "$SENDGRIDKEY"
+            grep "sendgrid_sender": secret.yml >/dev/null || make_secret "sendgrid_sender" "$SENDGRIDSENDER"
+        fi
+    fi
 
     kubectl apply -f secret.yml
     if [ "$ACCESSTYPE" -eq 1 ]
@@ -299,6 +316,11 @@ Selected access method: [0] " ACCESSTYPE
     then
         kubectl apply -f kube_configs/ingress.yml
         echo "ingress may need ~5min to boot."
+    elif [ "$ACCESSTYPE" -eq 0 ]
+    then
+        echo "to access the cluster, run:"
+        echo " $> kubectl port-forward service/server-service 8080:80 & sleep 2"
+        echo " $> curl localhost:8080/api/.commit/ && echo"
     fi
     kubectl apply -f kube_configs/dist.yml
     echo "waiting for dist copy ..."; sleep 15
