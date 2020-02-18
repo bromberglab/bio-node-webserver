@@ -21,6 +21,17 @@ ACCESSTYPE="-1"
 nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE"
 allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
+spin()
+{
+    spinner="- \\ | / - \\ | / - \\ | / - \\ | /"
+    for i in $spinner
+    do
+        echo -n "$i"
+        echo -en "\010"
+        sleep 0.5
+    done
+}
+
 confirm() {
     read -e -p "
 $1 ${2:-[Y/n]} " YN
@@ -234,18 +245,19 @@ Selected access method: [0] " ACCESSTYPE
         (cat sa-key.json | grep -o private_key >/dev/null) || rm sa-key.json
         [ -f sa-key.json ] || new_account
         new_cluster
-        echo "waiting for cluster to start ..."; sleep 10
+        printf "waiting for cluster to start ... "; spin
 
         while ! gcloud container clusters get-credentials $CLUSTERNAME --zone $ZONENAME --project $PROJECTNAME >/dev/null 2>&1
         do
-            sleep 10
+            spin
         done
-        sleep 10
+        spin
         while ! kubectl get pod >/dev/null 2>&1
         do
-            sleep 10
+            spin
         done
-        sleep 10
+        spin
+        echo
         if [ "$ACCESSTYPE" -eq 1 ]
         then
             gcloud compute addresses create bio-node-address --global
@@ -337,13 +349,15 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
     kubectl apply -f storage/classes.yml
     apply_subst storage/pvc.yml
 
-    echo "waiting for storage to start ..."; sleep 30
+    printf "waiting for storage to start ... "; spin; spin; spin; spin
+    echo
     kubectl apply -f deployment.yml
-    echo "waiting for server to start ..."; sleep 10
+    printf "waiting for server to start ... (up to 10 minutes) "; spin
     while ! kubectl get pod -l app=server -o json | jq -r '.items[0].status.phase' | grep -i running
     do
-        sleep 10
+        spin
     done
+    echo
     if [ "$ACCESSTYPE" -eq 1 ]
     then
         kubectl apply -f ingress.yml
@@ -355,7 +369,8 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
         echo " $> curl localhost:8080/api/.commit/ && echo"
     fi
     kubectl apply -f dist.yml
-    echo "waiting for dist copy ..."; sleep 60
+    printf "waiting for dist copy ... "; spin; spin; spin; spin; spin; spin; spin
+    echo
     kubectl delete -f dist.yml
     echo "done."
     echo
