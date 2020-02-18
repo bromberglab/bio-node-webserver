@@ -129,7 +129,7 @@ sa_secret() {
 # }
 
 requirements() {
-    for r in curl tar gcloud kubectl envsubst jq
+    for r in curl tar gcloud kubectl envsubst jq zip
     do
         if [ "$(which "$r")" = "" ]
         then
@@ -166,6 +166,20 @@ main() {
     program="$1"
     shift
     requirements || return 1
+
+    if ! [ -d kube_configs ]
+    then
+        echo "Downloading kube_configs..."
+        mkdir tmp
+        cd tmp
+        curl -L -o master.zip https://github.com/bromberglab/webservice-server/archive/master.zip
+        unzip master.zip || return 1
+        rm master.zip
+        cd *
+        mv kube_configs ../../
+        cd ../../
+        rm -rf tmp
+    fi
 
     if [ "$PROJECTNAME" = '$fromgcloud' ]
     then
