@@ -39,14 +39,16 @@ LOGIN_URL = LOGIN_REDIRECT_URL = "/api/accounts/login/"
 ALLOWED_HOSTS = ["*"]
 
 # Mail
-SENDGRID_API_KEY = os.getenv("sendgrid_key")
-SENDGRID_SENDER = os.getenv("sendgrid_sender")
-EMAIL_HOST = "smtp.sendgrid.net"
-EMAIL_HOST_USER = "apikey"
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-SERVER_EMAIL = DEFAULT_FROM_EMAIL = SENDGRID_SENDER
+SENDGRID_API_KEY = os.environ.get("sendgrid_key", "")
+SENDGRID_SENDER = os.environ.get("sendgrid_sender", "")
+USE_SENDGRID = SENDGRID_API_KEY != ""
+if USE_SENDGRID:
+    EMAIL_HOST = "smtp.sendgrid.net"
+    EMAIL_HOST_USER = "apikey"
+    EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    SERVER_EMAIL = DEFAULT_FROM_EMAIL = SENDGRID_SENDER
 
 # Application definition
 
