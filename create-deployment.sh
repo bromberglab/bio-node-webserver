@@ -15,11 +15,10 @@ VOLUMEMETASIZEPERNODE="10Gi"
 MAXNODES="9"
 MACHINETYPE="n1-standard-8"
 ACCESSTYPE="-1"
-RELEASECHANNEL="regular"
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
-nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE RELEASECHANNEL"
+nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE"
 allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
 confirm() {
@@ -130,7 +129,7 @@ sa_secret() {
 # }
 
 requirements() {
-    for r in curl tar gcloud kubectl envsubst
+    for r in curl tar gcloud kubectl envsubst jq
     do
         if [ "$(which "$r")" = "" ]
         then
@@ -145,7 +144,7 @@ requirements() {
 }
 
 new_cluster() {
-    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES --zone $ZONENAME --release-channel $RELEASECHANNEL --metadata disable-legacy-endpoints=true
+    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES --zone $ZONENAME --metadata disable-legacy-endpoints=true
 }
 
 confirm_settings() {
@@ -175,6 +174,7 @@ main() {
     DOMAINWAIT=false
     SETTINGSCONFIRMED=false
     load_settings
+    gcloud config set project $PROJECTNAME
     VOLUMESIZEPERNODENUM="$(echo $VOLUMESIZEPERNODE | grep -Eo '\d+')"
     VOLUMESIZEPERNODESUFFIX="$(echo $VOLUMESIZEPERNODE | grep -Eo '[^0-9]+')"
     export TOTALSTORAGE="$((VOLUMESIZEPERNODENUM*STORAGENODES))$VOLUMESIZEPERNODESUFFIX"
@@ -213,8 +213,7 @@ Selected access method: [0] " ACCESSTYPE
         # fi
         # helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
-        rm sa-key.json
-        new_account
+        [ -f sa-key.json ] || new_account
         new_cluster
         echo "waiting for cluster to start ..."; sleep 10
 
@@ -261,10 +260,10 @@ Selected access method: [0] " ACCESSTYPE
     POSTGRES_PASSWORD
     "
     [ -f secret.yml ] || echo "apiVersion: v1
-    kind: Secret
-    metadata:
-    name: secrets-config
-    data:" > secret.yml
+kind: Secret
+metadata:
+  name: secrets-config
+data:" > secret.yml
 
     echo "$secretvalues" | while read l
     do
@@ -320,11 +319,15 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
     apply_subst storage/pvc.yml
 
     echo "waiting for storage to start ..."; sleep 30
-    kubectl apply -f $kubeconfigs/deployment.yml
-    echo "waiting for server to start ..."; sleep 30
+    kubectl apply -f deployment.yml
+    echo "waiting for server to start ..."; sleep 10
+    while ! kubectl get pod -l app=server -o json | jq -r '.items[0].status.phase' | grep -i running
+    do
+        sleep 10
+    done
     if [ "$ACCESSTYPE" -eq 1 ]
     then
-        kubectl apply -f kube_configs/ingress.yml
+        kubectl apply -f ingress.yml
         echo "ingress may need ~5min to boot."
     elif [ "$ACCESSTYPE" -eq 0 ]
     then
@@ -332,10 +335,12 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
         echo " $> kubectl port-forward service/server-service 8080:80 & sleep 2"
         echo " $> curl localhost:8080/api/.commit/ && echo"
     fi
-    kubectl apply -f kube_configs/dist.yml
-    echo "waiting for dist copy ..."; sleep 15
-    kubectl delete -f kube_configs/dist.yml
+    kubectl apply -f dist.yml
+    echo "waiting for dist copy ..."; sleep 20
+    kubectl delete -f dist.yml
     echo "done."
+    echo
+    echo "To create the admin account, visit $DOMAIN/api/createadmin or localhost:8080/api/createadmin"
 }
 
 main "$0" "$@"
