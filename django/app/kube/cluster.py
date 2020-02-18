@@ -16,8 +16,9 @@ def drain():
     unsafe_nodes = []
     for p in api.list_namespaced_pod(namespace="rook-ceph").items:
         name = p.metadata.name
-        if "-osd-" in name and "-osd-prep" not in name:
-            safe_nodes.append(p.spec.node_name)
+        if "-osd-prep" not in name:
+            if "rook-ceph-osd-" in name or "rook-ceph-mon-" in name:
+                safe_nodes.append(p.spec.node_name)
     if len(safe_nodes) < settings.MIN_NODES:
         print("Too few nodes.")
         return False
