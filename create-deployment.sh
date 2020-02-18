@@ -26,8 +26,8 @@ spin()
     spinner="- \\ | / - \\ | / - \\ | / - \\ | /"
     for i in $spinner
     do
-        echo -n "$i"
-        echo -en "\010"
+        printf "$i"
+        printf "\010"
         sleep 0.5
     done
 }
