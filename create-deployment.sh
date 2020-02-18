@@ -206,6 +206,10 @@ Selected access method: [0] " ACCESSTYPE
         fi
     fi
 
+    gcloud auth list 2>/dev/null | grep -E '\*'
+    confirm "Use this account for the project?" "[Y/n]"
+    [ "$YN" = "n" ] && return 1
+
     if ! $SETTINGSCONFIRMED
     then
         confirm_settings || return 1
@@ -227,6 +231,7 @@ Selected access method: [0] " ACCESSTYPE
         # fi
         # helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 
+        (cat sa-key.json | grep -o private_key >/dev/null) || rm sa-key.json
         [ -f sa-key.json ] || new_account
         new_cluster
         echo "waiting for cluster to start ..."; sleep 10
@@ -350,7 +355,7 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
         echo " $> curl localhost:8080/api/.commit/ && echo"
     fi
     kubectl apply -f dist.yml
-    echo "waiting for dist copy ..."; sleep 20
+    echo "waiting for dist copy ..."; sleep 60
     kubectl delete -f dist.yml
     echo "done."
     echo
