@@ -31,10 +31,15 @@ def drain():
         if pod.spec.node_name in unsafe_nodes:
             pods.append((pod.metadata.name, pod.metadata.namespace))
     for name, namespace in pods:
-        try:
-            api.delete_namespaced_pod(name, namespace=namespace)
-        except:
-            pass
+        if not "server-deployment" in name:
+            try:
+                api.delete_namespaced_pod(name, namespace=namespace)
+            except:
+                pass
+    for node in unsafe_nodes:
+        api.delete_namespaced_config_map(
+            "local-device-" + node, async_req=True, namespace="rook-ceph"
+        )
     for node in unsafe_nodes:
         print("delete node", node)
         api.delete_node(node, async_req=True)
