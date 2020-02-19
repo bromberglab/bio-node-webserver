@@ -631,6 +631,10 @@ class UpdateResourcesView(APIView):
         try:
             result = workflow.update_resources()
             assert result
+            api = workflow.api_workflow
+            if api is not None:
+                api.json_string = workflow.json_string
+                api.save()
         except:
             return Response(status=HTTP_400_BAD_REQUEST)
         return Response()
