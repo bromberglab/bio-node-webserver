@@ -17,7 +17,7 @@ def drain():
     for p in api.list_namespaced_pod(namespace="rook-ceph").items:
         name = p.metadata.name
         if "-osd-prep" not in name:
-            if "rook-ceph-osd-" in name or "rook-ceph-mon-" in name:
+            if "rook-ceph-osd-" in name:
                 safe_nodes.append(p.spec.node_name)
     if len(safe_nodes) < settings.MIN_NODES:
         print("Too few nodes.")
@@ -109,13 +109,21 @@ def resize(num=None):
 
 
 def init_check():
+    from app.models import Globals
+
     if settings.DEBUG:
         return
 
     api = client.CoreV1Api()
     n = 0
     while n < 1:
-        n = len(api.list_node().items)
+        nodes = api.list_node().items
+        n = len(nodes)
+
+    nodes = [n.metadata.name for n in nodes]
 
     if n == settings.MIN_NODES:
         resize(n)
+        g = Globals().instance
+        g.nodes = nodes
+        g.save()

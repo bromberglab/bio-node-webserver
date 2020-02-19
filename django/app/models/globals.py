@@ -1,5 +1,6 @@
 from django.db import models
 import uuid as uu
+import json
 
 
 class Globals(models.Model):
@@ -14,6 +15,15 @@ class Globals(models.Model):
     log_chars_kept = models.IntegerField(default=1000)
     should_expand = models.BooleanField(default=False)
     drained = models.BooleanField(default=False)
+    nodes_string = models.TextField(default="[]")
+
+    @property
+    def nodes(self):
+        return json.loads(self.nodes_string)
+
+    @nodes.setter
+    def nodes(self, value):
+        self.nodes_string = json.dumps(value)
 
     @property
     def instance(self) -> "Globals":
