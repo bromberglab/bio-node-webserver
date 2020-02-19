@@ -23,7 +23,7 @@ allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
 spin()
 {
-    spinner="- \\ | / - \\ | / - \\ | / - \\ | /"
+    spinner='- \ | / - \ | / - \ | / - \ | /'
     for i in $spinner
     do
         printf "$i"
