@@ -340,12 +340,11 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
     kubectl apply -f secret.yml
     if [ "$ACCESSTYPE" -eq 1 ]
     then
-        kubectl apply -f cert.yml
+        apply_subst cert.yml
     fi
     kubectl apply -f storage/gce.yml
     kubectl apply -f priority.yml
     apply_subst db.yml
-    apply_subst cert.yml
     kubectl apply -f storage/rook.yml
     kubectl apply -f storage/rook-operator.yml
     sleep 5
@@ -385,6 +384,11 @@ Server's sender address (i.e. noreply@bio-no.de): " SENDGRIDSENDER
         echo "To access the cluster, run:"
         echo " $> kubectl port-forward service/server-service 8080:80 & sleep 2"
         echo " $> curl localhost:8080/api/.commit/ && echo"
+    fi
+    if [ "$ACCESSTYPE" -eq 1 ]
+    then
+        echo "To access the cluster, run:"
+        echo " $> curl $DOMAIN/api/.commit/ && echo"
     fi
     echo "To create the admin account, visit $DOMAIN/api/createadmin or localhost:8080/api/createadmin"
 }
