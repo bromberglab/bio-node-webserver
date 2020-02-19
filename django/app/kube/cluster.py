@@ -6,19 +6,16 @@ from kubernetes import client
 
 
 def drain():
+    from app.models import Globals
+
     """
     Drain cluster.
     """
 
     print("drain")
     api = client.CoreV1Api()
-    safe_nodes = []
+    safe_nodes = Globals().instance.nodes
     unsafe_nodes = []
-    for p in api.list_namespaced_pod(namespace="rook-ceph").items:
-        name = p.metadata.name
-        if "-osd-prep" not in name:
-            if "rook-ceph-osd-" in name:
-                safe_nodes.append(p.spec.node_name)
     if len(safe_nodes) < settings.MIN_NODES:
         print("Too few nodes.")
         return False
@@ -76,8 +73,14 @@ def drain_if_no_workflows():
 
 
 def expand():
-    api = client.CoreV1Api()
+    from app.models import Globals
 
+    safe_nodes = Globals().instance.nodes
+    if len(safe_nodes) < settings.MIN_NODES:
+        # Prevent cluster from expanding until we saved all the nodes of the minimum configuration.
+        return False
+
+    api = client.CoreV1Api()
     print("expand")
 
     n = 0
