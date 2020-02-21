@@ -47,7 +47,7 @@ def cron_worker():
     tasks = [
         # CronTask("some_function", 10 * minutes, some_function),
         # ...
-        CronTask("images_cron", 300 * seconds, images_cron),
+        CronTask("images_cron", 5 * minutes, images_cron),
         CronTask("workflows_cron", 2 * seconds, workflows_cron),
         CronTask("jobs_cron", 2 * seconds, jobs_cron),
         CronTask("downloads_cron", 15 * minutes, downloads_cron),
