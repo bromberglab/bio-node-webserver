@@ -597,20 +597,6 @@ class ApiWorkflowView(APIView):
         return Response({"api-key": flow.pk, "inputs": inputs, "outputs": outputs})
 
 
-class ListApiWorkflowView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def get(self, request, format=None):
-        pk = request.data.get("pk", -1)
-        flow = Workflow.objects.get(pk=pk)
-
-        flow = ApiWorkflow(json_string=flow.json_string, user=flow.user)
-        inputs, outputs = flow.prepare()
-        flow.save()
-
-        return Response({"api-key": flow.pk, "inputs": inputs, "outputs": outputs})
-
-
 class RunApiWorkflowView(APIView):
     permission_classes = [NoGuestPermission]
 
