@@ -129,9 +129,13 @@ class Job(models.Model):
         image_name = image["name"]
         img: NodeImage = NodeImage.objects.get(name=image_name)
         tag = img.imported_tag
-        if tag == '' or not tag:
-            tag = 'latest'
-        c["image"] = image_name + ':' + tag
+        if tag == "" or not tag:
+            tag = "latest"
+        selected_sha = image.get("selected_sha", None)
+        if selected_sha is not None:
+            c["image"] = image_name + "@sha256:" + selected_sha
+        else:
+            c["image"] = image_name + ":" + tag
 
         mounts = []
         for i, host_path in enumerate(input_paths):
