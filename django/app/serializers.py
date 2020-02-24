@@ -37,6 +37,17 @@ class FileTypeSerializer(serializers.ModelSerializer):
         read_only_fields = ["name"]
 
 
+class ApiWorkflowSerializer(serializers.ModelSerializer):
+
+    user = serializers.SlugRelatedField(
+        many=False, read_only=True, slug_field="username"
+    )
+
+    class Meta:
+        model = ApiWorkflow
+        read_only_fields = fields = ["uuid", "user", "created_at", "run_at"]
+
+
 class NodeImageTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = NodeImageTag

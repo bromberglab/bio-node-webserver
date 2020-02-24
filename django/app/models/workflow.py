@@ -14,6 +14,8 @@ class ApiWorkflow(models.Model):
     json_string = models.TextField(default="{}")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     outputs_count = models.IntegerField(default=-1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    run_at = models.DateTimeField(auto_now=True)
 
     @property
     def json(self):

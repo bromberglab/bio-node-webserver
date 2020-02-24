@@ -567,7 +567,40 @@ class RandomNameView(APIView):
 class ApiWorkflowView(APIView):
     permission_classes = [NoGuestPermission]
 
+    def get(self, request, format=None):
+        flows = ApiWorkflow.objects.all()
+        if not request.user.is_superuser:
+            flows = flows.filter(user=request.user)
+        return Response(ApiWorkflowSerializer(flows, many=True).data)
+
+    def delete(self, request, format=None):
+        try:
+            uuid = request.data.get("uuid", "")
+            flow = ApiWorkflow.objects.get(uuid=uuid)
+        except:
+            return Response(status=HTTP_404_NOT_FOUND)
+        if flow.user != request.user and not request.user.is_superuser:
+            return Response(status=HTTP_403_FORBIDDEN)
+
+        flow.delete()
+
+        return Response()
+
     def post(self, request, format=None):
+        pk = request.data.get("pk", -1)
+        flow = Workflow.objects.get(pk=pk)
+
+        flow = ApiWorkflow(json_string=flow.json_string, user=flow.user)
+        inputs, outputs = flow.prepare()
+        flow.save()
+
+        return Response({"api-key": flow.pk, "inputs": inputs, "outputs": outputs})
+
+
+class ListApiWorkflowView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, format=None):
         pk = request.data.get("pk", -1)
         flow = Workflow.objects.get(pk=pk)
 
@@ -601,6 +634,7 @@ class RunApiWorkflowView(APIView):
             api_workflow=flow,
         )
         w_flow.prepare_workflow()
+        flow.save()  # update run_at
         return Response({"pk": w_flow.pk, "outputs": flow.outputs_count})
 
 
