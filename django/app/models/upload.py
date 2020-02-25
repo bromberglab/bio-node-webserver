@@ -13,6 +13,7 @@ class Upload(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     reassembling = models.BooleanField(default=False)
     extracting = models.BooleanField(default=False)
+    no_extract = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
     is_newest = models.BooleanField(default=True)
     size = models.FloatField(default=-1.0)

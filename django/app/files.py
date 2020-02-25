@@ -374,13 +374,16 @@ def finish_upload_(request, upload):
                 all_tar = False
     if all_tar:
         extract = request.data.get("extract", None)
-        if extract is None:
-            return error("extract")
-        if extract:
-            upload.extracting = True
+        if not upload.no_extract:
+            if extract is None:
+                return error("extract")
+            if extract:
+                upload.extracting = True
+                upload.save()
+                untar_upload(upload, path, files)
+                return error("extracting")
+            upload.no_extract = True
             upload.save()
-            untar_upload(upload, path, files)
-            return error("extracting")
     all_zip = None
     if len(dirs) == 0:
         for f in files:
@@ -390,13 +393,16 @@ def finish_upload_(request, upload):
                 all_zip = False
     if all_zip:
         extract = request.data.get("extract", None)
-        if extract is None:
-            return error("extract")
-        if extract:
-            upload.extracting = True
+        if not upload.no_extract:
+            if extract is None:
+                return error("extract")
+            if extract:
+                upload.extracting = True
+                upload.save()
+                unzip_upload(upload, path, files)
+                return error("extracting")
+            upload.no_extract = True
             upload.save()
-            unzip_upload(upload, path, files)
-            return error("extracting")
     if request.data.get("extract_only", False):
         return error("no extract")
 
@@ -577,6 +583,9 @@ def finalize_upload(request, upload):
     """ move files according to the format annotations from the user """
     uuid = str(upload.uuid)
     tree, files, suffixes, dirs, prefixes, error = finish_upload_(request, upload)
+
+    if error != False:
+        return {"error": error}
 
     data = request.data
     manual_format = data.get("manual_format", False)
