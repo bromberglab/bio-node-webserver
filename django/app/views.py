@@ -275,8 +275,8 @@ class UploadView(APIView):
         upload = Upload.objects.get(uuid=uuid)
         if not user.is_superuser and upload.user != user:
             return Response(status=HTTP_403_FORBIDDEN)
-        upload.delete()
         clear_upload(upload)
+        upload.delete()
         return Response()
 
 
