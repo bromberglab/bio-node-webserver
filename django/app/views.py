@@ -94,7 +94,11 @@ class WorkflowStorageView(APIView):
             )
         else:
             try:
-                flow = Workflow.objects.get(should_run=False, name=name)
+                if name.lower().startswith("api/"):
+                    name = name[4:]
+                    flow = ApiWorkflow.objects.get(uuid=name)
+                else:
+                    flow = Workflow.objects.get(should_run=False, name=name)
             except:
                 return Response(status=HTTP_404_NOT_FOUND)
 
