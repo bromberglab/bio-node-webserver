@@ -18,4 +18,4 @@ cron_reboot() {
     reboot
 }
 
-cron_reboot &
+# cron_reboot &

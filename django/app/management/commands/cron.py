@@ -5,6 +5,12 @@ from django.conf import settings
 from datetime import datetime
 
 
+def setup_cron():
+    from app.apps import setup
+
+    setup()
+
+
 def should_run(name, seconds_interval):
     try:
         c = CronJob.objects.get(name=name)
@@ -52,9 +58,10 @@ def cron_worker():
         CronTask("jobs_cron", 2 * seconds, jobs_cron),
         CronTask("downloads_cron", 15 * minutes, downloads_cron),
         CronTask("resources_cron", 10 * seconds, resources_cron),
-        CronTask("clear_logs", 1 * days, clear_logs),
-        CronTask("clear_jobs", 1 * days, clear_jobs),
+        CronTask("clear_logs", 1.0 * days, clear_logs),
+        CronTask("clear_jobs", 1.1 * days, clear_jobs),
         CronTask("drain", 10 * seconds, drain_if_no_workflows),
+        CronTask("setup_cron", 1.2 * days, setup_cron),
     ]
 
     for task in tasks:
