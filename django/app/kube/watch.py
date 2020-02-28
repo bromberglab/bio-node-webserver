@@ -13,6 +13,8 @@ from app.util import now, dtformat
 
 DEBUG_WATCH = False
 
+STOP_LOOPS = False
+
 
 def debug_print(*msg, high_frequency=False):
     if not DEBUG_WATCH:
@@ -143,10 +145,11 @@ def expand():
 def status_thread(
     api, k8s_batch_v1, lock, pods, tasks, unhandled_pods, unhandled_jobs, unschedulable
 ):
+    global STOP_LOOPS
     unhandled_check = now()
     last_expand = now() - timedelta(hours=1)
 
-    while True:
+    while not STOP_LOOPS:
         try:
             debug_print("loop status_thread", high_frequency=True)
             for pod, t in unschedulable.items():
@@ -258,11 +261,13 @@ def status_thread(
 
 
 def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable):
+    global STOP_LOOPS
+
     from app.management.commands.resources import reg
 
     w = watch.Watch()
 
-    while True:
+    while not STOP_LOOPS:
         debug_print("loop pod_thread", high_frequency=True)
         del_unschedulable_pods = []
         for pod, t in unschedulable.items():
@@ -273,6 +278,8 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable):
         for event in w.stream(
             api.list_namespaced_pod, namespace="default", timeout_seconds=550
         ):
+            if STOP_LOOPS:
+                break
             job = event["object"].metadata.labels.get("job-name", None)
             if job is not None:
                 pod = event["object"].metadata.name
@@ -313,7 +320,11 @@ def get_status_all():
     from app.management.commands.resources import reg
     from .cluster import init_check
 
-    global handled_pods
+    global handled_pods, STOP_LOOPS
+
+    starttime = now()
+    print("Start watcher.")
+
     init_check()
     lock = threading.Lock()
     pods = {}
@@ -346,7 +357,7 @@ def get_status_all():
 
     time.sleep(3)
 
-    while True:
+    while not STOP_LOOPS:
         debug_print("loop get_status_all", high_frequency=True)
         try:
             for event in w.stream(
@@ -354,6 +365,11 @@ def get_status_all():
                 namespace="default",
                 timeout_seconds=600,
             ):
+                if (now() - starttime).total_seconds() > 60 * 60 * 24 * 1.05:
+                    print("Stop watcher.")
+                    STOP_LOOPS = True
+                if STOP_LOOPS:
+                    break
                 job = event["object"].metadata.name
 
                 success = event["object"].status.succeeded is not None
