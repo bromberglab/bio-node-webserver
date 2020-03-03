@@ -301,6 +301,15 @@ class InspectImageView(APIView):
         )
 
 
+class DiskUsageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, name, format=None):
+        from app.files import calc_usage
+
+        return Response(calc_usage())
+
+
 class ImportImageView(APIView):
     permission_classes = [IsAuthenticated]
 
