@@ -842,3 +842,15 @@ def calc_size(*a):
     s = s.split("\t")[0].replace(" ", "")
     return int(s) * 1024.0
 
+
+def calc_usage():
+    if settings.DEBUG:
+        return "0%"
+    path = Path(settings.DATA_PATH)
+
+    s = subprocess.run(
+        ["sh", "-c", 'df "' + str(path) + "\" | tail -1 | grep -Eo '[0-9]+\%'"],
+        capture_output=True,
+    ).stdout.decode()
+    return s.replace("\n", "")
+
