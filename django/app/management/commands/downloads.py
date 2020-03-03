@@ -8,7 +8,7 @@ import os
 
 def cron():
     limit = timezone.now()
-    limit -= timezone.timedelta(hours=2)
+    limit -= timezone.timedelta(hours=12)
     for d in Download.objects.filter(created_at__lte=limit):
         try:
             os.remove(Path(d.path))
