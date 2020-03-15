@@ -12,6 +12,29 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import pytz
+import subprocess
+
+
+def get_node_cpu():
+    s = subprocess.run(["nproc"], capture_output=True).stdout.decode()
+    s = s.replace(" ", "").replace("\n", "")
+    return int(s)
+
+
+def get_node_mem():
+    s = subprocess.run(
+        ["sh", "-c", "cat /proc/meminfo | grep -i memtotal | grep -Eo '[0-9]+.*'"],
+        capture_output=True,
+    ).stdout.decode()
+    s = s.replace(" ", "").replace("\n", "")
+
+    from app.kube.resources import SIConverter
+
+    if s.lower().endswith("b"):
+        s = s[:-1]
+
+    return SIConverter.to_number(s)
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -214,12 +237,15 @@ REST_FRAMEWORK = {
 #         },
 #     }
 
-MAX_CPU = 100  # cores
-MAX_MEMORY = 500000  # MiB
+MIN_NODES = int(os.environ.get("minnodes", "3"))
+MAX_NODES = int(os.environ.get("maxnodes", "9"))
 
 MIN_CPU = 50  # mCPU
 MIN_MEMORY = 50  # MiB
 RESOURCE_LIMIT_MULTIPLIER = 2  # limits = x * requests
 
-MIN_NODES = int(os.environ.get("minnodes", "3"))
-MAX_NODES = int(os.environ.get("maxnodes", "9"))
+MAX_CPU = 100
+MAX_MEMORY = 500000
+if not DEBUG:
+    MAX_CPU = MAX_NODES * get_node_cpu()  # cores
+    MAX_MEMORY = MAX_NODES * int(get_node_mem() / 1024 / 1024)  # MiB
