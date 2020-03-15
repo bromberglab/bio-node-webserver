@@ -105,7 +105,7 @@ def resize(num=None):
         path = os.path.join(path, "resize.sh")
         cmd = [path]
         if num is not None:
-            cmd += str(num)
+            cmd.append(str(num))
         subprocess.run(cmd)
     else:
         print("Out of bounds")
