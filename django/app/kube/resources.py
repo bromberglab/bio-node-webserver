@@ -1,5 +1,4 @@
 from kubernetes import client, watch
-from django.conf import settings
 from pathlib import Path
 from app.util import now
 import string
