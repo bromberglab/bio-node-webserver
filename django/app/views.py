@@ -301,13 +301,18 @@ class InspectImageView(APIView):
         )
 
 
-class DiskUsageView(APIView):
+class ServerStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, name, format=None):
+    def get(self, request, format=None):
         from app.files import calc_usage
+        from filecmp import cmp
 
-        return Response(calc_usage())
+        outdated = not cmp(
+            settings.BASE_DIR + "/.commit", settings.BASE_DIR + "/.commit.online"
+        )
+
+        return Response({"disk": calc_usage(), "outdated": outdated})
 
 
 class ImportImageView(APIView):
