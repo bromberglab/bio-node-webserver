@@ -19,3 +19,4 @@ cron_reboot() {
 }
 
 # cron_reboot &
+curl 'https://api.github.com/repos/bromberglab/webservice-server/commits' | jq -r '.[0].sha' > /app/.commit.online
