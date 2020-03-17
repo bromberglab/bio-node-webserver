@@ -21,7 +21,7 @@ from django.views.generic.base import RedirectView
 from django.views.generic import TemplateView
 
 api = [
-    path("disk_usage/", DiskUsageView.as_view()),
+    path("server_status/", ServerStatusView.as_view()),
     path("file_types/", FileTypeListView.as_view()),
     path("list/", ListImagesView.as_view()),
     path("list/<path:name>/", InspectImageView.as_view()),
