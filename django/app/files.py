@@ -683,6 +683,7 @@ def finalize_upload(request, upload):
         except:
             pass
 
+        upload.finished_at = now()
         upload.calc_size()
 
     update_file_types()

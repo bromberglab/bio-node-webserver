@@ -11,6 +11,7 @@ class Upload(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     file_type = models.CharField(max_length=64, default="file")
     started_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(auto_now_add=True)
     reassembling = models.BooleanField(default=False)
     extracting = models.BooleanField(default=False)
     no_extract = models.BooleanField(default=False)
