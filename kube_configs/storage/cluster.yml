@@ -32,7 +32,7 @@ spec:
           requests:
             storage: $VOLUMEMETASIZEPERNODE
   cephVersion:
-    image: ceph/ceph:v14.2.5
+    image: ceph/ceph:v14.2.8
     allowUnsupported: false
   skipUpgradeChecks: false
   continueUpgradeAfterChecksEvenIfNotHealthy: false
@@ -41,6 +41,8 @@ spec:
     ssl: false
   network:
     hostNetwork: false
+  crashCollector:
+    disable: false
   storage:
     storageClassDeviceSets:
       - name: set1
@@ -49,7 +51,7 @@ spec:
         # IMPORTANT: If volumes specified by the storageClassName are not portable across nodes
         # this needs to be set to false. For example, if using the local storage provisioner
         # this should be false.
-        portable: false
+        portable: true
         # Certain storage class in the Cloud are slow
         # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
         # Currently, "gp2" has been identified as such
