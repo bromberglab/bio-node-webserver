@@ -55,7 +55,7 @@ spec:
         # Certain storage class in the Cloud are slow
         # Rook can configure the OSD running on PVC to accommodate that by tuning some of the Ceph internal
         # Currently, "gp2" has been identified as such
-        tuneSlowDeviceClass: false
+        tuneSlowDeviceClass: true
         # Since the OSDs could end up on any node, an effort needs to be made to spread the OSDs
         # across nodes as much as possible. Unfortunately the pod anti-affinity breaks down
         # as soon as you have more than one OSD per node. If you have more OSDs than nodes, K8s may
@@ -96,7 +96,7 @@ spec:
                 requests:
                   storage: $VOLUMESIZEPERNODE
               # IMPORTANT: Change the storage class depending on your environment (e.g. local-storage, gp2)
-              storageClassName: gce-fast
+              storageClassName: gce-slow
               volumeMode: Block
               accessModes:
                 - ReadWriteOnce
