@@ -267,53 +267,59 @@ def pod_thread(lock, pods, api, unhandled_pods, unhandled_jobs, unschedulable):
 
     w = watch.Watch()
 
-    while not STOP_LOOPS:
-        debug_print("loop pod_thread", high_frequency=True)
-        del_unschedulable_pods = []
-        for pod, t in unschedulable.items():
-            if (now() - t).total_seconds() > 60 * 60:  # 1h
-                del_unschedulable_pods.append(pod)
-        for pod in del_unschedulable_pods:
-            del unschedulable[pod]
-        for event in w.stream(
-            api.list_namespaced_pod, namespace="default", timeout_seconds=550
-        ):
-            if STOP_LOOPS:
-                break
-            job = event["object"].metadata.labels.get("job-name", None)
-            if job is not None:
-                pod = event["object"].metadata.name
-                if not re.match(reg, pod):
+    try:
+        while not STOP_LOOPS:
+            debug_print("loop pod_thread", high_frequency=True)
+            del_unschedulable_pods = []
+            for pod, t in unschedulable.items():
+                if (now() - t).total_seconds() > 60 * 60:  # 1h
+                    del_unschedulable_pods.append(pod)
+            for pod in del_unschedulable_pods:
+                del unschedulable[pod]
+            for event in w.stream(
+                api.list_namespaced_pod, namespace="default", timeout_seconds=550
+            ):
+                if STOP_LOOPS:
+                    break
+                if event["object"].metadata.labels is None:
                     continue
+                job = event["object"].metadata.labels.get("job-name", None)
+                if job is not None:
+                    pod = event["object"].metadata.name
+                    if not re.match(reg, pod):
+                        continue
 
-                if (
-                    pods.get(job, None) is None
-                    and unhandled_pods.get(pod, None) is None
-                ):
-                    """
-                    add the pod just once.
-                    Whatever happens during handling,
-                    even if the pod fails to delete,
-                    it will be removed from the pods dict.
-                    Then it's added again.
-                    """
-                    unhandled_pods[pod] = now()
+                    if (
+                        pods.get(job, None) is None
+                        and unhandled_pods.get(pod, None) is None
+                    ):
+                        """
+                        add the pod just once.
+                        Whatever happens during handling,
+                        even if the pod fails to delete,
+                        it will be removed from the pods dict.
+                        Then it's added again.
+                        """
+                        unhandled_pods[pod] = now()
 
-                pods[job] = pod
+                    pods[job] = pod
 
-                with lock:
-                    try:
-                        if (
-                            event["object"].status.conditions[0].reason
-                            == "Unschedulable"
-                        ):
-                            if unschedulable.get(pod, None) is None:
-                                unschedulable[pod] = now()
-                        else:
-                            if unschedulable.get(pod, None) is not None:
-                                del unschedulable[pod]
-                    except Exception as e:
-                        pass
+                    with lock:
+                        try:
+                            if (
+                                event["object"].status.conditions[0].reason
+                                == "Unschedulable"
+                            ):
+                                if unschedulable.get(pod, None) is None:
+                                    unschedulable[pod] = now()
+                            else:
+                                if unschedulable.get(pod, None) is not None:
+                                    del unschedulable[pod]
+                        except Exception as e:
+                            pass
+    except Exception as e:
+        debug_print("pod thread failed:", e)
+        debug_print(traceback.format_exc())
 
 
 def get_status_all():
