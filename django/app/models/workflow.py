@@ -6,7 +6,7 @@ import time
 import random
 import string
 from app.events import send_event
-from app.util import default_name
+from app.util import default_name, now
 
 
 class ApiWorkflow(models.Model):
@@ -69,6 +69,7 @@ class Workflow(models.Model):
     finished = models.BooleanField(default=False)
     status = models.CharField(max_length=32, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(auto_now_add=True)
     is_shared = models.BooleanField(default=False)
     updated_resources = models.BooleanField(default=False)
     api_workflow = models.ForeignKey(
@@ -114,6 +115,7 @@ class Workflow(models.Model):
 
     def finish(self):
         self.finished = True
+        self.finished_at = now()
         self.status = "finished"
         send_event("workflow-finished", {"pk": self.pk})
 
