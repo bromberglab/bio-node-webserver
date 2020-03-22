@@ -37,7 +37,7 @@ data:
 
             rewrite ^/(webhooks)(.*)$ /api/$1$2 last;
 
-            location /docs {
+            location /api/docs {
                 alias   /volume/dist/docs;
             }
             location /static/downloads {
