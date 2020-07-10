@@ -22,6 +22,7 @@ jobs:
       # Build the Docker image
       - name: Build
         run: |
+          echo "${DOCKER_PASSWORD}" | docker login -u ${DOCKER_USERNAME} --password-stdin;
           echo $GITHUB_SHA > .commit;
           docker build . -t bromberglab/bio-node-webserver;
           docker push bromberglab/bio-node-webserver;
