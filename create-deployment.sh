@@ -186,7 +186,7 @@ main() {
         echo "Downloading kube_configs..."
         mkdir tmp
         cd tmp
-        curl -L -o master.zip https://github.com/bromberglab/webservice-server/archive/master.zip
+        curl -L -o master.zip https://github.com/bromberglab/bio-node-webserver/archive/master.zip
         unzip master.zip || return 1
         rm master.zip
         cd *
