@@ -40,8 +40,7 @@ RUN apk add --no-cache --virtual .build-deps \
     gcc \
     python3-dev \
     musl-dev \
-    postgresql-dev \
-    && pip install --no-cache-dir psycopg2-binary==2.8.3
+    postgresql-dev
 
 ### Main
 
