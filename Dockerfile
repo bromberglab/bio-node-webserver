@@ -41,8 +41,7 @@ RUN apk add --no-cache --virtual .build-deps \
     python3-dev \
     musl-dev \
     postgresql-dev \
-    && pip install --no-cache-dir psycopg2-binary==2.8.3 \
-    && apk del --no-cache .build-deps
+    && pip install --no-cache-dir psycopg2-binary==2.8.3
 
 ### Main
 
@@ -65,6 +64,6 @@ ADD django setup.sh resize.sh requirements.txt .commit $APP_DIR/
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
-    apk del .build-deps
+    apk del --no-cache .build-deps
 
 CMD [ "sh", "-c", "/app/setup.sh; python /app/manage.py migrate; python /app/manage.py collectstatic --noinput; (while true; do python /app/manage.py daemon; done) & daphne config.asgi:application -b 0.0.0.0 -p 8080"]
