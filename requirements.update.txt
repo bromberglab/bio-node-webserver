@@ -1,0 +1,7 @@
+django-cors-headers
+django-eventstream
+djangorestframework
+docker
+kubernetes
+psycopg2-binary
+git+https://github.com/y-spreen/django-zip-stream.git
