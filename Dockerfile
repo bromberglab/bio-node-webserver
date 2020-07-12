@@ -40,7 +40,10 @@ RUN apk add --no-cache --virtual .build-deps \
     gcc \
     python3-dev \
     musl-dev \
-    postgresql-dev
+    postgresql-dev \
+    libc-dev \
+    libffi-dev \
+    openssl-dev
 
 ### Main
 
@@ -50,12 +53,7 @@ RUN mkdir $APP_DIR && \
     apk update && \
     apk upgrade && \
     apk add tzdata && \
-    cp /usr/share/zoneinfo/EST /etc/localtime && \
-    apk add --no-cache --virtual .build-deps \
-    gcc \
-    libc-dev \
-    libffi-dev \
-    openssl-dev
+    cp /usr/share/zoneinfo/EST /etc/localtime
 WORKDIR $APP_DIR
 
 
