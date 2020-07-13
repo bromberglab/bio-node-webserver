@@ -15,10 +15,12 @@ VOLUMEMETASIZEPERNODE="10Gi"
 MAXNODES="9"
 MACHINETYPE="n1-standard-8"
 ACCESSTYPE="-1"
+NETWORK="default"
+SUBNETWORK=""
 
 [ -d /usr/local/opt/gettext/bin ] && export PATH="/usr/local/opt/gettext/bin:$PATH"
 
-nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE"
+nontechsettings="ZONENAME CLUSTERNAME PROJECTNAME SANAME DBSIZE VOLUMESIZEPERNODE VOLUMEMETASIZEPERNODE STORAGENODES MAXNODES MACHINETYPE DOMAIN ACCESSTYPE NETWORK SUBNETWORK"
 allsettings="SETTINGSCONFIRMED DOMAINWAIT $nontechsettings"
 
 spin()
@@ -155,7 +157,12 @@ requirements() {
 }
 
 new_cluster() {
-    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES --zone $ZONENAME --metadata disable-legacy-endpoints=true
+    SUBNETWORKPARAM=""
+    if [ ! "$SUBNETWORK" = "" ]
+    then
+        SUBNETWORKPARAM="--subnetwork=$SUBNETWORK"
+    fi
+    gcloud container clusters create $CLUSTERNAME --image-type ubuntu --machine-type $MACHINETYPE --num-nodes $STORAGENODES --zone $ZONENAME --metadata disable-legacy-endpoints=true --network=$NETWORK $SUBNETWORKPARAM
 }
 
 confirm_settings() {
