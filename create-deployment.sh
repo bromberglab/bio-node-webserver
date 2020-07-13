@@ -140,7 +140,7 @@ sa_secret() {
 # }
 
 requirements() {
-    for r in curl tar gcloud kubectl envsubst jq zip
+    for r in curl tar gcloud kubectl envsubst jq zip dig
     do
         if [ "$(which "$r")" = "" ]
         then
@@ -278,14 +278,20 @@ Selected access method: [0] " ACCESSTYPE
         echo $IPADDRESS
         DOMAINWAIT=true
         save_settings
-        confirm "Domain configured and DNS valid? (check 'ping $DOMAIN')" "[y/N]"
-        if ! [ "$YN" = "y" ]
-        then
-            echo "To continue the process, run"
-            echo " $program"
-            echo "again."
-            return 1
-        fi
+        echo "You can stop this process and continue later. Run"
+        echo " $program"
+        echo "again."
+        
+        while [ ! "$IPADDRESS" = "$(dig +short "$DOMAIN" | tail -n1)" ]
+        do
+            printf "Waiting for domain to change... "
+            # 80 seconds
+            for i in $(seq 10)
+            do
+                spin
+            done
+            echo
+        done
 
         DOMAINWAIT=false
     fi
