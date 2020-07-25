@@ -14,6 +14,15 @@ class NoGuestPermission(permissions.BasePermission):
         return request.user.is_authenticated and not is_guest(request.user)
 
 
+class IsSuperuser(permissions.BasePermission):
+    """
+    Global permission check for superusers.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_staff and request.user.is_superuser
+
+
 list_path = os.path.join(settings.BASE_DIR, "assets", "The_Oxford_3000.list")
 with open(list_path, "r") as f:
     word_list = f.read()

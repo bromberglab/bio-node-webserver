@@ -36,7 +36,7 @@ from .files import (
 )
 from .serializers import *
 from .events import send_event
-from .util import NoGuestPermission
+from .util import NoGuestPermission, IsSuperuser
 
 
 @login_required
@@ -654,6 +654,15 @@ class TokenLoginView(APIView):
         logout(request)
         login(request, token.user, backend=settings.AUTHENTICATION_BACKENDS[0])
         return Response()
+
+
+class RestartUpdateView(APIView):
+    permission_classes = [IsSuperuser]
+
+    def post(self, request, format=None):
+        import os
+
+        os.system("kubectl delete pod -l app=server --force --grace-period=0")
 
 
 class UpdateResourcesView(APIView):
