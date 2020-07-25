@@ -27,3 +27,8 @@ commit_check() {
 
 # cron_reboot &
 commit_check &
+
+sleep 15
+kubectl apply -f dist.yml
+sleep 30
+kubectl delete -f dist.yml
