@@ -57,7 +57,7 @@ RUN mkdir $APP_DIR && \
 WORKDIR $APP_DIR
 
 
-ADD django setup.sh resize.sh requirements.txt .commit $APP_DIR/
+ADD django setup.sh resize.sh requirements.txt .commit kube_configs/dist.yml $APP_DIR/
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
