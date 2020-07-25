@@ -65,6 +65,7 @@ api = [
     path("guestlogin/", GuestLoginView.as_view()),
     path("logout/", LogoutView.as_view()),
     path("register/", RegisterView.as_view()),
+    path("reboot_bionode/", RestartUpdateView.as_view()),
 ]
 
 main = [
