@@ -57,6 +57,7 @@ def check_filters():
     import requests
     from app.images import import_image
     from app.models import NodeImage
+    from django.contrib.auth.models import User
 
     r = requests.get(
         "https://api.github.com/repos/bromberglab/bio-node-filters/commits"
