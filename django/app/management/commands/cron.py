@@ -43,6 +43,7 @@ def cron_worker():
     from .resources import cron as resources_cron
     from app.kube.cluster import drain_if_no_workflows
     from app.files import clear_logs
+    from app.util import check_filters
 
     seconds = 1
     minutes = 60 * seconds
@@ -64,6 +65,7 @@ def cron_worker():
         CronTask("clear_jobs", 1.1 * days, clear_jobs),
         CronTask("drain", 10 * seconds, drain_if_no_workflows),
         CronTask("setup_cron", 1.2 * days, setup_cron),
+        CronTask("check_filters", 2 * days, check_filters),
     ]
 
     for task in tasks:

@@ -17,6 +17,13 @@ cron_reboot() {
     sleep 1d
     reboot
 }
+commit_check() {
+    while true
+    do
+        curl 'https://api.github.com/repos/bromberglab/bio-node-webserver/commits' | jq -r '.[0].sha' > /app/.commit.online
+        sleep 3600
+    done
+}
 
 # cron_reboot &
-curl 'https://api.github.com/repos/bromberglab/bio-node-webserver/commits' | jq -r '.[0].sha' > /app/.commit.online
+commit_check &

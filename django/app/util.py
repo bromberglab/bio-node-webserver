@@ -53,4 +53,36 @@ def is_guest(user):
     return user.has_perm("app.is_guest_user")
 
 
+def check_filters():
+    import requests
+    from app.images import import_image
+    from app.models import NodeImage
+
+    r = requests.get(
+        "https://api.github.com/repos/bromberglab/bio-node-filters/commits"
+    ).json()
+    sha = r[0]["sha"]
+    r = requests.get(
+        "https://api.github.com/repos/bromberglab/bio-node-filters/commits/%s" % sha
+    ).json()
+    tree = r["commit"]["tree"]["sha"]
+    r = requests.get(
+        "https://api.github.com/repos/bromberglab/bio-node-filters/git/trees/%s" % tree
+    ).json()
+    files = r["tree"]
+
+    files = [f["path"] for f in files]
+    files = list(filter(lambda f: "." not in f, files))
+
+    admin = User.objects.get(username="admin")
+    for f in files:
+        image = "bromberglab/bio-node-filter.%s" % f
+        try:
+            NodeImage.objects.get(name=image)
+            continue
+        except:
+            pass
+        import_image(image, user=admin)
+
+
 dtformat = "%Y-%m-%d %H:%M:%S"
