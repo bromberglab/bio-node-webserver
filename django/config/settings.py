@@ -107,6 +107,7 @@ MIDDLEWARE = [
     "app.middleware.AutoLogout",
 ]
 
+X_FRAME_OPTIONS = "SAMEORIGIN"
 CORS_ORIGIN_WHITELIST = []
 if DEBUG:
     CORS_ORIGIN_WHITELIST = ["http://localhost:8080"]
