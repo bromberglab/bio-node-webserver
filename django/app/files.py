@@ -719,7 +719,7 @@ def un_tar(file, make_folder=False, remove=True):
         move(file, file.parent / name / file.name)
         file = file.parent / name / file.name
 
-    subprocess.run(["tar", "-xzf", str(file), "-C", str(file.parent)])
+    subprocess.run(["tar", "-kxzf", str(file), "-C", str(file.parent)])
 
     if remove:
         os.remove(file)
