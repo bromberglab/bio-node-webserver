@@ -15,7 +15,7 @@ django-cors-headers==3.4.0
 django-eventstream==3.1.0
 django-grip==3.0.0
 django-zip-stream @ git+https://github.com/y-spreen/django-zip-stream.git@7a591688be9a6334cac721fe9050d1f1087bc40c
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 docker==4.2.2
 google-auth==1.18.0
 gripcontrol==4.0.0
